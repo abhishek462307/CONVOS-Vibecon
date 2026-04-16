@@ -141,6 +141,24 @@
               linear-gradient(135deg, #a855f7, #ec4899, #f97316) border-box;
 }
 
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.animate-gradient { animation: gradient var(--animation-duration, 8s) linear infinite; background-size: 300% 100%; }
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee { animation: marquee 30s linear infinite; }
+
+.bg-grid-pattern {
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
 .bg-emerald-500\/12 { background-color: rgba(16, 185, 129, 0.12); }
 .bg-amber-500\/12  { background-color: rgba(245, 158, 11, 0.12); }
 .bg-blue-500\/12   { background-color: rgba(59, 130, 246, 0.12); }

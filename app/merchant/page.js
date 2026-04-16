@@ -178,6 +178,29 @@ function MerchantDashboard() {
   const [campaigns, setCampaigns] = useState([])
   const [storeConfig, setStoreConfig] = useState(null)
   const [timeRange, setTimeRange] = useState('7D')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  // Check authentication
+  useEffect(() => {
+    try {
+      const user = localStorage.getItem('user')
+      if (user) {
+        const userData = JSON.parse(user)
+        if (userData.type === 'merchant') {
+          setIsAuthenticated(true)
+        } else {
+          window.location.href = '/merchant/login'
+        }
+      } else {
+        window.location.href = '/merchant/login'
+      }
+    } catch (e) {
+      window.location.href = '/merchant/login'
+    } finally {
+      setAuthLoading(false)
+    }
+  }, [])
 
   const fetchData = useCallback(async () => {
     try {
@@ -694,6 +717,21 @@ function MerchantDashboard() {
       <p className="text-sm text-muted-foreground">This section is coming soon.</p>
     </div>
   )
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <ConvosLogo size={40} />
+          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-background flex">

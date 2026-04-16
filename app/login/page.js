@@ -40,7 +40,10 @@ export default function CustomerLoginPage() {
         body: JSON.stringify({ email, password, type: 'customer' })
       })
       const data = await res.json()
-      if (data.success) { localStorage.setItem('user', JSON.stringify(data.user)); router.push('/') }
+      if (data.success) { 
+        localStorage.setItem('user', JSON.stringify(data.user))
+        window.location.href = '/'
+      }
       else setError(data.message || 'Invalid email or password')
     } catch { setError('Something went wrong. Try again.') } finally { setLoading(false) }
   }
@@ -56,7 +59,10 @@ export default function CustomerLoginPage() {
         body: JSON.stringify({ name, email: signupEmail, password: signupPassword, type: 'customer' })
       })
       const data = await res.json()
-      if (data.success) { localStorage.setItem('user', JSON.stringify(data.user)); router.push('/') }
+      if (data.success) { 
+        localStorage.setItem('user', JSON.stringify(data.user))
+        window.location.href = '/'
+      }
       else setError(data.message || 'Could not create account')
     } catch { setError('Something went wrong. Try again.') } finally { setLoading(false) }
   }

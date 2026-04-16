@@ -7,7 +7,7 @@ async function connectToMongo() {
   if (!client) {
     client = new MongoClient(process.env.MONGO_URL)
     await client.connect()
-    db = client.db(process.env.DB_NAME || 'convos')
+    db = client.db(process.env.DB_NAME || 'your_database_name')
   }
   return db
 }
@@ -574,29 +574,48 @@ async function handleRoute(request, { params }) {
     // ─── Checkout ───
     if (route === '/checkout' && method === 'POST') {
       const body = await request.json()
-      const { session_id } = body
-      const conv = await db.collection('conversations').findOne({ session_id })
-      const cart = conv?.cart || []
+      const { session_id, items, orderId, customerEmail } = body
+      
+      // Support both old (conversation-based) and new (direct items) cart
+      let cart = items || []
+      if (!cart.length && session_id) {
+        const conv = await db.collection('conversations').findOne({ session_id })
+        cart = conv?.cart || []
+      }
+      
       if (cart.length === 0) return corsResponse({ error: 'Cart is empty' }, 400)
+      
       const total = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+      
       try {
         const Stripe = (await import('stripe')).default
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
         const session = await stripe.checkout.sessions.create({
           line_items: cart.map(item => ({
-            price_data: { currency: 'usd', product_data: { name: item.name }, unit_amount: Math.round(item.price * 100) },
+            price_data: { 
+              currency: 'usd', 
+              product_data: { 
+                name: item.name,
+                images: item.image ? [item.image] : []
+              }, 
+              unit_amount: Math.round(item.price * 100) 
+            },
             quantity: item.quantity
           })),
           mode: 'payment',
+          customer_email: customerEmail,
           success_url: `${baseUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${baseUrl}?checkout=cancel`,
-          metadata: { convos_session_id: session_id }
+          cancel_url: `${baseUrl}/checkout?checkout=cancel`,
+          metadata: { 
+            convos_session_id: session_id || 'guest',
+            order_id: orderId || ''
+          }
         })
         return corsResponse({ url: session.url, session_id: session.id })
       } catch(e) {
         console.error('Stripe error:', e)
-        return corsResponse({ error: 'Checkout unavailable' }, 500)
+        return corsResponse({ error: 'Checkout unavailable: ' + e.message }, 500)
       }
     }
 
