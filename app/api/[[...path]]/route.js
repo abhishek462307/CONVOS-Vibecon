@@ -606,6 +606,60 @@ async function handleRoute(request, { params }) {
       return corsResponse(approvals.map(({ _id, ...a }) => a))
     }
 
+    // ─── Authentication ───
+    if (route === '/auth/signup' && method === 'POST') {
+      const body = await request.json()
+      const existingUser = await db.collection('users').findOne({ email: body.email })
+      
+      if (existingUser) {
+        return corsResponse({ success: false, message: 'Email already exists' }, 400)
+      }
+
+      const user = {
+        id: uuidv4(),
+        name: body.name,
+        email: body.email,
+        password: body.password, // In production, hash this!
+        type: body.type || 'customer',
+        created_at: new Date()
+      }
+
+      await db.collection('users').insertOne(user)
+      const { password, _id, ...userWithoutPassword } = user
+      return corsResponse({ success: true, user: userWithoutPassword })
+    }
+
+    if (route === '/auth/login' && method === 'POST') {
+      const body = await request.json()
+      const user = await db.collection('users').findOne({ 
+        email: body.email, 
+        password: body.password,
+        type: body.type 
+      })
+
+      if (!user) {
+        return corsResponse({ success: false, message: 'Invalid credentials' }, 401)
+      }
+
+      const { password, _id, ...userWithoutPassword } = user
+      return corsResponse({ success: true, user: userWithoutPassword })
+    }
+
+    if (route === '/auth/me' && method === 'GET') {
+      const userId = request.headers.get('x-user-id')
+      if (!userId) {
+        return corsResponse({ success: false, message: 'Not authenticated' }, 401)
+      }
+
+      const user = await db.collection('users').findOne({ id: userId })
+      if (!user) {
+        return corsResponse({ success: false, message: 'User not found' }, 404)
+      }
+
+      const { password, _id, ...userWithoutPassword } = user
+      return corsResponse({ success: true, user: userWithoutPassword })
+    }
+
     // ─── Stats (Merchant) ───
     if (route === '/stats' && method === 'GET') {
       const totalProducts = await db.collection('products').countDocuments({ status: { $ne: 'deleted' } })

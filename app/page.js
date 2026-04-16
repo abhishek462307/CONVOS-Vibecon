@@ -214,6 +214,14 @@ function App() {
     }
     setSessionId(sid)
 
+    // Load cart from localStorage
+    try {
+      const savedCart = localStorage.getItem('cart')
+      if (savedCart) {
+        setCart(JSON.parse(savedCart))
+      }
+    } catch(e) {}
+
     // Check checkout result
     const params = new URLSearchParams(window.location.search)
     if (params.get('checkout') === 'success') {
@@ -261,7 +269,25 @@ function App() {
     setIsLoading(false)
   }, [sessionId])
 
-  const addToCart = (product) => { sendMessage(`Add ${product.name} to my cart`) }
+  const addToCart = (product) => {
+    const existingItem = cart.find(item => item.id === product.id)
+    let newCart
+    
+    if (existingItem) {
+      newCart = cart.map(item => 
+        item.id === product.id 
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      )
+    } else {
+      newCart = [...cart, { ...product, quantity: 1 }]
+    }
+    
+    setCart(newCart)
+    localStorage.setItem('cart', JSON.stringify(newCart))
+    setMessages(prev => [...prev, { role: 'assistant', content: `Added ${product.name} to your cart!` }])
+  }
+  
   const negotiate = (product) => {
     const target = Math.round(product.price * 0.8 * 100) / 100
     sendMessage(`Can I get ${product.name} for $${target}?`)
@@ -323,6 +349,11 @@ function App() {
                 className="pl-9 h-9 w-48 rounded-full bg-muted border-0 text-sm"
               />
             </div>
+            <a href="/login">
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-8">
+                <User className="w-4 h-4 mr-1" /> Login
+              </Button>
+            </a>
             <a href="/merchant">
               <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-8">Merchant</Button>
             </a>
@@ -363,9 +394,11 @@ function App() {
                         <span className="text-sm text-muted-foreground">Total</span>
                         <span className="text-xl font-bold">${cartTotal.toFixed(2)}</span>
                       </div>
-                      <Button className="w-full bg-[#8B6F47] hover:bg-[#725A3A] text-white rounded-full" onClick={() => sendMessage('Generate checkout for my cart')}>
-                        Checkout <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
+                      <a href="/checkout">
+                        <Button className="w-full bg-[#8B6F47] hover:bg-[#725A3A] text-white rounded-full">
+                          Checkout <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </a>
                     </>
                   )}
                 </div>
