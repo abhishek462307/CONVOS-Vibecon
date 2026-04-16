@@ -9,9 +9,18 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Separator } from '@/components/ui/separator'
 import {
-  ShoppingCart, Send, User, Search, X, Plus, Minus, ArrowRight,
-  MessageCircle, Trash2, Home, ChevronRight, Coffee, Loader2, CreditCard, Tag
+  ShoppingCart, Send, User, Search, X, Plus, ArrowRight,
+  MessageCircle, Trash2, Loader2, CreditCard, Tag, Sparkles
 } from 'lucide-react'
+
+function ConvosLogo({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="url(#convos-g)"/>
+      <defs><linearGradient id="convos-g" x1="8" y1="2" x2="24" y2="28"><stop stopColor="#a855f7"/><stop offset="0.6" stopColor="#ec4899"/><stop offset="1" stopColor="#f97316"/></linearGradient></defs>
+    </svg>
+  )
+}
 
 const CATEGORIES = [
   { name: 'All', image: null },
@@ -24,12 +33,17 @@ const CATEGORIES = [
 
 function ProductCard({ product, onAddToCart, onNegotiate }) {
   return (
-    <div className="bg-card rounded-xl overflow-hidden store-shadow group hover:store-shadow-md transition-all duration-300">
+    <div className="bg-card rounded-2xl overflow-hidden store-shadow group hover:store-shadow-md transition-all duration-300 border border-border/60">
       <div className="relative aspect-square overflow-hidden bg-muted">
         <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         {product.compare_at_price && (
-          <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+          <div className="absolute top-2 left-2 bg-gradient-purple text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             SALE
+          </div>
+        )}
+        {product.bargain_enabled && (
+          <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+            <Sparkles className="w-2.5 h-2.5" /> AI Price
           </div>
         )}
       </div>
@@ -45,11 +59,11 @@ function ProductCard({ product, onAddToCart, onNegotiate }) {
         </div>
         {product.weight && <p className="text-[10px] text-muted-foreground mt-0.5">{product.weight}</p>}
         <div className="flex gap-1.5 mt-3">
-          <Button size="sm" className="flex-1 h-8 text-xs bg-[#8B6F47] hover:bg-[#725A3A] text-white rounded-full" onClick={() => onAddToCart(product)}>
+          <Button size="sm" className="flex-1 h-8 text-xs bg-gradient-purple hover:opacity-90 text-white rounded-full border-0" onClick={() => onAddToCart(product)}>
             <Plus className="w-3 h-3 mr-1" /> Add to Cart
           </Button>
           {product.bargain_enabled && (
-            <Button size="sm" variant="outline" className="h-8 text-xs rounded-full border-[#8B6F47]/30 text-[#8B6F47]" onClick={() => onNegotiate(product)}>
+            <Button size="sm" variant="outline" className="h-8 text-xs rounded-full border-purple-500/30 text-purple-600 hover:bg-purple-50" onClick={() => onNegotiate(product)}>
               <Tag className="w-3 h-3" />
             </Button>
           )}
@@ -80,7 +94,7 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
     return (
       <button
         onClick={onToggle}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-[#8B6F47] rounded-full flex items-center justify-center text-white shadow-lg hover:bg-[#725A3A] transition-all z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-purple rounded-full flex items-center justify-center text-white shadow-lg hover:opacity-90 transition-all z-50 glow-purple"
       >
         <MessageCircle className="w-6 h-6" />
       </button>
@@ -92,18 +106,20 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
       {/* Chat Header */}
       <div className="p-3 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-[#8B6F47] flex items-center justify-center text-white text-sm font-bold">M</div>
+          <div className="w-9 h-9 rounded-full bg-gradient-purple flex items-center justify-center text-white flex-shrink-0">
+            <ConvosLogo size={18} />
+          </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold">Mark</span>
+              <span className="text-sm font-semibold">Convos AI</span>
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
             </div>
-            <p className="text-[11px] text-muted-foreground">Talk to Mark</p>
+            <p className="text-[11px] text-muted-foreground">Agentic shopping assistant</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={onClear} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"><Trash2 className="w-4 h-4" /></button>
-          <button onClick={onToggle} className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"><X className="w-4 h-4" /></button>
+          <button onClick={onClear} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><Trash2 className="w-4 h-4" /></button>
+          <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X className="w-4 h-4" /></button>
         </div>
       </div>
 
@@ -121,11 +137,13 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
                   className={`flex ${isUser ? 'justify-end' : 'justify-start gap-2'}`}
                 >
                   {!isUser && (
-                    <div className="w-7 h-7 rounded-full bg-[#8B6F47] flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5">M</div>
+                    <div className="w-7 h-7 rounded-full bg-gradient-purple flex items-center justify-center text-white flex-shrink-0 mt-0.5">
+                      <ConvosLogo size={14} />
+                    </div>
                   )}
                   <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
                     isUser
-                      ? 'bg-[#8B6F47] text-white rounded-br-sm'
+                      ? 'bg-gradient-purple text-white rounded-br-sm'
                       : 'bg-muted text-foreground rounded-bl-sm'
                   }`}>
                     {msg.content}
@@ -139,11 +157,11 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
           {messages.length > 0 && messages[messages.length - 1].products?.length > 0 && (
             <div className="space-y-2 pl-9">
               {messages[messages.length - 1].products.map(p => (
-                <div key={p.id} className="bg-muted rounded-lg p-2 flex gap-2">
-                  <img src={p.image} alt={p.name} className="w-12 h-12 rounded-md object-cover" />
+                <div key={p.id} className="bg-muted rounded-xl p-2 flex gap-2 border border-border/50">
+                  <img src={p.image} alt={p.name} className="w-12 h-12 rounded-lg object-cover" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{p.name}</p>
-                    <p className="text-xs font-bold text-[#8B6F47]">${p.price}</p>
+                    <p className="text-xs font-bold text-gradient-purple">${p.price}</p>
                   </div>
                 </div>
               ))}
@@ -163,7 +181,9 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
 
           {isLoading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#8B6F47] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">M</div>
+              <div className="w-7 h-7 rounded-full bg-gradient-purple flex items-center justify-center text-white flex-shrink-0">
+                <ConvosLogo size={14} />
+              </div>
               <div className="bg-muted rounded-2xl rounded-bl-sm px-3.5 py-2 text-sm text-muted-foreground flex items-center gap-1.5">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" /> Thinking...
               </div>
@@ -181,10 +201,10 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Search or ask anything..."
-            className="text-sm bg-muted border-0 rounded-full h-9 focus-visible:ring-[#8B6F47]/30"
+            className="text-sm bg-muted border-0 rounded-full h-9 focus-visible:ring-purple-500/30"
             disabled={isLoading}
           />
-          <Button type="submit" size="sm" className="h-9 w-9 rounded-full bg-[#8B6F47] hover:bg-[#725A3A] p-0 flex-shrink-0" disabled={!input.trim() || isLoading}>
+          <Button type="submit" size="sm" className="h-9 w-9 rounded-full bg-gradient-purple hover:opacity-90 p-0 flex-shrink-0 border-0" disabled={!input.trim() || isLoading}>
             <Send className="w-3.5 h-3.5 text-white" />
           </Button>
         </form>
@@ -311,16 +331,16 @@ function App() {
   return (
     <div className="min-h-screen bg-background">
       {/* Banner */}
-      <div className="bg-[#8B6F47] text-white text-center py-2 text-xs font-medium tracking-wide">
-        {store?.banner || 'FREE GLOBAL SHIPPING ON ORDERS OVER $100 | USE CODE WELCOME TO GET 10% OFF'}
+      <div className="bg-gradient-purple text-white text-center py-2 text-xs font-medium tracking-wide">
+        {store?.banner || 'FREE GLOBAL SHIPPING ON ORDERS OVER $100 · USE CODE WELCOME FOR 10% OFF'}
       </div>
 
       {/* Navigation */}
-      <nav className="bg-card border-b border-border sticky top-0 z-40">
+      <nav className="bg-card/90 backdrop-blur border-b border-border sticky top-0 z-40">
         <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <Coffee className="w-5 h-5 text-[#8B6F47]" />
+              <ConvosLogo size={24} />
               <span className="font-bold text-base tracking-tight hidden sm:inline">{store?.name || 'Artisan Coffee Roasters'}</span>
             </div>
             <div className="hidden md:flex items-center gap-1">
@@ -362,7 +382,7 @@ function App() {
                 <Button variant="ghost" size="sm" className="relative h-8">
                   <ShoppingCart className="w-4 h-4" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#8B6F47] rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gradient-purple rounded-full text-[10px] font-bold flex items-center justify-center text-white">
                       {cartCount}
                     </span>
                   )}
@@ -380,11 +400,11 @@ function App() {
                   ) : (
                     <>
                       {cart.map((item, i) => (
-                        <div key={i} className="rounded-lg border border-border p-3 flex gap-3">
-                          <img src={item.image} alt={item.name} className="w-14 h-14 rounded-md object-cover" />
+                        <div key={i} className="rounded-2xl border border-border p-3 flex gap-3">
+                          <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />
                           <div className="flex-1">
                             <p className="text-sm font-medium">{item.name}</p>
-                            <p className="text-sm font-bold text-[#8B6F47]">${item.price.toFixed(2)}</p>
+                            <p className="text-sm font-bold text-gradient-purple">${item.price.toFixed(2)}</p>
                             <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                           </div>
                         </div>
@@ -395,7 +415,7 @@ function App() {
                         <span className="text-xl font-bold">${cartTotal.toFixed(2)}</span>
                       </div>
                       <a href="/checkout">
-                        <Button className="w-full bg-[#8B6F47] hover:bg-[#725A3A] text-white rounded-full">
+                        <Button className="w-full bg-gradient-purple hover:opacity-90 text-white rounded-full border-0">
                           Checkout <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </a>
@@ -419,18 +439,23 @@ function App() {
               alt="Coffee Shop"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-16 max-w-2xl">
-              <p className="text-white/80 text-sm font-medium mb-2 tracking-wider uppercase">Premium Roasts</p>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1">
+                  <Sparkles className="w-3 h-3 text-purple-300" />
+                  <span className="text-white/90 text-xs font-medium">AI-Powered Shopping</span>
+                </div>
+              </div>
               <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-3">
                 {store?.name || 'Artisan Coffee Roasters'}
               </h1>
-              <p className="text-white/80 text-base mb-6 max-w-lg">
+              <p className="text-white/75 text-base mb-6 max-w-lg">
                 {store?.description || 'Premium single origin and blended coffees, roasted fresh to order.'}
               </p>
               <button
                 onClick={() => { setSelectedCategory('All'); document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }) }}
-                className="flex items-center gap-2 bg-[#8B6F47] hover:bg-[#725A3A] text-white px-6 py-3 rounded-full text-sm font-semibold w-fit transition-colors"
+                className="flex items-center gap-2 bg-gradient-purple hover:opacity-90 text-white px-6 py-3 rounded-full text-sm font-semibold w-fit transition-opacity"
               >
                 Shop Collection <ArrowRight className="w-4 h-4" />
               </button>
@@ -450,7 +475,7 @@ function App() {
                   }`}
                 >
                   <div className={`w-16 h-16 rounded-full overflow-hidden border-2 ${
-                    selectedCategory === c.name ? 'border-[#8B6F47]' : 'border-transparent'
+                    selectedCategory === c.name ? 'border-purple-500' : 'border-transparent'
                   }`}>
                     {c.image ? (
                       <img src={c.image} alt={c.name} className="w-full h-full object-cover" />
@@ -502,7 +527,7 @@ function App() {
       {!chatOpen && (
         <button
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-[#8B6F47] rounded-full flex items-center justify-center text-white shadow-lg hover:bg-[#725A3A] transition-all z-50"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-purple rounded-full flex items-center justify-center text-white shadow-lg hover:opacity-90 transition-all z-50 glow-purple"
         >
           <MessageCircle className="w-6 h-6" />
         </button>
