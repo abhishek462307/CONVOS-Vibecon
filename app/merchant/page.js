@@ -1,757 +1,1674 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Progress } from '@/components/ui/progress'
-import {
-  LayoutDashboard, MessageSquare, Bot, ShoppingBag, Package, Users,
-  Truck, Paintbrush, Star, Megaphone, PieChart, Mail, MessageCircle,
-  Search, DollarSign, ClipboardList, TrendingUp, Activity,
-  Sparkles, Plus, ArrowUpRight, Globe, Shield
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { 
+  LayoutDashboard, MessageSquare, ShoppingBag, Package, Users, 
+  Truck, Paintbrush, Star, Megaphone, Plus, Search, Filter,
+  Edit, Trash2, Eye, Send, Check, X, Download, Calendar,
+  TrendingUp, DollarSign, ShoppingCart, Activity, AlertCircle,
+  MoreVertical, ExternalLink, Mail, Phone, MapPin, Clock,
+  Bell, Settings, LogOut, ChevronDown, ChevronRight, RefreshCw,
+  ArrowLeft, Copy, MessageCircle, Shield, BarChart3, Hash,
+  Loader2, CheckCircle, XCircle, Archive, Reply
 } from 'lucide-react'
 
-function ConvosLogo({ size = 28 }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
-      <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="url(#merchant-g)"/>
-      <defs><linearGradient id="merchant-g" x1="8" y1="2" x2="24" y2="28"><stop stopColor="#a855f7"/><stop offset="0.6" stopColor="#ec4899"/><stop offset="1" stopColor="#f97316"/></linearGradient></defs>
-    </svg>
-  )
-}
+const BASE_URL = '/api'
 
 const SIDEBAR_ITEMS = [
   { section: 'OVERVIEW', items: [
     { key: 'home', label: 'Home', icon: LayoutDashboard },
-    { key: 'conversations', label: 'Conversations', icon: MessageSquare },
+    { key: 'conversations', label: 'Intent Stream', icon: MessageSquare },
   ]},
   { section: 'COMMERCE', items: [
     { key: 'orders', label: 'Orders', icon: ShoppingBag },
     { key: 'catalog', label: 'Catalog', icon: Package },
     { key: 'customers', label: 'Customers', icon: Users },
     { key: 'shipments', label: 'Shipments', icon: Truck },
-    { key: 'store-design', label: 'Store Design', icon: Paintbrush },
     { key: 'reviews', label: 'Reviews', icon: Star },
   ]},
-  { section: 'GROWTH', items: [
+  { section: 'MARKETING', items: [
     { key: 'campaigns', label: 'Campaigns', icon: Megaphone },
+  ]},
+  { section: 'SETTINGS', items: [
+    { key: 'store-design', label: 'Store Design', icon: Paintbrush },
   ]}
 ]
 
-function StatCard({ label, value, description, icon: Icon, change, changePositive }) {
-  const trendTone = change === undefined
-    ? 'bg-secondary text-muted-foreground'
-    : changePositive
-      ? 'bg-emerald-500/10 text-emerald-600'
-      : 'bg-red-500/10 text-red-500'
+const PRODUCT_CATEGORIES = ['Single Origin', 'Blends', 'Espresso', 'Decaf', 'Equipment', 'Accessories']
+
+// ═══════════════════════════════════════════
+// REUSABLE COMPONENTS
+// ═══════════════════════════════════════════
+
+function StatCard({ title, value, change, icon: Icon, subtitle }) {
   return (
-    <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card shadow-sm">
-      <div className="p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">{label}</p>
-            <p className="mt-2 text-[28px] font-semibold tracking-tight text-foreground">{value}</p>
-          </div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
-            <Icon className="h-4 w-4 text-foreground" />
-          </div>
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs leading-4 text-muted-foreground">{description}</p>
-          {change !== undefined && (
-            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${trendTone}`}>{change}</span>
-          )}
+    <div className="bg-card rounded-xl p-5 border border-border hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm text-muted-foreground font-medium">{title}</span>
+        <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-primary" />
         </div>
       </div>
+      <div className="text-2xl font-bold mb-1">{value}</div>
+      {change && (
+        <div className="flex items-center gap-1 text-xs text-emerald-600">
+          <TrendingUp className="w-3 h-3" />
+          <span>{change}</span>
+        </div>
+      )}
+      {subtitle && <div className="text-xs text-muted-foreground mt-0.5">{subtitle}</div>}
     </div>
   )
 }
 
-function PulseItem({ label, description, value }) {
+function EmptyState({ icon: Icon, title, description, action }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-[16px] border border-border/70 bg-secondary/20 px-3.5 py-2.5">
-      <div className="min-w-0">
-        <p className="text-[13px] font-medium text-foreground">{label}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+        <Icon className="w-8 h-8 text-muted-foreground" />
       </div>
-      <p className="shrink-0 text-base font-semibold tracking-tight text-foreground">{value}</p>
+      <h3 className="text-lg font-semibold mb-1">{title}</h3>
+      <p className="text-sm text-muted-foreground mb-4 max-w-md">{description}</p>
+      {action}
     </div>
   )
 }
 
-function IntentItem({ intent }) {
-  const typeColors = {
-    search: 'bg-blue-500/12 text-blue-400', negotiate: 'bg-amber-500/12 text-amber-400',
-    mission_create: 'bg-purple-500/12 text-purple-400', add_to_cart: 'bg-emerald-500/12 text-emerald-400',
-    checkout: 'bg-emerald-500/12 text-emerald-500', message: 'bg-secondary text-muted-foreground'
-  }
-  const color = typeColors[intent.type] || 'bg-secondary text-muted-foreground'
-  const time = new Date(intent.timestamp)
-  const ago = getTimeAgo(time)
+function ConfirmDialog({ open, onClose, onConfirm, title, description, loading }) {
   return (
-    <div className="flex items-start gap-3 py-3 px-5 hover:bg-secondary/25 transition-colors border-b border-border/70 last:border-0">
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">{intent.description}</p>
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${color}`}>{intent.type}</span>
-          <span className="text-[10px] text-muted-foreground">{ago}</span>
-          <span className="text-[10px] text-muted-foreground font-mono">{intent.session_id?.slice(0, 8)}</span>
-        </div>
-      </div>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button variant="destructive" onClick={onConfirm} disabled={loading}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function Toast({ message, type, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000)
+    return () => clearTimeout(timer)
+  }, [onClose])
+
+  return (
+    <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all ${
+      type === 'success' ? 'bg-emerald-600 text-white' : type === 'error' ? 'bg-red-600 text-white' : 'bg-primary text-primary-foreground'
+    }`}>
+      {type === 'success' ? <CheckCircle className="w-4 h-4" /> : type === 'error' ? <XCircle className="w-4 h-4" /> : null}
+      {message}
     </div>
   )
 }
 
-function ConsumerCard({ profile }) {
-  const trustColor = profile.trust_score >= 80 ? 'text-emerald-500' : profile.trust_score >= 60 ? 'text-amber-500' : 'text-red-500'
-  return (
-    <div className="rounded-[20px] border border-border/70 bg-card p-4 shadow-sm">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <Users className="w-4 h-4 text-muted-foreground" />
-          </div>
-          <div>
-            <p className="text-sm font-medium font-mono">{profile.session_id?.slice(0, 12)}...</p>
-            <p className="text-[10px] text-muted-foreground">{profile.interactions || 0} interactions</p>
-          </div>
-        </div>
-        <span className="inline-flex items-center rounded-full bg-emerald-500/12 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-500">{profile.risk_level || 'Low Risk'}</span>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <p className="text-[10px] text-muted-foreground">Trust</p>
-          <p className={`text-lg font-bold ${trustColor}`}>{profile.trust_score || 80}</p>
-        </div>
-        <div>
-          <p className="text-[10px] text-muted-foreground">Spent</p>
-          <p className="text-lg font-bold">${(profile.total_spent || 0).toFixed(0)}</p>
-        </div>
-        <div>
-          <p className="text-[10px] text-muted-foreground">Orders</p>
-          <p className="text-lg font-bold">{profile.total_orders || 0}</p>
-        </div>
-      </div>
-    </div>
-  )
+// ═══════════════════════════════════════════
+// CSV EXPORT HELPER
+// ═══════════════════════════════════════════
+function downloadCSV(data, filename) {
+  if (!data || data.length === 0) return
+  const headers = Object.keys(data[0])
+  const csv = [
+    headers.join(','),
+    ...data.map(row => headers.map(h => {
+      const val = row[h]
+      const str = val === null || val === undefined ? '' : String(val)
+      return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str
+    }).join(','))
+  ].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
-function MissionItem({ mission }) {
-  return (
-    <div className="rounded-[20px] border border-border/70 bg-card p-4 shadow-sm">
-      <div className="flex items-start justify-between mb-2">
-        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${mission.status === 'active' ? 'bg-purple-500/12 text-purple-400' : 'bg-emerald-500/12 text-emerald-500'}`}>{mission.status}</span>
-        <span className="text-[10px] text-muted-foreground font-mono">{mission.session_id?.slice(0, 8)}</span>
-      </div>
-      <p className="text-sm font-medium">{mission.goal}</p>
-      <div className="flex items-center gap-2 mt-2">
-        <Progress value={mission.progress || 0} className="h-1.5 flex-1" />
-        <span className="text-xs text-muted-foreground">{mission.progress || 0}%</span>
-      </div>
-    </div>
-  )
-}
+// ═══════════════════════════════════════════
+// MAIN DASHBOARD COMPONENT
+// ═══════════════════════════════════════════
 
-function getTimeAgo(date) {
-  const s = Math.floor((new Date() - date) / 1000)
-  if (s < 60) return 'just now'
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
-  return `${Math.floor(s / 86400)}d ago`
-}
-
-function MerchantDashboard() {
+export default function MerchantDashboard() {
   const [activeSection, setActiveSection] = useState('home')
   const [stats, setStats] = useState(null)
-  const [intents, setIntents] = useState([])
-  const [profiles, setProfiles] = useState([])
-  const [missions, setMissions] = useState([])
-  const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
+  const [products, setProducts] = useState([])
+  const [customers, setCustomers] = useState([])
   const [reviews, setReviews] = useState([])
   const [campaigns, setCampaigns] = useState([])
+  const [intents, setIntents] = useState([])
   const [storeConfig, setStoreConfig] = useState(null)
-  const [timeRange, setTimeRange] = useState('7D')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [toast, setToast] = useState(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  const fetchData = useCallback(async () => {
+  // Modal states
+  const [productModal, setProductModal] = useState({ open: false, mode: 'create', data: null })
+  const [orderDetailModal, setOrderDetailModal] = useState({ open: false, order: null })
+  const [campaignModal, setCampaignModal] = useState({ open: false, mode: 'create', data: null })
+  const [reviewModal, setReviewModal] = useState({ open: false, review: null })
+  const [shipmentModal, setShipmentModal] = useState({ open: false, order: null })
+  const [customerModal, setCustomerModal] = useState({ open: false, customer: null })
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: '', id: '', name: '' })
+
+  // Filter/search states
+  const [orderFilter, setOrderFilter] = useState('all')
+  const [orderSearch, setOrderSearch] = useState('')
+  const [productSearch, setProductSearch] = useState('')
+  const [reviewFilter, setReviewFilter] = useState('all')
+
+  const showToast = (message, type = 'success') => setToast({ message, type })
+
+  // Auth check
+  useEffect(() => {
     try {
-      const [s, i, p, m, pr, o, r, c, sc] = await Promise.all([
-        fetch('/api/stats').then(r => r.json()),
-        fetch('/api/intents?limit=50').then(r => r.json()),
-        fetch('/api/consumer-matrix').then(r => r.json()),
-        fetch('/api/missions').then(r => r.json()),
-        fetch('/api/products').then(r => r.json()),
-        fetch('/api/orders').then(r => r.json()),
-        fetch('/api/reviews').then(r => r.json()),
-        fetch('/api/campaigns').then(r => r.json()),
-        fetch('/api/store-config').then(r => r.json())
-      ])
-      if (s && !s.error) setStats(s)
-      if (Array.isArray(i)) setIntents(i)
-      if (Array.isArray(p)) setProfiles(p)
-      if (Array.isArray(m)) setMissions(m)
-      if (Array.isArray(pr)) setProducts(pr)
-      if (Array.isArray(o)) setOrders(o)
-      if (Array.isArray(r)) setReviews(r)
-      if (Array.isArray(c)) setCampaigns(c)
-      if (sc && !sc.error) setStoreConfig(sc)
-    } catch (e) { console.error(e) }
+      const user = localStorage.getItem('user')
+      if (user) {
+        const userData = JSON.parse(user)
+        if (userData.type === 'merchant') {
+          setIsAuthenticated(true)
+        } else {
+          window.location.href = '/merchant/login'
+        }
+      } else {
+        window.location.href = '/merchant/login'
+      }
+    } catch (e) {
+      window.location.href = '/merchant/login'
+    } finally {
+      setAuthLoading(false)
+    }
   }, [])
+
+  // Fetch all data
+  const fetchData = useCallback(async () => {
+    if (!isAuthenticated) return
+    
+    try {
+      const [statsRes, ordersRes, productsRes, customersRes, reviewsRes, campaignsRes, intentsRes, configRes] = await Promise.all([
+        fetch(`${BASE_URL}/stats`).then(r => r.json()),
+        fetch(`${BASE_URL}/orders`).then(r => r.json()),
+        fetch(`${BASE_URL}/products`).then(r => r.json()),
+        fetch(`${BASE_URL}/consumer-matrix`).then(r => r.json()),
+        fetch(`${BASE_URL}/reviews`).then(r => r.json()),
+        fetch(`${BASE_URL}/campaigns`).then(r => r.json()),
+        fetch(`${BASE_URL}/intents?limit=50`).then(r => r.json()),
+        fetch(`${BASE_URL}/store-config`).then(r => r.json())
+      ])
+
+      if (statsRes && !statsRes.error) setStats(statsRes)
+      if (Array.isArray(ordersRes)) setOrders(ordersRes)
+      if (Array.isArray(productsRes)) setProducts(productsRes)
+      if (Array.isArray(customersRes)) setCustomers(customersRes)
+      if (Array.isArray(reviewsRes)) setReviews(reviewsRes)
+      if (Array.isArray(campaignsRes)) setCampaigns(campaignsRes)
+      if (Array.isArray(intentsRes)) setIntents(intentsRes)
+      if (configRes && !configRes.error) setStoreConfig(configRes)
+    } catch (error) {
+      console.error('Fetch error:', error)
+    }
+  }, [isAuthenticated])
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 4000)
+    const interval = setInterval(fetchData, 10000)
     return () => clearInterval(interval)
   }, [fetchData])
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'home': return renderOverview()
-      case 'conversations': return renderConversations()
-      case 'catalog': return renderCatalog()
-      case 'customers': return renderCustomers()
-      case 'orders': return renderOrders()
-      case 'shipments': return renderShipments()
-      case 'store-design': return renderStoreDesign()
-      case 'reviews': return renderReviews()
-      case 'campaigns': return renderCampaigns()
-      default: return renderOverview()
+  // ═══════════════════════════════════════════
+  // CRUD OPERATIONS
+  // ═══════════════════════════════════════════
+
+  // Products
+  const saveProduct = async (productData) => {
+    try {
+      setLoading(true)
+      const isEdit = productModal.mode === 'edit'
+      const url = isEdit ? `${BASE_URL}/products/${productData.id}` : `${BASE_URL}/products`
+      const method = isEdit ? 'PUT' : 'POST'
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(productData)
+      })
+      const result = await res.json()
+      if (res.ok) {
+        showToast(isEdit ? 'Product updated successfully' : 'Product created successfully')
+        setProductModal({ open: false, mode: 'create', data: null })
+        await fetchData()
+      } else {
+        showToast(result.error || 'Failed to save product', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to save product', 'error')
+    } finally {
+      setLoading(false)
     }
   }
 
-  const renderOverview = () => (
+  const deleteProduct = async (id) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${BASE_URL}/products/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        showToast('Product deleted successfully')
+        setDeleteConfirm({ open: false, type: '', id: '', name: '' })
+        await fetchData()
+      } else {
+        showToast('Failed to delete product', 'error')
+      }
+    } catch (error) {
+      showToast('Failed to delete product', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Orders
+  const updateOrderStatus = async (orderId, status) => {
+    try {
+      const res = await fetch(`${BASE_URL}/orders/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      })
+      if (res.ok) {
+        showToast(`Order status updated to ${status}`)
+        await fetchData()
+      }
+    } catch (error) {
+      showToast('Failed to update order', 'error')
+    }
+  }
+
+  // Shipments
+  const updateShipment = async (orderId, shipmentData) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${BASE_URL}/shipments/${orderId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(shipmentData)
+      })
+      if (res.ok) {
+        showToast('Shipment updated successfully')
+        setShipmentModal({ open: false, order: null })
+        await fetchData()
+      }
+    } catch (error) {
+      showToast('Failed to update shipment', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Reviews
+  const updateReview = async (reviewId, data) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${BASE_URL}/reviews/${reviewId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      if (res.ok) {
+        showToast('Review updated successfully')
+        setReviewModal({ open: false, review: null })
+        await fetchData()
+      }
+    } catch (error) {
+      showToast('Failed to update review', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteReview = async (id) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${BASE_URL}/reviews/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        showToast('Review deleted')
+        setDeleteConfirm({ open: false, type: '', id: '', name: '' })
+        await fetchData()
+      }
+    } catch (error) {
+      showToast('Failed to delete review', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Campaigns
+  const saveCampaign = async (campaignData) => {
+    try {
+      setLoading(true)
+      const isEdit = campaignModal.mode === 'edit'
+      const url = isEdit ? `${BASE_URL}/campaigns/${campaignData.id}` : `${BASE_URL}/campaigns`
+      const method = isEdit ? 'PUT' : 'POST'
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(campaignData)
+      })
+      if (res.ok) {
+        showToast(isEdit ? 'Campaign updated' : 'Campaign created')
+        setCampaignModal({ open: false, mode: 'create', data: null })
+        await fetchData()
+      }
+    } catch (error) {
+      showToast('Failed to save campaign', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const deleteCampaign = async (id) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${BASE_URL}/campaigns/${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        showToast('Campaign deleted')
+        setDeleteConfirm({ open: false, type: '', id: '', name: '' })
+        await fetchData()
+      }
+    } catch (error) {
+      showToast('Failed to delete campaign', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Store Config
+  const updateStoreConfig = async (updates) => {
+    try {
+      setLoading(true)
+      const res = await fetch(`${BASE_URL}/store-config`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      })
+      if (res.ok) {
+        showToast('Store settings saved')
+        await fetchData()
+      }
+    } catch (error) {
+      showToast('Failed to save settings', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Export
+  const handleExport = async (type) => {
+    try {
+      const res = await fetch(`${BASE_URL}/export/${type}`)
+      const data = await res.json()
+      if (Array.isArray(data)) {
+        downloadCSV(data, `${type}-export-${new Date().toISOString().split('T')[0]}.csv`)
+        showToast(`${type} exported successfully`)
+      }
+    } catch (error) {
+      showToast('Export failed', 'error')
+    }
+  }
+
+  // Delete handler
+  const handleDelete = async () => {
+    const { type, id } = deleteConfirm
+    if (type === 'product') await deleteProduct(id)
+    else if (type === 'review') await deleteReview(id)
+    else if (type === 'campaign') await deleteCampaign(id)
+  }
+
+  // ═══════════════════════════════════════════
+  // SECTION RENDERERS
+  // ═══════════════════════════════════════════
+
+  const renderHome = () => (
     <div>
-      <header className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/85 shadow-sm mb-4">
-            <Sparkles className="h-3.5 w-3.5" /> Live commerce operations
-          </div>
-          <h1 className="text-[28px] font-semibold tracking-tight text-foreground">Overview</h1>
-          <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
-            Watch revenue, AI activity, and storefront readiness from one calmer control surface for {stats ? 'Artisan Coffee Roasters' : 'your store'}.
-          </p>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground text-sm mt-1">Welcome back! Here's your store overview.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-4 xl:justify-end">
-          <div className="inline-flex items-center gap-1.5 rounded-2xl border border-border/70 bg-card p-1.5 shadow-sm">
-            {['1D', '7D', '30D'].map(r => (
-              <button key={r} onClick={() => setTimeRange(r)} className={`rounded-xl px-5 py-2.5 text-[11px] font-bold tracking-tight transition-all ${
-                timeRange === r
-                  ? 'bg-primary text-primary-foreground shadow-sm scale-[1.02]'
-                  : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground'
-              }`}>{r}</button>
-            ))}
-          </div>
-          <Button variant="outline" className="h-11 rounded-2xl border-border/70 bg-card px-6 font-semibold tracking-tight shadow-sm hover:bg-secondary/40 transition-all">
-            <MessageSquare className="mr-2.5 h-4 w-4" /> Conversations
-          </Button>
-          <Button className="h-11 rounded-2xl px-7 font-semibold tracking-tight shadow-md hover:opacity-90 transition-all">
-            <Plus className="mr-2 h-4 w-4" /> Create product
-          </Button>
-        </div>
-      </header>
-
-      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Revenue" value={`$${(stats?.totalRevenue || 0).toFixed(2)}`} description="Gross sales in the selected range" icon={DollarSign} />
-        <StatCard label="Orders" value={String(stats?.totalOrders || 0)} description="Completed and active transactions" icon={ClipboardList} />
-        <StatCard label="AI Sessions" value={String(stats?.totalConversations || 0)} description="Live assistant-led shopping chats" icon={MessageSquare} />
-        <StatCard label="Conversion" value={`${stats?.totalOrders && stats?.totalConversations ? ((stats.totalOrders / stats.totalConversations * 100).toFixed(1)) : '0.0'}%`} description="Sessions that turned into orders" icon={TrendingUp} />
-      </div>
-
-      <div className="mb-5 grid gap-3 xl:items-start xl:grid-cols-[minmax(0,1.75fr)_320px]">
-        <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
-          <div className="border-b border-border/70 bg-card px-5 py-4 lg:px-6">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-base font-semibold tracking-tight">Sales performance</p>
-                <p className="mt-1 text-sm text-muted-foreground">A cleaner view of what your store and AI agent generated over the last {timeRange}.</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">Net sales</p>
-                  <p className="mt-1 text-[28px] font-semibold tracking-tight">${(stats?.totalRevenue || 0).toFixed(2)}</p>
-                </div>
-                <span className="shrink-0 rounded-full border border-border/70 bg-secondary px-3 py-1 text-xs font-semibold flex items-center gap-1">
-                  <ArrowUpRight className="h-3.5 w-3.5" /> vs prior period
-                </span>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className="h-[200px] border-b border-border/70 px-5 py-4 relative bg-secondary/10">
-              <div className="absolute inset-4 flex items-end gap-1.5">
-                {[20, 35, 15, 45, 30, 50, 25, 40, 28, 55, 33, 48, 22, 38].map((h, i) => (
-                  <div key={i} className="flex-1 bg-foreground/10 rounded-t-md hover:bg-foreground/20 transition-colors" style={{ height: `${h}%` }} />
-                ))}
-              </div>
-              {(stats?.totalRevenue || 0) === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-xs text-muted-foreground">Sales data will appear as orders come in</p>
-                </div>
-              )}
-            </div>
-            <div className="grid gap-2.5 px-5 py-4 md:grid-cols-3 lg:px-6">
-              {[
-                { label: 'Orders captured', value: String(stats?.totalOrders || 0) },
-                { label: 'AI sessions', value: String(stats?.totalConversations || 0) },
-                { label: 'Active missions', value: String(stats?.activeMissions || 0) },
-              ].map(pill => (
-                <div key={pill.label} className="rounded-[18px] border border-border/70 bg-secondary/25 px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">{pill.label}</p>
-                  <p className="mt-2 text-base font-semibold tracking-tight">{pill.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
-          <div className="border-b border-border/70 px-4 py-3.5">
-            <p className="text-sm font-semibold tracking-tight">Store pulse</p>
-          </div>
-          <div className="space-y-2.5 p-4">
-            <PulseItem label="Orders in range" description="Total transactions captured" value={String(stats?.totalOrders || 0)} />
-            <PulseItem label="AI-assisted orders" description={stats?.totalOrders ? 'of all orders' : 'No AI-assisted orders yet'} value={String(stats?.totalOrders || 0)} />
-            <PulseItem label="Active AI workflows" description={`${stats?.activeMissions || 0} completed`} value={String(stats?.activeMissions || 0)} />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderConversations = () => (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-[28px] font-semibold tracking-tight">Intent Stream</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Real-time buyer activity, AI actions, and conversion events.</p>
-      </div>
-      <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
-        <div className="px-5 py-3.5 border-b border-border/70 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-semibold text-emerald-500">Live</span>
-          </div>
-          <span className="rounded-full border border-border/70 bg-secondary px-3 py-0.5 text-[10px] font-semibold">{intents.length} events</span>
-        </div>
-        <ScrollArea className="h-[500px]">
-          {intents.length === 0 ? (
-            <div className="text-center py-16 text-muted-foreground">
-              <Activity className="w-8 h-8 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No events yet. Activity will appear here as buyers interact.</p>
-            </div>
-          ) : intents.map(i => <IntentItem key={i.id} intent={i} />)}
-        </ScrollArea>
-      </div>
-    </div>
-  )
-
-  const renderCatalog = () => (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-[28px] font-semibold tracking-tight">Catalog</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{products.length} products in your store</p>
-        </div>
-        <Button className="h-11 rounded-2xl px-6 font-semibold tracking-tight shadow-md hover:opacity-90 transition-all">
-          <Plus className="mr-2 h-4 w-4" /> Add product
+        <Button variant="outline" size="sm" onClick={fetchData}>
+          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
         </Button>
       </div>
-      <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border/70 bg-secondary/20">
-              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Product</th>
-              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Category</th>
-              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Price</th>
-              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Min Price</th>
-              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Stock</th>
-              <th className="text-center px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Bargain</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map(p => (
-              <tr key={p.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <img src={p.image} alt={p.name} className="w-9 h-9 rounded-xl object-cover" />
-                    <span className="font-medium">{p.name}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3"><span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{p.category}</span></td>
-                <td className="px-4 py-3 text-right font-semibold">${p.price}</td>
-                <td className="px-4 py-3 text-right text-muted-foreground">${p.bargain_min_price}</td>
-                <td className="px-4 py-3 text-right">{p.stock}</td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${p.bargain_enabled ? 'bg-emerald-500/12 text-emerald-500' : 'bg-secondary text-muted-foreground'}`}>
-                    {p.bargain_enabled ? 'Active' : 'Off'}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
 
-  const renderCustomers = () => (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-[28px] font-semibold tracking-tight">Customers</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Consumer Matrix overview for all buyers.</p>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        {profiles.map(p => <ConsumerCard key={p.id || p.session_id} profile={p} />)}
-      </div>
-      {profiles.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <Users className="w-8 h-8 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No customers yet.</p>
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <StatCard title="Revenue" value={`$${(stats.totalRevenue || 0).toFixed(2)}`} change="+12.5% this month" icon={DollarSign} />
+          <StatCard title="Orders" value={stats.totalOrders || 0} subtitle={`${stats.pendingOrders || 0} pending`} icon={ShoppingCart} />
+          <StatCard title="Products" value={stats.totalProducts || 0} icon={Package} />
+          <StatCard title="Customers" value={stats.totalBuyers || 0} change="+15.3%" icon={Users} />
         </div>
       )}
-    </div>
-  )
 
-  const renderOrders = () => (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-[28px] font-semibold tracking-tight">Orders</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{orders.length} total orders</p>
-      </div>
-      <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-border/70 bg-secondary/20">
-              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Order</th>
-              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Customer</th>
-              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Date</th>
-              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Total</th>
-              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Payment</th>
-              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map(o => (
-              <tr key={o.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                <td className="px-4 py-3 font-medium">{o.order_number}</td>
-                <td className="px-4 py-3 text-muted-foreground">{o.shipping_address?.name || 'N/A'}</td>
-                <td className="px-4 py-3 text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3 text-right font-semibold">${parseFloat(o.total).toFixed(2)}</td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${o.payment_status === 'paid' ? 'bg-emerald-500/12 text-emerald-500' : 'bg-amber-500/12 text-amber-500'}`}>
-                    {o.payment_status}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{o.status}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {orders.length === 0 && (
-          <div className="text-center py-16 text-muted-foreground">
-            <ShoppingBag className="w-8 h-8 mx-auto mb-3 opacity-30" />
-            <p className="text-sm">No orders yet.</p>
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <StatCard title="Avg Rating" value={`${stats.avgRating || '0.0'} ★`} subtitle={`${stats.totalReviews || 0} reviews`} icon={Star} />
+          <StatCard title="Conversations" value={stats.totalConversations || 0} icon={MessageSquare} />
+          <StatCard title="Active Missions" value={stats.activeMissions || 0} icon={Activity} />
+          <StatCard title="Trust Score" value={stats.avgTrustScore || 80} subtitle="avg across buyers" icon={Shield} />
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-card rounded-xl p-5 border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-sm">Recent Orders</h3>
+            <Button variant="ghost" size="sm" onClick={() => setActiveSection('orders')}>View All →</Button>
           </div>
-        )}
+          <div className="space-y-2">
+            {orders.slice(0, 5).map(order => (
+              <div key={order.id} className="flex items-center justify-between py-2 border-b border-border last:border-0 cursor-pointer hover:bg-muted/30 rounded px-2 -mx-2" onClick={() => setOrderDetailModal({ open: true, order })}>
+                <div>
+                  <div className="font-medium text-sm">{order.order_number}</div>
+                  <div className="text-xs text-muted-foreground">{order.shipping_address?.name || 'N/A'}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-sm">${parseFloat(order.total || 0).toFixed(2)}</div>
+                  <Badge variant="outline" className="text-xs mt-1">{order.status}</Badge>
+                </div>
+              </div>
+            ))}
+            {orders.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No orders yet</p>}
+          </div>
+        </div>
+
+        <div className="bg-card rounded-xl p-5 border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-sm">Live Activity</h3>
+            <Button variant="ghost" size="sm" onClick={() => setActiveSection('conversations')}>View All →</Button>
+          </div>
+          <div className="space-y-2">
+            {intents.slice(0, 6).map((intent, i) => (
+              <div key={i} className="flex items-start gap-2 py-2 border-b border-border last:border-0">
+                <Activity className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs truncate">{intent.description}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(intent.timestamp).toLocaleTimeString()}
+                  </div>
+                </div>
+                <Badge variant="secondary" className="text-[10px] shrink-0">{intent.type}</Badge>
+              </div>
+            ))}
+            {intents.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No activity yet</p>}
+          </div>
+        </div>
       </div>
     </div>
   )
 
-  const renderShipments = () => {
-    const shipments = orders.filter(o => ['processing', 'shipped', 'delivered'].includes(o.status))
+  const renderOrders = () => {
+    const filtered = orders.filter(o => {
+      if (orderFilter !== 'all' && o.status !== orderFilter) return false
+      if (orderSearch) {
+        const s = orderSearch.toLowerCase()
+        return (o.order_number?.toLowerCase().includes(s) || o.shipping_address?.name?.toLowerCase().includes(s))
+      }
+      return true
+    })
+
     return (
       <div>
-        <div className="mb-8">
-          <h1 className="text-[28px] font-semibold tracking-tight">Shipments</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{shipments.length} active shipments</p>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-2xl font-bold">Orders</h1>
+            <p className="text-muted-foreground text-sm mt-1">{orders.length} total orders</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => handleExport('orders')}>
+            <Download className="w-4 h-4 mr-2" /> Export CSV
+          </Button>
         </div>
-        <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/70 bg-secondary/20">
-                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Order</th>
-                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Customer</th>
-                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Carrier</th>
-                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Tracking</th>
-                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Status</th>
-                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Updated</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shipments.map(s => (
-                <tr key={s.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 font-medium">{s.order_number}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.shipping_address?.name || 'N/A'}</td>
-                  <td className="px-4 py-3">{s.carrier || '—'}</td>
-                  <td className="px-4 py-3 font-mono text-xs">{s.tracking_number || '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{s.status}</span>
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground text-xs">{getTimeAgo(new Date(s.updated_at))}</td>
+
+        <div className="flex gap-2 mb-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search orders..." className="pl-9" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} />
+          </div>
+          <Select value={orderFilter} onValueChange={setOrderFilter}>
+            <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="processing">Processing</SelectItem>
+              <SelectItem value="shipped">Shipped</SelectItem>
+              <SelectItem value="delivered">Delivered</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Order</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Customer</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase text-muted-foreground">Total</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Payment</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium uppercase text-muted-foreground">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {shipments.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground">
-              <Truck className="w-8 h-8 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">No active shipments.</p>
-            </div>
+              </thead>
+              <tbody>
+                {filtered.map(order => {
+                  const statusColors = {
+                    pending: 'bg-amber-100 text-amber-700',
+                    processing: 'bg-blue-100 text-blue-700',
+                    shipped: 'bg-purple-100 text-purple-700',
+                    delivered: 'bg-emerald-100 text-emerald-700',
+                    cancelled: 'bg-red-100 text-red-700'
+                  }
+                  return (
+                    <tr key={order.id} className="border-b border-border hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-sm">{order.order_number}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm font-medium">{order.shipping_address?.name || 'N/A'}</div>
+                      </td>
+                      <td className="px-4 py-3 text-right font-bold text-sm">${parseFloat(order.total || 0).toFixed(2)}</td>
+                      <td className="px-4 py-3">
+                        <Badge className={`text-xs ${statusColors[order.payment_status] || 'bg-gray-100 text-gray-700'}`}>
+                          {order.payment_status || 'unknown'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={order.status}
+                          onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                          className="text-xs px-2 py-1.5 rounded-lg border border-border bg-background cursor-pointer"
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Button size="sm" variant="ghost" onClick={() => setOrderDetailModal({ open: true, order })}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {filtered.length === 0 && (
+            <EmptyState icon={ShoppingBag} title="No orders found" description="Orders will appear here when customers make purchases." />
           )}
         </div>
       </div>
     )
   }
 
-  const renderReviews = () => (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-[28px] font-semibold tracking-tight">Reviews</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{reviews.length} total reviews</p>
+  const renderCatalog = () => {
+    const filtered = products.filter(p => {
+      if (productSearch) {
+        const s = productSearch.toLowerCase()
+        return p.name?.toLowerCase().includes(s) || p.category?.toLowerCase().includes(s)
+      }
+      return true
+    })
+
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-2xl font-bold">Product Catalog</h1>
+            <p className="text-muted-foreground text-sm mt-1">{products.length} products</p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleExport('products')}>
+              <Download className="w-4 h-4 mr-2" /> Export
+            </Button>
+            <Button size="sm" onClick={() => setProductModal({ open: true, mode: 'create', data: null })}>
+              <Plus className="w-4 h-4 mr-2" /> Add Product
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mb-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input placeholder="Search products..." className="pl-9" value={productSearch} onChange={(e) => setProductSearch(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Product</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium uppercase text-muted-foreground">Price</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium uppercase text-muted-foreground">Stock</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Category</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Bargain</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium uppercase text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(product => (
+                  <tr key={product.id} className="border-b border-border hover:bg-muted/30">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <img src={product.image} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
+                        <div>
+                          <div className="font-medium text-sm">{product.name}</div>
+                          <div className="text-xs text-muted-foreground truncate max-w-[200px]">{product.description?.substring(0, 50)}...</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="font-bold text-sm">${product.price}</div>
+                      {product.compare_at_price > product.price && (
+                        <div className="text-xs text-muted-foreground line-through">${product.compare_at_price}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`text-sm font-medium ${(product.stock || 0) < 20 ? 'text-amber-600' : 'text-foreground'}`}>
+                        {product.stock || 0}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="outline" className="text-xs">{product.category}</Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      {product.bargain_enabled ? (
+                        <span className="text-xs text-emerald-600">Min ${product.bargain_min_price}</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Disabled</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex gap-1 justify-center">
+                        <Button size="sm" variant="ghost" onClick={() => setProductModal({ open: true, mode: 'edit', data: product })}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={() => setDeleteConfirm({ open: true, type: 'product', id: product.id, name: product.name })}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {filtered.length === 0 && (
+            <EmptyState 
+              icon={Package} 
+              title="No products found" 
+              description="Start building your catalog by adding your first product."
+              action={<Button size="sm" onClick={() => setProductModal({ open: true, mode: 'create', data: null })}><Plus className="w-4 h-4 mr-2" /> Add Product</Button>}
+            />
+          )}
+        </div>
       </div>
-      <div className="space-y-3">
-        {reviews.map(r => (
-          <div key={r.id} className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-3">
-                {r.product?.image && (
-                  <img src={r.product.image} alt={r.product.name} className="w-12 h-12 rounded-md object-cover" />
-                )}
-                <div>
-                  <p className="font-semibold text-sm">{r.product?.name || 'Product'}</p>
-                  <p className="text-xs text-muted-foreground">{r.author_name}</p>
+    )
+  }
+
+  const renderCustomers = () => (
+    <div>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-2xl font-bold">Customers</h1>
+          <p className="text-muted-foreground text-sm mt-1">{customers.length} customer profiles</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => handleExport('customers')}>
+          <Download className="w-4 h-4 mr-2" /> Export
+        </Button>
+      </div>
+
+      {customers.length === 0 ? (
+        <EmptyState icon={Users} title="No customers yet" description="Customer profiles are created automatically when buyers interact with your store." />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {customers.map(customer => (
+            <div key={customer.id} className="bg-card rounded-xl p-5 border border-border hover:shadow-md transition-shadow cursor-pointer" onClick={() => setCustomerModal({ open: true, customer })}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                  {customer.session_id?.charAt(0)?.toUpperCase() || '?'}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm">Session #{customer.session_id?.slice(0, 8)}</div>
+                  <div className="text-xs text-muted-foreground">{customer.interactions || 0} interactions</div>
+                </div>
+                <Badge variant={customer.risk_level === 'low' ? 'outline' : 'destructive'} className="text-xs">
+                  {customer.risk_level || 'low'}
+                </Badge>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex">
-                  {[1,2,3,4,5].map(i => (
-                    <Star key={i} className={`w-4 h-4 ${i <= r.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} />
-                  ))}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <div className="text-xs text-muted-foreground">Trust</div>
+                  <div className="font-bold text-sm text-emerald-600">{customer.trust_score || 80}</div>
                 </div>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${r.status === 'published' ? 'bg-emerald-500/12 text-emerald-500' : 'bg-amber-500/12 text-amber-500'}`}>
-                  {r.status}
-                </span>
+                <div>
+                  <div className="text-xs text-muted-foreground">Spent</div>
+                  <div className="font-bold text-sm">${(customer.total_spent || 0).toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Orders</div>
+                  <div className="font-bold text-sm">{customer.total_orders || 0}</div>
+                </div>
               </div>
             </div>
-            {r.title && <p className="font-medium text-sm mb-1">{r.title}</p>}
-            <p className="text-sm text-muted-foreground">{r.content}</p>
-            <p className="text-xs text-muted-foreground mt-2">{new Date(r.created_at).toLocaleDateString()}</p>
-          </div>
-        ))}
-      </div>
-      {reviews.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <Star className="w-8 h-8 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No reviews yet.</p>
+          ))}
         </div>
       )}
     </div>
   )
 
-  const renderStoreDesign = () => (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-[28px] font-semibold tracking-tight">Store Design</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Customize your storefront appearance and branding.</p>
-      </div>
-      {storeConfig && (
-        <div className="space-y-4">
-          <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
-            <h3 className="text-sm font-semibold tracking-tight mb-4">Store Information</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider">Store Name</label>
-                <p className="text-sm font-medium mt-1">{storeConfig.name}</p>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider">Tagline</label>
-                <p className="text-sm font-medium mt-1">{storeConfig.tagline}</p>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider">Description</label>
-                <p className="text-sm text-muted-foreground mt-1">{storeConfig.description}</p>
-              </div>
-            </div>
-          </div>
-          <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
-            <h3 className="text-sm font-semibold tracking-tight mb-4">AI Assistant Settings</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider">AI Name</label>
-                <p className="text-sm font-medium mt-1">{storeConfig.ai_name}</p>
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground uppercase tracking-wider">AI Greeting</label>
-                <p className="text-sm text-muted-foreground mt-1">{storeConfig.ai_greeting}</p>
-              </div>
-            </div>
-          </div>
-          <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
-            <h3 className="text-sm font-semibold tracking-tight mb-4">Categories</h3>
-            <div className="flex flex-wrap gap-2">
-              {storeConfig.categories?.map((cat, i) => (
-                <span key={i} className="inline-flex items-center rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">{cat}</span>
-              ))}
-            </div>
+  const renderReviews = () => {
+    const filtered = reviews.filter(r => reviewFilter === 'all' || r.status === reviewFilter)
+
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-2xl font-bold">Reviews</h1>
+            <p className="text-muted-foreground text-sm mt-1">{reviews.length} total • {reviews.filter(r => r.status === 'pending').length} pending</p>
           </div>
         </div>
-      )}
-    </div>
-  )
+
+        <div className="flex gap-2 mb-4">
+          <Select value={reviewFilter} onValueChange={setReviewFilter}>
+            <SelectTrigger className="w-40"><SelectValue placeholder="Filter" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Reviews</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {filtered.length === 0 ? (
+          <EmptyState icon={Star} title="No reviews found" description="Reviews will appear here when customers leave feedback." />
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(review => (
+              <div key={review.id} className="bg-card rounded-xl p-5 border border-border">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    {review.product?.image && (
+                      <img src={review.product.image} alt={review.product.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-sm">{review.product?.name || 'Product'}</span>
+                        <span className="text-xs text-muted-foreground">by {review.author_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex">
+                          {[1,2,3,4,5].map(i => (
+                            <Star key={i} className={`w-3.5 h-3.5 ${i <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                          ))}
+                        </div>
+                        <Badge variant={review.status === 'published' ? 'default' : review.status === 'pending' ? 'secondary' : 'destructive'} className="text-xs">
+                          {review.status}
+                        </Badge>
+                      </div>
+                      {review.title && <div className="font-medium text-sm mb-1">{review.title}</div>}
+                      <div className="text-sm text-muted-foreground">{review.content}</div>
+                      {review.merchant_reply && (
+                        <div className="mt-3 pl-3 border-l-2 border-primary/30 bg-primary/5 rounded-r-lg p-2">
+                          <div className="text-xs font-medium text-primary mb-0.5">Merchant Reply</div>
+                          <div className="text-xs text-muted-foreground">{review.merchant_reply}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    {review.status === 'pending' && (
+                      <>
+                        <Button size="sm" variant="ghost" className="text-emerald-600" onClick={() => updateReview(review.id, { status: 'published' })}>
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-red-500" onClick={() => updateReview(review.id, { status: 'rejected' })}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                    <Button size="sm" variant="ghost" onClick={() => setReviewModal({ open: true, review })}>
+                      <Reply className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-red-500" onClick={() => setDeleteConfirm({ open: true, type: 'review', id: review.id, name: review.title || 'this review' })}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const renderCampaigns = () => (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[28px] font-semibold tracking-tight">Campaigns</h1>
-          <p className="mt-2 text-sm text-muted-foreground">{campaigns.length} total campaigns</p>
+          <h1 className="text-2xl font-bold">Campaigns</h1>
+          <p className="text-muted-foreground text-sm mt-1">{campaigns.length} campaigns</p>
         </div>
-        <Button className="h-11 rounded-2xl px-6 font-semibold tracking-tight shadow-md hover:opacity-90 transition-all">
-          <Plus className="mr-2 h-4 w-4" /> Create campaign
+        <Button size="sm" onClick={() => setCampaignModal({ open: true, mode: 'create', data: null })}>
+          <Plus className="w-4 h-4 mr-2" /> Create Campaign
         </Button>
       </div>
-      <div className="space-y-3">
-        {campaigns.map(c => (
-          <div key={c.id} className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold">{c.name}</h3>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
-                    c.status === 'active' ? 'bg-emerald-500/12 text-emerald-500' :
-                    c.status === 'scheduled' ? 'bg-blue-500/12 text-blue-400' :
-                    'bg-secondary text-muted-foreground'
-                  }`}>
-                    {c.status}
-                  </span>
+
+      {campaigns.length === 0 ? (
+        <EmptyState 
+          icon={Megaphone} 
+          title="No campaigns yet" 
+          description="Create your first email campaign to engage customers."
+          action={<Button size="sm" onClick={() => setCampaignModal({ open: true, mode: 'create', data: null })}><Plus className="w-4 h-4 mr-2" /> Create Campaign</Button>}
+        />
+      ) : (
+        <div className="space-y-4">
+          {campaigns.map(campaign => (
+            <div key={campaign.id} className="bg-card rounded-xl p-5 border border-border hover:shadow-sm transition-shadow">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-bold">{campaign.name}</h3>
+                    <Badge variant={campaign.status === 'active' ? 'default' : campaign.status === 'scheduled' ? 'secondary' : 'outline'}>
+                      {campaign.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{campaign.description}</p>
                 </div>
-                <p className="text-sm text-muted-foreground">{c.description}</p>
+                <div className="flex gap-1 shrink-0 ml-4">
+                  <Button size="sm" variant="ghost" onClick={() => setCampaignModal({ open: true, mode: 'edit', data: campaign })}>
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-red-500" onClick={() => setDeleteConfirm({ open: true, type: 'campaign', id: campaign.id, name: campaign.name })}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{c.type}</span>
+              <div className="grid grid-cols-4 gap-4">
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase">Type</div>
+                  <div className="text-sm font-medium capitalize">{campaign.type}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase">Audience</div>
+                  <div className="text-lg font-bold">{campaign.audience_count || 0}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase">Sent</div>
+                  <div className="text-lg font-bold">{campaign.sent_count || 0}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground uppercase">Open Rate</div>
+                  <div className="text-lg font-bold">{campaign.open_rate || 0}%</div>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Audience</p>
-                <p className="text-lg font-bold mt-1">{c.audience_count}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Sent</p>
-                <p className="text-lg font-bold mt-1">{c.sent_count}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Open Rate</p>
-                <p className="text-lg font-bold mt-1">{c.open_rate}%</p>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {campaigns.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <Megaphone className="w-8 h-8 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No campaigns yet.</p>
+          ))}
         </div>
       )}
     </div>
   )
 
-  const renderPlaceholder = (section) => (
-    <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/70 bg-card mb-4">
-        <Package className="w-6 h-6 opacity-50" />
-      </div>
-      <p className="text-base font-semibold tracking-tight capitalize mb-1">{section.replace('-', ' ')}</p>
-      <p className="text-sm text-muted-foreground">This section is coming soon.</p>
-    </div>
-  )
+  const renderShipments = () => {
+    const shipments = orders.filter(o => ['processing', 'shipped', 'delivered'].includes(o.status))
 
-  return (
-    <div className="h-screen bg-background flex overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-[240px] bg-card border-r border-border/70 flex-shrink-0 flex flex-col">
-        <div className="px-4 pb-0 pt-7 flex items-center pb-2">
-          <div className="px-2">
-            <a href="/" className="flex items-center gap-2.5 h-9">
-              <ConvosLogo size={26} />
-              <span className="text-base font-bold tracking-tight">Convos</span>
-            </a>
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <h1 className="text-2xl font-bold">Shipments</h1>
+            <p className="text-muted-foreground text-sm mt-1">{shipments.length} active shipments</p>
           </div>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-4 py-6">
-          {SIDEBAR_ITEMS.map(group => (
-            <div key={group.section} className="mb-8 last:mb-0">
-              <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/50">{group.section}</p>
-              <div className="space-y-1">
-                {group.items.map(item => (
+        {shipments.length === 0 ? (
+          <EmptyState icon={Truck} title="No shipments" description="Shipments will appear here when orders move to processing." />
+        ) : (
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Order</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Customer</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Carrier</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Tracking</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium uppercase text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-center text-xs font-medium uppercase text-muted-foreground">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {shipments.map(shipment => (
+                    <tr key={shipment.id} className="border-b border-border hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <div className="font-medium text-sm">{shipment.order_number}</div>
+                        <div className="text-xs text-muted-foreground">{new Date(shipment.created_at).toLocaleDateString()}</div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">{shipment.shipping_address?.name || 'N/A'}</td>
+                      <td className="px-4 py-3 text-sm">{shipment.carrier || <span className="text-muted-foreground">Not set</span>}</td>
+                      <td className="px-4 py-3">
+                        {shipment.tracking_number ? (
+                          <code className="text-xs bg-muted px-2 py-1 rounded">{shipment.tracking_number}</code>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Not set</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={shipment.status === 'delivered' ? 'default' : 'secondary'}>
+                          {shipment.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Button size="sm" variant="ghost" onClick={() => setShipmentModal({ open: true, order: shipment })}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  const renderStoreDesign = () => (
+    <div>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-2xl font-bold">Store Design</h1>
+          <p className="text-muted-foreground text-sm mt-1">Customize your store appearance and AI assistant</p>
+        </div>
+        <Button size="sm" onClick={() => updateStoreConfig(storeConfig)} disabled={loading}>
+          {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Check className="w-4 h-4 mr-2" />}
+          Save Changes
+        </Button>
+      </div>
+
+      {storeConfig && (
+        <Tabs defaultValue="general" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="ai">AI Assistant</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            <div className="bg-card rounded-xl p-6 border border-border space-y-4">
+              <div>
+                <Label>Store Name</Label>
+                <Input value={storeConfig.name || ''} onChange={(e) => setStoreConfig({...storeConfig, name: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label>Tagline</Label>
+                <Input value={storeConfig.tagline || ''} onChange={(e) => setStoreConfig({...storeConfig, tagline: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea value={storeConfig.description || ''} onChange={(e) => setStoreConfig({...storeConfig, description: e.target.value})} className="mt-1" rows={3} />
+              </div>
+              <div>
+                <Label>Banner Text</Label>
+                <Input value={storeConfig.banner || ''} onChange={(e) => setStoreConfig({...storeConfig, banner: e.target.value})} className="mt-1" />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ai">
+            <div className="bg-card rounded-xl p-6 border border-border space-y-4">
+              <div>
+                <Label>AI Assistant Name</Label>
+                <Input value={storeConfig.ai_name || ''} onChange={(e) => setStoreConfig({...storeConfig, ai_name: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label>Greeting Message</Label>
+                <Textarea value={storeConfig.ai_greeting || ''} onChange={(e) => setStoreConfig({...storeConfig, ai_greeting: e.target.value})} className="mt-1" rows={3} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="appearance">
+            <div className="bg-card rounded-xl p-6 border border-border space-y-4">
+              <div>
+                <Label>Hero Image URL</Label>
+                <Input value={storeConfig.hero_image || ''} onChange={(e) => setStoreConfig({...storeConfig, hero_image: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label>Logo URL</Label>
+                <Input value={storeConfig.logo_url || ''} onChange={(e) => setStoreConfig({...storeConfig, logo_url: e.target.value})} className="mt-1" />
+              </div>
+              <div>
+                <Label>Store Status</Label>
+                <Select value={storeConfig.status || 'live'} onValueChange={(v) => setStoreConfig({...storeConfig, status: v})}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="live">Live</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="closed">Closed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
+  )
+
+  const renderConversations = () => (
+    <div>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-2xl font-bold">Live Intent Stream</h1>
+          <p className="text-muted-foreground text-sm mt-1">Real-time customer activity and AI interactions</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchData}>
+          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
+        </Button>
+      </div>
+
+      {intents.length === 0 ? (
+        <EmptyState icon={Activity} title="No activity yet" description="Customer interactions will appear here in real-time." />
+      ) : (
+        <div className="space-y-2">
+          {intents.map((intent, i) => {
+            const typeColors = {
+              search: 'bg-blue-100 text-blue-700',
+              add_to_cart: 'bg-emerald-100 text-emerald-700',
+              negotiate: 'bg-purple-100 text-purple-700',
+              checkout: 'bg-amber-100 text-amber-700',
+              message: 'bg-gray-100 text-gray-700',
+              mission_create: 'bg-pink-100 text-pink-700'
+            }
+            return (
+              <div key={i} className="bg-card rounded-lg p-4 border border-border flex items-start gap-3 hover:bg-muted/20 transition-colors">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${typeColors[intent.type] || 'bg-gray-100 text-gray-700'}`}>
+                  {intent.type === 'search' ? <Search className="w-4 h-4" /> :
+                   intent.type === 'add_to_cart' ? <ShoppingCart className="w-4 h-4" /> :
+                   intent.type === 'negotiate' ? <DollarSign className="w-4 h-4" /> :
+                   intent.type === 'checkout' ? <CheckCircle className="w-4 h-4" /> :
+                   intent.type === 'mission_create' ? <Activity className="w-4 h-4" /> :
+                   <MessageSquare className="w-4 h-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm">{intent.description}</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {new Date(intent.timestamp).toLocaleString()} • Session: {intent.session_id?.slice(0, 8)}...
+                  </div>
+                </div>
+                <Badge variant="outline" className="text-[10px] shrink-0">{intent.type}</Badge>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+
+  // ═══════════════════════════════════════════
+  // MODALS
+  // ═══════════════════════════════════════════
+
+  const ProductModal = () => {
+    const [form, setForm] = useState(productModal.data || {
+      name: '', description: '', price: '', compare_at_price: '', category: 'Single Origin',
+      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop',
+      stock: '', bargain_enabled: true, bargain_min_price: '', tags: [], weight: ''
+    })
+
+    return (
+      <Dialog open={productModal.open} onOpenChange={(open) => !open && setProductModal({ open: false, mode: 'create', data: null })}>
+        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{productModal.mode === 'edit' ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogDescription>
+              {productModal.mode === 'edit' ? 'Update the product details below.' : 'Fill in the details to add a new product.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Label>Product Name *</Label>
+                <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="mt-1" placeholder="e.g. Ethiopian Yirgacheffe" />
+              </div>
+              <div className="col-span-2">
+                <Label>Description</Label>
+                <Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} className="mt-1" rows={3} placeholder="Product description..." />
+              </div>
+              <div>
+                <Label>Price *</Label>
+                <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} className="mt-1" placeholder="0.00" />
+              </div>
+              <div>
+                <Label>Compare at Price</Label>
+                <Input type="number" step="0.01" value={form.compare_at_price} onChange={(e) => setForm({...form, compare_at_price: e.target.value})} className="mt-1" placeholder="0.00" />
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select value={form.category || 'Single Origin'} onValueChange={(v) => setForm({...form, category: v})}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Stock</Label>
+                <Input type="number" value={form.stock} onChange={(e) => setForm({...form, stock: e.target.value})} className="mt-1" placeholder="0" />
+              </div>
+              <div className="col-span-2">
+                <Label>Image URL</Label>
+                <Input value={form.image} onChange={(e) => setForm({...form, image: e.target.value})} className="mt-1" placeholder="https://..." />
+              </div>
+              <div>
+                <Label>Weight</Label>
+                <Input value={form.weight} onChange={(e) => setForm({...form, weight: e.target.value})} className="mt-1" placeholder="e.g. 340g" />
+              </div>
+              <div>
+                <Label>Min Bargain Price</Label>
+                <Input type="number" step="0.01" value={form.bargain_min_price} onChange={(e) => setForm({...form, bargain_min_price: e.target.value})} className="mt-1" placeholder="0.00" />
+              </div>
+              <div className="col-span-2 flex items-center gap-2">
+                <Switch checked={form.bargain_enabled ?? true} onCheckedChange={(v) => setForm({...form, bargain_enabled: v})} />
+                <Label>Enable price negotiation</Label>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProductModal({ open: false, mode: 'create', data: null })}>Cancel</Button>
+            <Button onClick={() => saveProduct(form)} disabled={loading || !form.name || !form.price}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {productModal.mode === 'edit' ? 'Update Product' : 'Create Product'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  const OrderDetailModal = () => {
+    const order = orderDetailModal.order
+    if (!order) return null
+
+    return (
+      <Dialog open={orderDetailModal.open} onOpenChange={(open) => !open && setOrderDetailModal({ open: false, order: null })}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Order {order.order_number}</DialogTitle>
+            <DialogDescription>
+              Created on {new Date(order.created_at).toLocaleDateString()} at {new Date(order.created_at).toLocaleTimeString()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-muted/50 rounded-lg p-3">
+                <div className="text-xs text-muted-foreground">Status</div>
+                <Badge className="mt-1">{order.status}</Badge>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3">
+                <div className="text-xs text-muted-foreground">Payment</div>
+                <Badge variant="outline" className="mt-1">{order.payment_status}</Badge>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Items</h4>
+              <div className="space-y-2">
+                {(order.items || []).map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 bg-muted/30 rounded-lg p-2">
+                    {item.image && <img src={item.image} alt={item.name} className="w-10 h-10 rounded object-cover" />}
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{item.name}</div>
+                      <div className="text-xs text-muted-foreground">Qty: {item.quantity}</div>
+                    </div>
+                    <div className="text-sm font-bold">${(item.price * item.quantity).toFixed(2)}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-1 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>${(order.subtotal || 0).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Shipping</span><span>${(order.shipping || 0).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Tax</span><span>${(order.tax || 0).toFixed(2)}</span></div>
+              <Separator />
+              <div className="flex justify-between font-bold text-base"><span>Total</span><span>${parseFloat(order.total || 0).toFixed(2)}</span></div>
+            </div>
+
+            {order.shipping_address && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">Shipping Address</h4>
+                  <div className="text-sm text-muted-foreground">
+                    <div>{order.shipping_address.name}</div>
+                    <div>{order.shipping_address.street}</div>
+                    <div>{order.shipping_address.city}, {order.shipping_address.state} {order.shipping_address.zip}</div>
+                    <div>{order.shipping_address.country}</div>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {(order.tracking_number || order.carrier) && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">Tracking</h4>
+                  <div className="text-sm text-muted-foreground">
+                    {order.carrier && <div>Carrier: {order.carrier}</div>}
+                    {order.tracking_number && <div>Tracking: <code className="bg-muted px-1 rounded">{order.tracking_number}</code></div>}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {order.notes && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Notes</h4>
+                  <p className="text-sm text-muted-foreground">{order.notes}</p>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  const CampaignModal = () => {
+    const [form, setForm] = useState(campaignModal.data || {
+      name: '', description: '', type: 'email', status: 'draft', audience_count: '',
+      content: { subject: '', body: '', cta: '' }
+    })
+
+    return (
+      <Dialog open={campaignModal.open} onOpenChange={(open) => !open && setCampaignModal({ open: false, mode: 'create', data: null })}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{campaignModal.mode === 'edit' ? 'Edit Campaign' : 'Create Campaign'}</DialogTitle>
+            <DialogDescription>
+              {campaignModal.mode === 'edit' ? 'Update the campaign details.' : 'Set up a new marketing campaign.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Campaign Name *</Label>
+              <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="mt-1" placeholder="e.g. Summer Sale" />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} className="mt-1" rows={2} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Type</Label>
+                <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="sms">SMS</SelectItem>
+                    <SelectItem value="push">Push Notification</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({...form, status: v})}>
+                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="paused">Paused</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Audience Count</Label>
+              <Input type="number" value={form.audience_count} onChange={(e) => setForm({...form, audience_count: e.target.value})} className="mt-1" placeholder="0" />
+            </div>
+            <Separator />
+            <h4 className="font-semibold text-sm">Content</h4>
+            <div>
+              <Label>Subject Line</Label>
+              <Input value={form.content?.subject || ''} onChange={(e) => setForm({...form, content: {...(form.content || {}), subject: e.target.value}})} className="mt-1" placeholder="Email subject..." />
+            </div>
+            <div>
+              <Label>Body</Label>
+              <Textarea value={form.content?.body || ''} onChange={(e) => setForm({...form, content: {...(form.content || {}), body: e.target.value}})} className="mt-1" rows={3} placeholder="Campaign body..." />
+            </div>
+            <div>
+              <Label>CTA Button Text</Label>
+              <Input value={form.content?.cta || ''} onChange={(e) => setForm({...form, content: {...(form.content || {}), cta: e.target.value}})} className="mt-1" placeholder="e.g. Shop Now" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCampaignModal({ open: false, mode: 'create', data: null })}>Cancel</Button>
+            <Button onClick={() => saveCampaign(form)} disabled={loading || !form.name}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {campaignModal.mode === 'edit' ? 'Update' : 'Create'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  const ReviewReplyModal = () => {
+    const [replyText, setReplyText] = useState(reviewModal.review?.merchant_reply || '')
+
+    return (
+      <Dialog open={reviewModal.open} onOpenChange={(open) => !open && setReviewModal({ open: false, review: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reply to Review</DialogTitle>
+            <DialogDescription>
+              Respond to {reviewModal.review?.author_name}'s review
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="bg-muted/50 rounded-lg p-3">
+              <div className="flex items-center gap-1 mb-1">
+                {[1,2,3,4,5].map(i => (
+                  <Star key={i} className={`w-3 h-3 ${i <= (reviewModal.review?.rating || 0) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                ))}
+              </div>
+              <div className="text-sm">{reviewModal.review?.content}</div>
+            </div>
+            <div>
+              <Label>Your Reply</Label>
+              <Textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} className="mt-1" rows={3} placeholder="Thank you for your feedback..." />
+            </div>
+            <div>
+              <Label className="text-xs">Review Status</Label>
+              <div className="flex gap-2 mt-1">
+                <Button size="sm" variant={reviewModal.review?.status === 'published' ? 'default' : 'outline'} onClick={() => updateReview(reviewModal.review?.id, { status: 'published', merchant_reply: replyText })}>
+                  <Check className="w-3 h-3 mr-1" /> Publish
+                </Button>
+                <Button size="sm" variant={reviewModal.review?.status === 'rejected' ? 'destructive' : 'outline'} onClick={() => updateReview(reviewModal.review?.id, { status: 'rejected', merchant_reply: replyText })}>
+                  <X className="w-3 h-3 mr-1" /> Reject
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewModal({ open: false, review: null })}>Cancel</Button>
+            <Button onClick={() => updateReview(reviewModal.review?.id, { merchant_reply: replyText })} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
+              Save Reply
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  const ShipmentEditModal = () => {
+    const [form, setForm] = useState({
+      carrier: shipmentModal.order?.carrier || '',
+      tracking_number: shipmentModal.order?.tracking_number || '',
+      status: shipmentModal.order?.status || 'processing',
+      notes: shipmentModal.order?.notes || ''
+    })
+
+    return (
+      <Dialog open={shipmentModal.open} onOpenChange={(open) => !open && setShipmentModal({ open: false, order: null })}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Update Shipment</DialogTitle>
+            <DialogDescription>
+              {shipmentModal.order?.order_number} — {shipmentModal.order?.shipping_address?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label>Carrier</Label>
+              <Select value={form.carrier || 'none'} onValueChange={(v) => setForm({...form, carrier: v === 'none' ? '' : v})}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select carrier" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Select carrier</SelectItem>
+                  <SelectItem value="UPS">UPS</SelectItem>
+                  <SelectItem value="USPS">USPS</SelectItem>
+                  <SelectItem value="FedEx">FedEx</SelectItem>
+                  <SelectItem value="DHL">DHL</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Tracking Number</Label>
+              <Input value={form.tracking_number} onChange={(e) => setForm({...form, tracking_number: e.target.value})} className="mt-1" placeholder="Enter tracking number" />
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(v) => setForm({...form, status: v})}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="processing">Processing</SelectItem>
+                  <SelectItem value="shipped">Shipped</SelectItem>
+                  <SelectItem value="delivered">Delivered</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea value={form.notes} onChange={(e) => setForm({...form, notes: e.target.value})} className="mt-1" rows={2} placeholder="Internal notes..." />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShipmentModal({ open: false, order: null })}>Cancel</Button>
+            <Button onClick={() => updateShipment(shipmentModal.order?.id, form)} disabled={loading}>
+              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Update Shipment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  const CustomerDetailModal = () => {
+    const customer = customerModal.customer
+    if (!customer) return null
+
+    return (
+      <Dialog open={customerModal.open} onOpenChange={(open) => !open && setCustomerModal({ open: false, customer: null })}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Customer Profile</DialogTitle>
+            <DialogDescription>Session #{customer.session_id?.slice(0, 12)}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <div className="text-xs text-muted-foreground">Trust Score</div>
+                <div className="text-2xl font-bold text-emerald-600">{customer.trust_score || 80}</div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <div className="text-xs text-muted-foreground">Risk Level</div>
+                <div className="text-2xl font-bold capitalize">{customer.risk_level || 'low'}</div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <div className="text-xs text-muted-foreground">Total Spent</div>
+                <div className="text-2xl font-bold">${(customer.total_spent || 0).toFixed(2)}</div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-3 text-center">
+                <div className="text-xs text-muted-foreground">Total Orders</div>
+                <div className="text-2xl font-bold">{customer.total_orders || 0}</div>
+              </div>
+            </div>
+            <div className="text-sm">
+              <div className="flex justify-between py-1"><span className="text-muted-foreground">Interactions</span><span className="font-medium">{customer.interactions || 0}</span></div>
+              <div className="flex justify-between py-1"><span className="text-muted-foreground">First Seen</span><span className="font-medium">{customer.created_at ? new Date(customer.created_at).toLocaleDateString() : 'N/A'}</span></div>
+              <div className="flex justify-between py-1"><span className="text-muted-foreground">Last Active</span><span className="font-medium">{customer.updated_at ? new Date(customer.updated_at).toLocaleDateString() : 'N/A'}</span></div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    )
+  }
+
+  // ═══════════════════════════════════════════
+  // MAIN RENDER
+  // ═══════════════════════════════════════════
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'home': return renderHome()
+      case 'orders': return renderOrders()
+      case 'catalog': return renderCatalog()
+      case 'customers': return renderCustomers()
+      case 'reviews': return renderReviews()
+      case 'campaigns': return renderCampaigns()
+      case 'shipments': return renderShipments()
+      case 'store-design': return renderStoreDesign()
+      case 'conversations': return renderConversations()
+      default: return <div>Section not found</div>
+    }
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) return null
+
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <aside className="w-60 border-r border-border bg-card flex flex-col shrink-0">
+        <div className="p-4 border-b border-border">
+          <h1 className="text-lg font-bold text-primary">Convos</h1>
+          <p className="text-[11px] text-muted-foreground">Merchant Command Center</p>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto p-3 space-y-5">
+          {SIDEBAR_ITEMS.map((section) => (
+            <div key={section.section}>
+              <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5 px-2">{section.section}</div>
+              <div className="space-y-0.5">
+                {section.items.map((item) => (
                   <button
                     key={item.key}
                     onClick={() => setActiveSection(item.key)}
-                    className={`w-full group flex h-11 items-center gap-3.5 rounded-xl px-3 transition-all duration-200 ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${
                       activeSection === item.key
-                        ? 'bg-accent/90 text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                     }`}
                   >
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
-                      activeSection === item.key
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground/80 group-hover:text-foreground'
-                    }`}>
-                      <item.icon className="h-[18px] w-[18px]" />
-                    </div>
-                    <span className={`truncate text-[14px] tracking-tight ${
-                      activeSection === item.key ? 'font-bold' : 'font-semibold'
-                    }`}>{item.label}</span>
-                    {activeSection === item.key && <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/80 ml-auto" />}
+                    <item.icon className="w-4 h-4" />
+                    {item.label}
+                    {item.key === 'reviews' && reviews.filter(r => r.status === 'pending').length > 0 && (
+                      <span className="ml-auto bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                        {reviews.filter(r => r.status === 'pending').length}
+                      </span>
+                    )}
+                    {item.key === 'orders' && orders.filter(o => o.status === 'pending').length > 0 && (
+                      <span className="ml-auto bg-amber-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                        {orders.filter(o => o.status === 'pending').length}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
           ))}
         </nav>
+
+        <div className="p-3 border-t border-border">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              localStorage.removeItem('user')
+              window.location.href = '/merchant/login'
+            }}
+          >
+            <LogOut className="w-4 h-4 mr-2" /> Logout
+          </Button>
+        </div>
       </aside>
 
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        <header className="h-14 border-b border-border/70 bg-card/90 backdrop-blur-md flex items-center justify-between px-5 sticky top-0 z-30 gap-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search orders, missions, intelligence..." className="pl-9 h-9 rounded-xl bg-secondary/40 border-border/70 text-sm" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/70 bg-secondary/30">
-              <span className="text-sm font-semibold tracking-tight truncate max-w-[140px]">Artisan Coffee Roasters</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-500">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Live
-              </span>
-            </div>
-            <a href="/store">
-              <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold border-border/70">
-                <Globe className="w-3.5 h-3.5 mr-1.5" /> View Store
-              </Button>
-            </a>
-            <a href="/merchant/login">
-              <Button variant="ghost" size="sm" className="rounded-xl h-9 text-xs font-semibold text-muted-foreground hover:text-foreground">
-                Log out
-              </Button>
-            </a>
-          </div>
-        </header>
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto">
+        <div className="p-6 max-w-6xl">
+          {renderContent()}
+        </div>
+      </main>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-[1440px] px-4 py-5 pb-8 sm:px-6 lg:px-8">
-            {renderContent()}
-          </div>
-        </main>
-      </div>
+      {/* Modals */}
+      <ProductModal />
+      <OrderDetailModal />
+      <CampaignModal />
+      <ReviewReplyModal />
+      <ShipmentEditModal />
+      <CustomerDetailModal />
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onClose={() => setDeleteConfirm({ open: false, type: '', id: '', name: '' })}
+        onConfirm={handleDelete}
+        title={`Delete ${deleteConfirm.type}?`}
+        description={`Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.`}
+        loading={loading}
+      />
+
+      {/* Toast */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }
-
-export default MerchantDashboard;

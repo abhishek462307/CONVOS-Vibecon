@@ -198,7 +198,6 @@ async function callAI(conversationMsgs) {
   const apiKey = process.env.AZURE_OPENAI_API_KEY
   const url = `${baseUrl}/openai/deployments/${model}/chat/completions?api-version=2025-04-01-preview`
 
-  // Ensure all tool_calls have type: 'function'
   const messages = conversationMsgs.map(m => {
     if (m.tool_calls) {
       return {
@@ -229,7 +228,6 @@ async function callAI(conversationMsgs) {
 }
 
 function parseAIResponse(data) {
-  // Chat Completions format
   if (data.choices && data.choices.length > 0) {
     const msg = data.choices[0].message
     if (msg.tool_calls && msg.tool_calls.length > 0) {
@@ -244,7 +242,6 @@ function parseAIResponse(data) {
     }
     return { type: 'text', content: msg.content || 'How can I help you today?' }
   }
-  // Responses API format (fallback)
   if (data.output && Array.isArray(data.output)) {
     const textParts = []
     const toolCalls = []
@@ -438,13 +435,18 @@ async function handleRoute(request, { params }) {
       return corsResponse(STORE_CONFIG)
     }
 
-    // ─── Products ───
+    // ═══════════════════════════════════════════
+    // PRODUCTS - FULL CRUD
+    // ═══════════════════════════════════════════
+
+    // GET /api/products - List all products
     if (route === '/products' && method === 'GET') {
       const products = await db.collection('products').find({ status: { $ne: 'deleted' } }).toArray()
       return corsResponse(products.map(({ _id, ...p }) => p))
     }
 
-    if (route.startsWith('/products/') && method === 'GET') {
+    // GET /api/products/:id - Get single product
+    if (route.match(/^\/products\/[^/]+$/) && !route.includes('/seed') && method === 'GET') {
       const productId = route.split('/')[2]
       const product = await db.collection('products').findOne({ id: productId })
       if (!product) return corsResponse({ error: 'Product not found' }, 404)
@@ -452,6 +454,74 @@ async function handleRoute(request, { params }) {
       return corsResponse(clean)
     }
 
+    // POST /api/products - Create new product
+    if (route === '/products' && method === 'POST') {
+      const body = await request.json()
+      const product = {
+        id: uuidv4(),
+        name: body.name || 'Untitled Product',
+        description: body.description || '',
+        price: parseFloat(body.price) || 0,
+        compare_at_price: parseFloat(body.compare_at_price) || 0,
+        category: body.category || 'Uncategorized',
+        image: body.image || 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop',
+        stock: parseInt(body.stock) || 0,
+        bargain_enabled: body.bargain_enabled ?? true,
+        bargain_min_price: parseFloat(body.bargain_min_price) || parseFloat(body.price) * 0.8 || 0,
+        tags: body.tags || [],
+        weight: body.weight || '',
+        status: body.status || 'active',
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+      await db.collection('products').insertOne(product)
+      const { _id, ...clean } = product
+      return corsResponse(clean, 201)
+    }
+
+    // PUT /api/products/:id - Update product
+    if (route.match(/^\/products\/[^/]+$/) && !route.includes('/seed') && method === 'PUT') {
+      const productId = route.split('/')[2]
+      const body = await request.json()
+      
+      const updateFields = {}
+      if (body.name !== undefined) updateFields.name = body.name
+      if (body.description !== undefined) updateFields.description = body.description
+      if (body.price !== undefined) updateFields.price = parseFloat(body.price)
+      if (body.compare_at_price !== undefined) updateFields.compare_at_price = parseFloat(body.compare_at_price)
+      if (body.category !== undefined) updateFields.category = body.category
+      if (body.image !== undefined) updateFields.image = body.image
+      if (body.stock !== undefined) updateFields.stock = parseInt(body.stock)
+      if (body.bargain_enabled !== undefined) updateFields.bargain_enabled = body.bargain_enabled
+      if (body.bargain_min_price !== undefined) updateFields.bargain_min_price = parseFloat(body.bargain_min_price)
+      if (body.tags !== undefined) updateFields.tags = body.tags
+      if (body.weight !== undefined) updateFields.weight = body.weight
+      if (body.status !== undefined) updateFields.status = body.status
+      updateFields.updated_at = new Date()
+
+      const result = await db.collection('products').updateOne(
+        { id: productId },
+        { $set: updateFields }
+      )
+      if (result.matchedCount === 0) return corsResponse({ error: 'Product not found' }, 404)
+      
+      const updated = await db.collection('products').findOne({ id: productId })
+      const { _id, ...clean } = updated
+      return corsResponse(clean)
+    }
+
+    // DELETE /api/products/:id - Soft delete product
+    if (route.match(/^\/products\/[^/]+$/) && method === 'DELETE') {
+      const productId = route.split('/')[2]
+      const result = await db.collection('products').updateOne(
+        { id: productId },
+        { $set: { status: 'deleted', updated_at: new Date() } }
+      )
+      if (result.matchedCount === 0) return corsResponse({ error: 'Product not found' }, 404)
+      return corsResponse({ success: true, message: 'Product deleted' })
+    }
+
+    // POST /api/products/seed - Seed demo products
     if (route === '/products/seed' && method === 'POST') {
       const existing = await db.collection('products').countDocuments()
       if (existing >= 10 && existing <= 15) return corsResponse({ message: 'Products already seeded', count: existing })
@@ -467,23 +537,18 @@ async function handleRoute(request, { params }) {
       const { session_id, message } = body
       if (!session_id || !message) return corsResponse({ error: 'session_id and message required' }, 400)
 
-      // Get or create conversation
       let conv = await db.collection('conversations').findOne({ session_id })
       if (!conv) {
         conv = { id: uuidv4(), session_id, messages: [], cart: [], created_at: new Date(), updated_at: new Date() }
         await db.collection('conversations').insertOne(conv)
       }
 
-      // Ensure consumer profile exists
       await updateConsumerProfile(db, session_id, { action: 'message' })
 
-      // Add user message
       conv.messages.push({ role: 'user', content: message, timestamp: new Date() })
       await logIntent(db, session_id, 'message', `Buyer: "${message.substring(0, 100)}"`, {})
 
-      // Build messages for AI
       const aiMessages = [{ role: 'system', content: SYSTEM_PROMPT }]
-      // Keep last 20 messages for context
       const recentMsgs = conv.messages.slice(-20)
       for (const m of recentMsgs) {
         if (m.role === 'assistant' && m.tool_calls) {
@@ -495,7 +560,6 @@ async function handleRoute(request, { params }) {
         }
       }
 
-      // Tool-calling loop
       let finalText = ''
       let productsFound = []
       let missionCreated = null
@@ -514,18 +578,15 @@ async function handleRoute(request, { params }) {
         }
 
         if (parsed.type === 'tool_calls') {
-          // Store assistant message with tool calls
           const assistantMsg = { role: 'assistant', content: parsed.partial_text || null, tool_calls: parsed.tool_calls, timestamp: new Date() }
           conv.messages.push(assistantMsg)
           aiMessages.push({ role: 'assistant', content: parsed.partial_text || null, tool_calls: parsed.tool_calls })
 
-          // Execute each tool
           for (const tc of parsed.tool_calls) {
             const toolResult = await executeTool(tc.function.name, tc.function.arguments, db, session_id)
             conv.messages.push({ role: 'tool', tool_call_id: tc.id, content: toolResult, timestamp: new Date() })
             aiMessages.push({ role: 'tool', tool_call_id: tc.id, content: toolResult })
 
-            // Extract structured data for frontend
             try {
               const result = JSON.parse(toolResult)
               if (result.products) productsFound = result.products
@@ -542,17 +603,14 @@ async function handleRoute(request, { params }) {
 
       if (!finalText) finalText = 'I\'ve processed your request. What would you like to do next?'
 
-      // Get updated cart
       const updatedConv = await db.collection('conversations').findOne({ session_id })
       const currentCart = updatedConv?.cart || conv.cart || []
 
-      // Save conversation
       await db.collection('conversations').updateOne(
         { session_id },
         { $set: { messages: conv.messages, updated_at: new Date() } }
       )
 
-      // Get active missions for this session
       const missions = await db.collection('missions').find({ session_id, status: 'active' }).toArray()
 
       return corsResponse({
@@ -606,7 +664,6 @@ async function handleRoute(request, { params }) {
       const body = await request.json()
       const { session_id, items, orderId, customerEmail } = body
       
-      // Support both old (conversation-based) and new (direct items) cart
       let cart = items || []
       if (!cart.length && session_id) {
         const conv = await db.collection('conversations').findOne({ session_id })
@@ -668,7 +725,7 @@ async function handleRoute(request, { params }) {
         id: uuidv4(),
         name: body.name,
         email: body.email,
-        password: body.password, // In production, hash this!
+        password: body.password,
         type: body.type || 'customer',
         created_at: new Date()
       }
@@ -709,7 +766,9 @@ async function handleRoute(request, { params }) {
       return corsResponse({ success: true, user: userWithoutPassword })
     }
 
-    // ─── Stats (Merchant) ───
+    // ═══════════════════════════════════════════
+    // STATS (Merchant Dashboard)
+    // ═══════════════════════════════════════════
     if (route === '/stats' && method === 'GET') {
       const totalProducts = await db.collection('products').countDocuments({ status: { $ne: 'deleted' } })
       const totalConversations = await db.collection('conversations').countDocuments()
@@ -724,20 +783,62 @@ async function handleRoute(request, { params }) {
         { $match: { payment_status: 'paid' } },
         { $group: { _id: null, total: { $sum: '$total' } } }
       ]).toArray()
+      
+      // Order status breakdown
+      const pendingOrders = await db.collection('orders').countDocuments({ status: 'pending' })
+      const processingOrders = await db.collection('orders').countDocuments({ status: 'processing' })
+      const shippedOrders = await db.collection('orders').countDocuments({ status: 'shipped' })
+      const deliveredOrders = await db.collection('orders').countDocuments({ status: 'delivered' })
+      
+      // Reviews stats
+      const totalReviews = await db.collection('reviews').countDocuments()
+      const pendingReviews = await db.collection('reviews').countDocuments({ status: 'pending' })
+      const avgRating = await db.collection('reviews').aggregate([
+        { $group: { _id: null, avg: { $avg: '$rating' } } }
+      ]).toArray()
+
       return corsResponse({ 
         totalProducts, totalConversations, totalMissions, activeMissions, 
         totalIntents, recentIntents, avgTrustScore: parseFloat(avgTrust), 
         totalBuyers: profiles.length, totalOrders,
-        totalRevenue: totalRevenue[0]?.total || 0
+        totalRevenue: totalRevenue[0]?.total || 0,
+        pendingOrders, processingOrders, shippedOrders, deliveredOrders,
+        totalReviews, pendingReviews,
+        avgRating: avgRating[0]?.avg?.toFixed(1) || '0.0'
       })
     }
 
-    // ─── Orders ───
+    // ═══════════════════════════════════════════
+    // ORDERS - FULL CRUD
+    // ═══════════════════════════════════════════
+
+    // GET /api/orders - List all orders
     if (route === '/orders' && method === 'GET') {
-      const orders = await db.collection('orders').find({}).sort({ created_at: -1 }).limit(100).toArray()
+      const status = request.nextUrl.searchParams.get('status')
+      const search = request.nextUrl.searchParams.get('search')
+      const filter = {}
+      if (status && status !== 'all') filter.status = status
+      if (search) {
+        filter.$or = [
+          { order_number: { $regex: search, $options: 'i' } },
+          { 'shipping_address.name': { $regex: search, $options: 'i' } },
+          { 'shipping_address.email': { $regex: search, $options: 'i' } }
+        ]
+      }
+      const orders = await db.collection('orders').find(filter).sort({ created_at: -1 }).limit(100).toArray()
       return corsResponse(orders.map(({ _id, ...o }) => o))
     }
 
+    // GET /api/orders/:id - Get single order
+    if (route.match(/^\/orders\/[^/]+$/) && method === 'GET') {
+      const orderId = route.split('/')[2]
+      const order = await db.collection('orders').findOne({ id: orderId })
+      if (!order) return corsResponse({ error: 'Order not found' }, 404)
+      const { _id, ...clean } = order
+      return corsResponse(clean)
+    }
+
+    // POST /api/orders - Create order
     if (route === '/orders' && method === 'POST') {
       const body = await request.json()
       const order = {
@@ -760,20 +861,42 @@ async function handleRoute(request, { params }) {
         updated_at: new Date()
       }
       await db.collection('orders').insertOne(order)
-      return corsResponse(order, 201)
+      const { _id, ...clean } = order
+      return corsResponse(clean, 201)
     }
 
-    if (route.startsWith('/orders/') && method === 'PUT') {
+    // PUT /api/orders/:id - Update order
+    if (route.match(/^\/orders\/[^/]+$/) && method === 'PUT') {
       const orderId = route.split('/')[2]
       const body = await request.json()
-      await db.collection('orders').updateOne(
+      const updateFields = { ...body, updated_at: new Date() }
+      delete updateFields.id
+      delete updateFields._id
+      
+      const result = await db.collection('orders').updateOne(
         { id: orderId },
-        { $set: { ...body, updated_at: new Date() } }
+        { $set: updateFields }
       )
-      return corsResponse({ success: true })
+      if (result.matchedCount === 0) return corsResponse({ error: 'Order not found' }, 404)
+      
+      const updated = await db.collection('orders').findOne({ id: orderId })
+      const { _id, ...clean } = updated
+      return corsResponse(clean)
     }
 
-    // ─── Shipments ───
+    // DELETE /api/orders/:id - Delete order
+    if (route.match(/^\/orders\/[^/]+$/) && method === 'DELETE') {
+      const orderId = route.split('/')[2]
+      const result = await db.collection('orders').deleteOne({ id: orderId })
+      if (result.deletedCount === 0) return corsResponse({ error: 'Order not found' }, 404)
+      return corsResponse({ success: true, message: 'Order deleted' })
+    }
+
+    // ═══════════════════════════════════════════
+    // SHIPMENTS
+    // ═══════════════════════════════════════════
+
+    // GET /api/shipments - List shipments
     if (route === '/shipments' && method === 'GET') {
       const shipments = await db.collection('orders').find({
         status: { $in: ['processing', 'shipped', 'delivered'] }
@@ -781,25 +904,38 @@ async function handleRoute(request, { params }) {
       return corsResponse(shipments.map(({ _id, ...s }) => s))
     }
 
-    if (route.startsWith('/shipments/') && method === 'PUT') {
+    // PUT /api/shipments/:id - Update shipment tracking
+    if (route.match(/^\/shipments\/[^/]+$/) && method === 'PUT') {
       const orderId = route.split('/')[2]
       const body = await request.json()
-      await db.collection('orders').updateOne(
+      const updateFields = { updated_at: new Date() }
+      if (body.tracking_number !== undefined) updateFields.tracking_number = body.tracking_number
+      if (body.carrier !== undefined) updateFields.carrier = body.carrier
+      if (body.status !== undefined) updateFields.status = body.status
+      if (body.notes !== undefined) updateFields.notes = body.notes
+
+      const result = await db.collection('orders').updateOne(
         { id: orderId },
-        { $set: { 
-          tracking_number: body.tracking_number,
-          carrier: body.carrier,
-          status: body.status || 'shipped',
-          updated_at: new Date()
-        }}
+        { $set: updateFields }
       )
-      return corsResponse({ success: true })
+      if (result.matchedCount === 0) return corsResponse({ error: 'Shipment not found' }, 404)
+      
+      const updated = await db.collection('orders').findOne({ id: orderId })
+      const { _id, ...clean } = updated
+      return corsResponse(clean)
     }
 
-    // ─── Reviews ───
+    // ═══════════════════════════════════════════
+    // REVIEWS - FULL CRUD
+    // ═══════════════════════════════════════════
+
+    // GET /api/reviews - List reviews
     if (route === '/reviews' && method === 'GET') {
-      const reviews = await db.collection('reviews').find({}).sort({ created_at: -1 }).limit(100).toArray()
-      // Populate product info
+      const status = request.nextUrl.searchParams.get('status')
+      const filter = {}
+      if (status && status !== 'all') filter.status = status
+      
+      const reviews = await db.collection('reviews').find(filter).sort({ created_at: -1 }).limit(100).toArray()
       const reviewsWithProducts = await Promise.all(reviews.map(async (r) => {
         if (r.product_id) {
           const product = await db.collection('products').findOne({ id: r.product_id })
@@ -810,6 +946,7 @@ async function handleRoute(request, { params }) {
       return corsResponse(reviewsWithProducts)
     }
 
+    // POST /api/reviews - Create review
     if (route === '/reviews' && method === 'POST') {
       const body = await request.json()
       const review = {
@@ -820,24 +957,49 @@ async function handleRoute(request, { params }) {
         rating: body.rating,
         title: body.title || '',
         content: body.content || '',
-        status: body.status || 'published',
-        created_at: new Date()
+        merchant_reply: body.merchant_reply || null,
+        status: body.status || 'pending',
+        created_at: new Date(),
+        updated_at: new Date()
       }
       await db.collection('reviews').insertOne(review)
-      return corsResponse(review, 201)
+      const { _id, ...clean } = review
+      return corsResponse(clean, 201)
     }
 
-    if (route.startsWith('/reviews/') && method === 'PUT') {
+    // PUT /api/reviews/:id - Update review (status, merchant reply)
+    if (route.match(/^\/reviews\/[^/]+$/) && method === 'PUT') {
       const reviewId = route.split('/')[2]
       const body = await request.json()
-      await db.collection('orders').updateOne(
+      const updateFields = { updated_at: new Date() }
+      if (body.status !== undefined) updateFields.status = body.status
+      if (body.merchant_reply !== undefined) updateFields.merchant_reply = body.merchant_reply
+      if (body.title !== undefined) updateFields.title = body.title
+      if (body.content !== undefined) updateFields.content = body.content
+      
+      const result = await db.collection('reviews').updateOne(
         { id: reviewId },
-        { $set: { status: body.status } }
+        { $set: updateFields }
       )
-      return corsResponse({ success: true })
+      if (result.matchedCount === 0) return corsResponse({ error: 'Review not found' }, 404)
+      
+      const updated = await db.collection('reviews').findOne({ id: reviewId })
+      const { _id, ...clean } = updated
+      return corsResponse(clean)
     }
 
-    // ─── Store Config ───
+    // DELETE /api/reviews/:id - Delete review
+    if (route.match(/^\/reviews\/[^/]+$/) && method === 'DELETE') {
+      const reviewId = route.split('/')[2]
+      const result = await db.collection('reviews').deleteOne({ id: reviewId })
+      if (result.deletedCount === 0) return corsResponse({ error: 'Review not found' }, 404)
+      return corsResponse({ success: true, message: 'Review deleted' })
+    }
+
+    // ═══════════════════════════════════════════
+    // STORE CONFIG
+    // ═══════════════════════════════════════════
+
     if (route === '/store-config' && method === 'GET') {
       let config = await db.collection('store_config').findOne({})
       if (!config) {
@@ -873,40 +1035,155 @@ async function handleRoute(request, { params }) {
       return corsResponse({ success: true })
     }
 
-    // ─── Campaigns ───
+    // ═══════════════════════════════════════════
+    // CAMPAIGNS - FULL CRUD
+    // ═══════════════════════════════════════════
+
+    // GET /api/campaigns - List campaigns
     if (route === '/campaigns' && method === 'GET') {
-      const campaigns = await db.collection('campaigns').find({}).sort({ created_at: -1 }).toArray()
+      const status = request.nextUrl.searchParams.get('status')
+      const filter = {}
+      if (status && status !== 'all') filter.status = status
+      const campaigns = await db.collection('campaigns').find(filter).sort({ created_at: -1 }).toArray()
       return corsResponse(campaigns.map(({ _id, ...c }) => c))
     }
 
+    // POST /api/campaigns - Create campaign
     if (route === '/campaigns' && method === 'POST') {
       const body = await request.json()
       const campaign = {
         id: uuidv4(),
-        name: body.name,
+        name: body.name || 'Untitled Campaign',
         description: body.description || '',
         type: body.type || 'email',
         status: body.status || 'draft',
-        audience_count: body.audience_count || 0,
+        audience_count: parseInt(body.audience_count) || 0,
         sent_count: 0,
         open_rate: 0,
+        click_rate: 0,
+        conversion_rate: 0,
         content: body.content || {},
         scheduled_at: body.scheduled_at ? new Date(body.scheduled_at) : null,
         created_at: new Date(),
         updated_at: new Date()
       }
       await db.collection('campaigns').insertOne(campaign)
-      return corsResponse(campaign, 201)
+      const { _id, ...clean } = campaign
+      return corsResponse(clean, 201)
     }
 
-    if (route.startsWith('/campaigns/') && method === 'PUT') {
+    // PUT /api/campaigns/:id - Update campaign
+    if (route.match(/^\/campaigns\/[^/]+$/) && method === 'PUT') {
       const campaignId = route.split('/')[2]
       const body = await request.json()
-      await db.collection('campaigns').updateOne(
+      const updateFields = { updated_at: new Date() }
+      if (body.name !== undefined) updateFields.name = body.name
+      if (body.description !== undefined) updateFields.description = body.description
+      if (body.type !== undefined) updateFields.type = body.type
+      if (body.status !== undefined) updateFields.status = body.status
+      if (body.audience_count !== undefined) updateFields.audience_count = parseInt(body.audience_count)
+      if (body.content !== undefined) updateFields.content = body.content
+      if (body.scheduled_at !== undefined) updateFields.scheduled_at = body.scheduled_at ? new Date(body.scheduled_at) : null
+      
+      const result = await db.collection('campaigns').updateOne(
         { id: campaignId },
-        { $set: { ...body, updated_at: new Date() } }
+        { $set: updateFields }
       )
-      return corsResponse({ success: true })
+      if (result.matchedCount === 0) return corsResponse({ error: 'Campaign not found' }, 404)
+      
+      const updated = await db.collection('campaigns').findOne({ id: campaignId })
+      const { _id, ...clean } = updated
+      return corsResponse(clean)
+    }
+
+    // DELETE /api/campaigns/:id - Delete campaign
+    if (route.match(/^\/campaigns\/[^/]+$/) && method === 'DELETE') {
+      const campaignId = route.split('/')[2]
+      const result = await db.collection('campaigns').deleteOne({ id: campaignId })
+      if (result.deletedCount === 0) return corsResponse({ error: 'Campaign not found' }, 404)
+      return corsResponse({ success: true, message: 'Campaign deleted' })
+    }
+
+    // ═══════════════════════════════════════════
+    // CUSTOMERS (Consumer Profiles)
+    // ═══════════════════════════════════════════
+
+    // GET /api/customers/:id - Get single customer profile
+    if (route.match(/^\/customers\/[^/]+$/) && method === 'GET') {
+      const customerId = route.split('/')[2]
+      const profile = await db.collection('consumer_profiles').findOne({ id: customerId })
+      if (!profile) return corsResponse({ error: 'Customer not found' }, 404)
+      
+      // Get their conversations and orders
+      const conversations = await db.collection('conversations').find({ session_id: profile.session_id }).toArray()
+      const intents = await db.collection('intents').find({ session_id: profile.session_id }).sort({ timestamp: -1 }).limit(20).toArray()
+      
+      const { _id, ...clean } = profile
+      return corsResponse({
+        ...clean,
+        conversations: conversations.map(({ _id, messages, ...c }) => ({ ...c, message_count: messages?.length || 0 })),
+        recent_activity: intents.map(({ _id, ...i }) => i)
+      })
+    }
+
+    // ═══════════════════════════════════════════
+    // EXPORT ENDPOINTS
+    // ═══════════════════════════════════════════
+
+    // GET /api/export/orders - Export orders as JSON (can be converted to CSV on frontend)
+    if (route === '/export/orders' && method === 'GET') {
+      const orders = await db.collection('orders').find({}).sort({ created_at: -1 }).toArray()
+      const exportData = orders.map(({ _id, ...o }) => ({
+        order_number: o.order_number,
+        customer_name: o.shipping_address?.name || 'N/A',
+        customer_email: o.shipping_address?.email || 'N/A',
+        items: o.items?.map(i => `${i.name} x${i.quantity}`).join('; ') || '',
+        subtotal: o.subtotal,
+        shipping: o.shipping,
+        tax: o.tax,
+        total: o.total,
+        status: o.status,
+        payment_status: o.payment_status,
+        tracking_number: o.tracking_number || '',
+        carrier: o.carrier || '',
+        created_at: o.created_at,
+        notes: o.notes || ''
+      }))
+      return corsResponse(exportData)
+    }
+
+    // GET /api/export/products - Export products
+    if (route === '/export/products' && method === 'GET') {
+      const products = await db.collection('products').find({ status: { $ne: 'deleted' } }).toArray()
+      const exportData = products.map(({ _id, ...p }) => ({
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        compare_at_price: p.compare_at_price,
+        category: p.category,
+        stock: p.stock,
+        status: p.status,
+        bargain_enabled: p.bargain_enabled,
+        bargain_min_price: p.bargain_min_price,
+        tags: p.tags?.join(', ') || '',
+        weight: p.weight
+      }))
+      return corsResponse(exportData)
+    }
+
+    // GET /api/export/customers - Export customers
+    if (route === '/export/customers' && method === 'GET') {
+      const profiles = await db.collection('consumer_profiles').find({}).toArray()
+      const exportData = profiles.map(({ _id, ...p }) => ({
+        session_id: p.session_id,
+        trust_score: p.trust_score,
+        risk_level: p.risk_level,
+        total_orders: p.total_orders,
+        total_spent: p.total_spent,
+        interactions: p.interactions,
+        created_at: p.created_at
+      }))
+      return corsResponse(exportData)
     }
 
     return corsResponse({ error: `Route ${route} not found` }, 404)

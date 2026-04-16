@@ -257,7 +257,7 @@ function HeroSection() {
       </div>
       <motion.div initial={{ opacity: 0, y: 60, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }} className="relative z-20 mx-auto mt-6 md:mt-16 w-full max-w-7xl px-0 md:px-4 mb-2 md:mb-8">
         <div className="relative p-1.5 md:p-3 rounded-[20px] md:rounded-[40px] backdrop-blur-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 0 80px rgba(255,255,255,0.03), 0 0 160px rgba(0,0,0,0.5)' }}>
-          <div className="relative rounded-[16px] md:rounded-[32px] overflow-hidden bg-[#0a0a0a] border border-[#1f1f1f] aspect-video">
+          <div className="relative rounded-[16px] md:rounded-[32px] overflow-hidden bg-card border border-[#1f1f1f] aspect-video">
             <img src={DASHBOARD_IMG} alt="Convos Dashboard" className="w-full h-full object-cover object-top" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
           </div>
@@ -299,20 +299,20 @@ function FeaturesGrid() {
         {[0, 1].map(idx => (
           <motion.div key={idx} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={idx} className={idx === 0 ? 'lg:col-span-2' : 'lg:col-span-3'}>
             {idx === 0 ? (
-              <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
+              <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
                 <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
                   <div className="relative w-[180px] sm:w-[280px] h-[180px] sm:h-[280px]">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border border-white/[0.04] animate-[spin_25s_linear_infinite]" />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75%] h-[75%] rounded-full border border-white/[0.06] animate-[spin_18s_linear_infinite_reverse]" />
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-purple-500/40 blur-sm" />
-                    <div className="absolute top-2 left-1/2 -ml-4 w-8 h-8 sm:w-10 sm:h-10 bg-[#141414] border border-white/[0.08] rounded-xl flex items-center justify-center shadow-lg"><MessageSquare className="text-white/70 w-3.5 h-3.5" /></div>
-                    <div className="absolute bottom-6 right-2 w-8 h-8 bg-[#141414] border border-white/[0.08] rounded-xl flex items-center justify-center shadow-lg"><Bot className="text-white/70 w-3.5 h-3.5" /></div>
-                    <div className="absolute top-1/2 left-1 -mt-4 w-7 h-7 bg-[#141414] border border-white/[0.08] rounded-lg flex items-center justify-center shadow-lg"><Star className="text-purple-400/70 w-3 h-3" /></div>
+                    <div className="absolute top-2 left-1/2 -ml-4 w-8 h-8 sm:w-10 sm:h-10 bg-muted border border-white/[0.08] rounded-xl flex items-center justify-center shadow-lg"><MessageSquare className="text-white/70 w-3.5 h-3.5" /></div>
+                    <div className="absolute bottom-6 right-2 w-8 h-8 bg-muted border border-white/[0.08] rounded-xl flex items-center justify-center shadow-lg"><Bot className="text-white/70 w-3.5 h-3.5" /></div>
+                    <div className="absolute top-1/2 left-1 -mt-4 w-7 h-7 bg-muted border border-white/[0.08] rounded-lg flex items-center justify-center shadow-lg"><Star className="text-purple-400/70 w-3 h-3" /></div>
                   </div>
                 </div>
                 <div className="relative z-10 flex items-start">
-                  <div className="w-11 h-11 rounded-xl bg-[#141414] border border-white/[0.08] flex items-center justify-center"><MessageSquare className="w-5 h-5 text-white/80" /></div>
+                  <div className="w-11 h-11 rounded-xl bg-muted border border-white/[0.08] flex items-center justify-center"><MessageSquare className="w-5 h-5 text-white/80" /></div>
                 </div>
                 <div className="relative z-10 mt-auto">
                   <h3 className="text-xl md:text-[2.25rem] font-medium leading-[1.15] tracking-tight text-white">AI-Powered<br />Conversations</h3>
@@ -321,7 +321,7 @@ function FeaturesGrid() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col p-0 hover:border-[#2a2a2a] transition-colors duration-500 h-full relative">
+              <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col p-0 hover:border-[#2a2a2a] transition-colors duration-500 h-full relative">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
                 <div className="flex flex-col h-full relative z-10">
                   <div className="p-5 sm:p-6 md:p-8 pb-0">
@@ -329,7 +329,7 @@ function FeaturesGrid() {
                     <p className="max-w-md text-[13px] font-normal leading-relaxed mt-3 text-[#737373]">Let customers shop hands-free with built-in voice AI. They speak naturally to browse, compare, and buy — no typing needed.</p>
                   </div>
                   <div className="mt-auto p-5 sm:p-6 pt-4">
-                    <div className="relative rounded-2xl bg-[#0f0f0f] border border-[#1a1a1a] p-5 overflow-hidden">
+                    <div className="relative rounded-2xl bg-card border border-border/70 p-5 overflow-hidden">
                       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
                       <div className="flex items-center gap-3 mb-4">
                         <div className="relative">
@@ -370,7 +370,7 @@ function FeaturesGrid() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 auto-rows-auto lg:auto-rows-[28rem] mt-4">
         <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={0} className="lg:col-span-3">
-          <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
+          <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
             <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-0">
               <div>
@@ -390,7 +390,7 @@ function FeaturesGrid() {
           </div>
         </motion.div>
         <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={1} className="lg:col-span-2">
-          <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
+          <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
             <div>
               <h3 className="text-xl md:text-[2.25rem] font-medium leading-[1.15] tracking-tight text-white">Autonomous<br />Pricing</h3>
@@ -420,7 +420,7 @@ function FeaturesGrid() {
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 auto-rows-auto lg:auto-rows-[28rem]">
         <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={0} className="lg:col-span-3">
-          <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col p-0 hover:border-[#2a2a2a] transition-colors duration-500 h-full relative">
+          <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col p-0 hover:border-[#2a2a2a] transition-colors duration-500 h-full relative">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
             <div className="flex flex-col h-full relative z-10">
               <div className="p-5 sm:p-6 md:p-8 pb-0">
@@ -433,7 +433,7 @@ function FeaturesGrid() {
                 <p className="max-w-md text-[13px] font-normal leading-relaxed text-[#737373]">Your AI agent lives inside WhatsApp. Customers browse products, add to cart, and pay — all without leaving the chat.</p>
               </div>
               <div className="mt-auto p-5 sm:p-6 pt-4">
-                <div className="relative rounded-2xl bg-[#0f0f0f] border border-[#1a1a1a] p-5 overflow-hidden">
+                <div className="relative rounded-2xl bg-card border border-border/70 p-5 overflow-hidden">
                   <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
                   <div className="space-y-3">
                     <div className="flex items-start gap-2.5"><div className="mt-0.5 w-5 h-5 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0"><Smartphone className="w-2.5 h-2.5 text-white/40" /></div><div className="bg-white/[0.04] border border-white/[0.05] rounded-2xl rounded-tl-sm px-3.5 py-2"><p className="text-[12px] text-white/60">&quot;I want a birthday gift under $50&quot;</p></div></div>
@@ -447,15 +447,15 @@ function FeaturesGrid() {
           </div>
         </motion.div>
         <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={1} className="lg:col-span-2">
-          <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
+          <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 min-h-[18rem] lg:h-full relative">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
             <div className="relative z-10">
-              <div className="w-11 h-11 rounded-xl bg-[#141414] border border-white/[0.08] flex items-center justify-center mb-5"><Lock className="w-5 h-5 text-white/80" /></div>
+              <div className="w-11 h-11 rounded-xl bg-muted border border-white/[0.08] flex items-center justify-center mb-5"><Lock className="w-5 h-5 text-white/80" /></div>
               <h3 className="text-xl md:text-[2.25rem] font-medium leading-[1.15] tracking-tight text-white">OTP<br />Authentication</h3>
               <p className="max-w-[280px] text-[13px] font-normal leading-relaxed mt-3 text-[#737373]">Customers verify identity via email OTP — sent through your own SMTP. No passwords, no friction, just a code to their inbox.</p>
             </div>
             <div className="relative z-10 mt-auto space-y-3">
-              <div className="rounded-xl bg-[#0f0f0f] border border-[#1a1a1a] p-4">
+              <div className="rounded-xl bg-card border border-border/70 p-4">
                 <div className="flex items-center gap-2 mb-3"><Send className="w-3.5 h-3.5 text-purple-400" /><span className="text-[11px] text-white/50 font-medium">OTP sent to j***n@email.com</span></div>
                 <div className="flex gap-2 justify-center">{['4','8','2','9','1','7'].map((d, i) => <div key={i} className="w-9 h-11 rounded-lg bg-white/[0.04] border border-white/[0.08] flex items-center justify-center"><span className="text-lg font-mono font-semibold text-white/80">{d}</span></div>)}</div>
                 <div className="mt-3 flex items-center justify-center gap-1.5"><div className="w-3 h-3 rounded-full bg-emerald-500/20 flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /></div><span className="text-[10px] text-emerald-400/70">Verified via your SMTP</span></div>
@@ -473,9 +473,9 @@ function FeaturesGrid() {
           { icon: Bot, title: 'ChatGPT MCP Support', desc: 'Connect your store directly to ChatGPT. Manage inventory, orders, and stats through natural language.', tags: ['Model Context Protocol', 'ChatGPT', 'Secure Auth'] },
         ].map((card, i) => (
           <motion.div key={card.title} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={i}>
-            <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] p-5 sm:p-7 hover:border-[#2a2a2a] transition-colors duration-500 h-full relative">
+            <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 p-5 sm:p-7 hover:border-[#2a2a2a] transition-colors duration-500 h-full relative">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
-              <div className="w-10 h-10 rounded-xl bg-[#141414] border border-white/[0.08] flex items-center justify-center mb-5"><card.icon className="w-5 h-5 text-[#666]" /></div>
+              <div className="w-10 h-10 rounded-xl bg-muted border border-white/[0.08] flex items-center justify-center mb-5"><card.icon className="w-5 h-5 text-[#666]" /></div>
               <h3 className="text-lg font-medium text-white mb-1.5">{card.title}</h3>
               <p className="text-[13px] text-[#737373] leading-relaxed mb-5">{card.desc}</p>
               <div className="flex flex-wrap gap-1.5">{card.tags.map(tag => <span key={tag} className="px-2.5 py-1 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[11px] text-white/40 font-medium">{tag}</span>)}</div>
@@ -497,18 +497,18 @@ function HowItWorks() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 auto-rows-auto lg:auto-rows-[30rem]">
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={0} className="lg:col-span-3">
-            <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col relative justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 h-full">
+            <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col relative justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 h-full">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
               <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                 <div>
-                  <div className="flex items-center gap-3 mb-5"><div className="w-11 h-11 rounded-xl bg-[#141414] border border-white/[0.08] flex items-center justify-center"><Upload className="w-5 h-5 text-white/80" /></div><span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/25">Step 01</span></div>
+                  <div className="flex items-center gap-3 mb-5"><div className="w-11 h-11 rounded-xl bg-muted border border-white/[0.08] flex items-center justify-center"><Upload className="w-5 h-5 text-white/80" /></div><span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/25">Step 01</span></div>
                   <h3 className="text-xl md:text-[2.25rem] font-medium leading-[1.15] tracking-tight text-white">Add Your<br />Products</h3>
                   <p className="max-w-sm text-[13px] font-normal leading-relaxed mt-3 text-[#737373]">Import your catalog from Shopify, WooCommerce, or upload a CSV. AI indexes and structures everything instantly.</p>
                 </div>
                 <div className="flex items-center gap-1.5 bg-purple-500/[0.08] border border-purple-500/15 px-3 py-1.5 rounded-full"><Zap className="w-3 h-3 text-purple-400" /><span className="text-purple-400 text-[13px] font-semibold">Instant</span></div>
               </div>
               <div className="mt-auto">
-                <div className="rounded-2xl bg-[#0f0f0f] border border-[#1a1a1a] p-5 relative">
+                <div className="rounded-2xl bg-card border border-border/70 p-5 relative">
                   <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
                   <div className="flex items-center gap-3 mb-4"><div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/15 flex items-center justify-center"><Upload className="w-3.5 h-3.5 text-purple-400" /></div><div><p className="text-[11px] font-semibold text-white/70">Product Import</p><p className="text-[10px] text-[#555]">3 sources connected</p></div></div>
                   <div className="space-y-2.5">
@@ -525,20 +525,20 @@ function HowItWorks() {
             </div>
           </motion.div>
           <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={1} className="lg:col-span-2">
-            <div className="rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden flex flex-col relative justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 h-full">
+            <div className="rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden flex flex-col relative justify-between p-5 sm:p-6 md:p-8 hover:border-[#2a2a2a] transition-colors duration-500 h-full">
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
               <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
                 <div className="relative w-[240px] h-[240px]">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full border border-white/[0.03] animate-[spin_25s_linear_infinite]" />
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] rounded-full border border-white/[0.05] animate-[spin_18s_linear_infinite_reverse]" />
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-violet-500/40 blur-sm" />
-                  <div className="absolute top-0 left-1/2 -ml-4 w-8 h-8 bg-[#141414] border border-white/[0.08] rounded-lg flex items-center justify-center"><Sliders className="w-3.5 h-3.5 text-white/60" /></div>
-                  <div className="absolute bottom-6 right-2 w-8 h-8 bg-[#141414] border border-white/[0.08] rounded-lg flex items-center justify-center"><MessageSquare className="w-3.5 h-3.5 text-white/60" /></div>
-                  <div className="absolute top-1/2 left-0 -mt-4 w-8 h-8 bg-[#141414] border border-white/[0.08] rounded-lg flex items-center justify-center"><DollarSign className="w-3.5 h-3.5 text-violet-400/70" /></div>
+                  <div className="absolute top-0 left-1/2 -ml-4 w-8 h-8 bg-muted border border-white/[0.08] rounded-lg flex items-center justify-center"><Sliders className="w-3.5 h-3.5 text-white/60" /></div>
+                  <div className="absolute bottom-6 right-2 w-8 h-8 bg-muted border border-white/[0.08] rounded-lg flex items-center justify-center"><MessageSquare className="w-3.5 h-3.5 text-white/60" /></div>
+                  <div className="absolute top-1/2 left-0 -mt-4 w-8 h-8 bg-muted border border-white/[0.08] rounded-lg flex items-center justify-center"><DollarSign className="w-3.5 h-3.5 text-violet-400/70" /></div>
                 </div>
               </div>
               <div className="relative z-10">
-                <div className="flex items-center gap-3 mb-5"><div className="w-11 h-11 rounded-xl bg-[#141414] border border-white/[0.08] flex items-center justify-center"><Bot className="w-5 h-5 text-white/80" /></div><span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/25">Step 02</span></div>
+                <div className="flex items-center gap-3 mb-5"><div className="w-11 h-11 rounded-xl bg-muted border border-white/[0.08] flex items-center justify-center"><Bot className="w-5 h-5 text-white/80" /></div><span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/25">Step 02</span></div>
                 <h3 className="text-xl md:text-[2.25rem] font-medium leading-[1.15] tracking-tight text-white">Train Your<br />AI Agent</h3>
                 <p className="max-w-[260px] text-[13px] font-normal leading-relaxed mt-3 text-[#737373]">Set your brand voice, pricing rules, negotiation limits, and sales personality. The agent learns your business.</p>
               </div>
@@ -556,12 +556,12 @@ function HowItWorks() {
           </motion.div>
         </div>
 
-        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={2} className="mt-4 rounded-[20px] sm:rounded-[24px] bg-[#0A0A0A] border border-[#1F1F1F] overflow-hidden relative hover:border-[#2a2a2a] transition-colors duration-500">
+        <motion.div variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} custom={2} className="mt-4 rounded-[20px] sm:rounded-[24px] bg-card border border-border/70 overflow-hidden relative hover:border-[#2a2a2a] transition-colors duration-500">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <div className="p-6 md:p-10 flex flex-col justify-between">
               <div>
-                <div className="flex items-center gap-3 mb-5"><div className="w-11 h-11 rounded-xl bg-[#141414] border border-white/[0.08] flex items-center justify-center"><TrendingUp className="w-5 h-5 text-white/80" /></div><span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/25">Step 03</span></div>
+                <div className="flex items-center gap-3 mb-5"><div className="w-11 h-11 rounded-xl bg-muted border border-white/[0.08] flex items-center justify-center"><TrendingUp className="w-5 h-5 text-white/80" /></div><span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/25">Step 03</span></div>
                 <h3 className="text-xl md:text-[2.25rem] font-medium leading-[1.15] tracking-tight text-white">Go Live &<br />Scale Autonomously</h3>
                 <p className="max-w-md text-[13px] font-normal leading-relaxed mt-3 text-[#737373]">Your store goes live with AI agents handling every customer. Monitor real-time analytics and watch revenue grow without lifting a finger.</p>
               </div>
@@ -576,8 +576,8 @@ function HowItWorks() {
               </div>
               <button className="mt-6 px-6 py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[13px] font-medium hover:from-purple-400 hover:to-pink-400 transition-all w-fit">Launch Your Store</button>
             </div>
-            <div className="p-6 md:p-8 lg:border-l border-t lg:border-t-0 border-[#1a1a1a] flex flex-col justify-center">
-              <div className="rounded-2xl bg-[#0f0f0f] border border-[#1a1a1a] p-5 relative">
+            <div className="p-6 md:p-8 lg:border-l border-t lg:border-t-0 border-border/70 flex flex-col justify-center">
+              <div className="rounded-2xl bg-card border border-border/70 p-5 relative">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
                 <div className="flex items-center justify-between mb-5"><div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" /><span className="text-[10px] font-semibold text-purple-400/80 uppercase tracking-[0.15em]">Live Dashboard</span></div><span className="text-[10px] text-[#555]">Last 30 days</span></div>
                 <div className="h-[120px] sm:h-[160px] flex items-end gap-[3px] sm:gap-[5px] mb-4">
@@ -612,7 +612,7 @@ function TestimonialsSection() {
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-4 md:gap-6">
           <div className="flex flex-col gap-4 sm:gap-4 md:gap-6">
             {[testimonials[0], testimonials[2]].map((t, i) => (
-              <div key={i} className="p-4 sm:p-6 bg-[#0a0a0a] rounded-2xl border border-white/10 flex flex-col gap-3 sm:gap-4 group hover:border-white/20 transition-colors">
+              <div key={i} className="p-4 sm:p-6 bg-card rounded-2xl border border-white/10 flex flex-col gap-3 sm:gap-4 group hover:border-white/20 transition-colors">
                 <div className="flex gap-0.5 mb-1">{[...Array(5)].map((_, j) => <Star key={j} className="h-3.5 w-3.5 fill-purple-400 text-purple-400" />)}</div>
                 <p className="text-[#737373] text-[13px] sm:text-sm leading-relaxed">&quot;{t.content}&quot;</p>
                 <div className="flex items-center gap-3 mt-auto"><div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/15 flex items-center justify-center text-[11px] font-bold text-white/60">{t.initials}</div><div><h3 className="text-white font-medium text-sm">{t.name}</h3><p className="text-[#737373] text-xs">{t.role}</p></div></div>
@@ -621,7 +621,7 @@ function TestimonialsSection() {
           </div>
           <div className="flex flex-col gap-4 sm:gap-4 md:gap-6 sm:translate-y-0 lg:translate-y-12">
             {[testimonials[1], testimonials[3]].map((t, i) => (
-              <div key={i} className="p-4 sm:p-6 bg-[#0a0a0a] rounded-2xl border border-white/10 flex flex-col gap-3 sm:gap-4 group hover:border-white/20 transition-colors">
+              <div key={i} className="p-4 sm:p-6 bg-card rounded-2xl border border-white/10 flex flex-col gap-3 sm:gap-4 group hover:border-white/20 transition-colors">
                 <div className="flex gap-0.5 mb-1">{[...Array(5)].map((_, j) => <Star key={j} className="h-3.5 w-3.5 fill-purple-400 text-purple-400" />)}</div>
                 <p className="text-[#737373] text-[13px] sm:text-sm leading-relaxed">&quot;{t.content}&quot;</p>
                 <div className="flex items-center gap-3 mt-auto"><div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/15 flex items-center justify-center text-[11px] font-bold text-white/60">{t.initials}</div><div><h3 className="text-white font-medium text-sm">{t.name}</h3><p className="text-[#737373] text-xs">{t.role}</p></div></div>
@@ -646,7 +646,7 @@ function PricingSection() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 max-w-6xl mx-auto items-stretch">
           {fallbackPlans.map((plan, index) => (
-            <SpotlightCard key={index} className={`relative flex flex-col p-3 sm:p-5 md:p-7 rounded-[16px] sm:rounded-[24px] md:rounded-[32px] bg-[#0A0A0A] border transition-all duration-300 hover:border-[#3B3B3B] ${plan.isFeatured ? 'lg:scale-105 z-10 border-purple-500/30 shadow-[0_0_40px_rgba(168,85,247,0.1)]' : 'border-[#1F1F1F]'}`} spotlightColor={plan.isFeatured ? 'rgba(168,85,247,0.25)' : 'rgba(168,85,247,0.12)'}>
+            <SpotlightCard key={index} className={`relative flex flex-col p-3 sm:p-5 md:p-7 rounded-[16px] sm:rounded-[24px] md:rounded-[32px] bg-card border transition-all duration-300 hover:border-[#3B3B3B] ${plan.isFeatured ? 'lg:scale-105 z-10 border-purple-500/30 shadow-[0_0_40px_rgba(168,85,247,0.1)]' : 'border-border/70'}`} spotlightColor={plan.isFeatured ? 'rgba(168,85,247,0.25)' : 'rgba(168,85,247,0.12)'}>
               {plan.isFeatured && <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-500 to-pink-500 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest text-white uppercase z-20">Most Popular</div>}
               <div className="flex flex-col mb-3 sm:mb-6">
                 <div className="bg-[#171717] border border-purple-500/15 rounded-md px-2 py-1 w-fit text-[11px] sm:text-[12px] font-medium text-white mb-2 sm:mb-5">{plan.plan}</div>
