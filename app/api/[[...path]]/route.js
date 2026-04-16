@@ -25,78 +25,59 @@ export async function OPTIONS() {
 }
 
 // ═══════════════════════════════════════════
-// DEMO PRODUCTS
+// DEMO PRODUCTS - ARTISAN COFFEE ROASTERS
 // ═══════════════════════════════════════════
 const DEMO_PRODUCTS = [
-  {
-    id: uuidv4(), name: 'Wireless Pro Headphones', description: 'Premium noise-cancelling wireless headphones with 40hr battery life, Hi-Res audio, and adaptive sound control.',
-    price: 89.99, compare_at_price: 129.99, category: 'Electronics', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=400&fit=crop',
-    stock: 45, bargain_enabled: true, bargain_min_price: 69.99, tags: ['headphones', 'wireless', 'audio', 'gift']
-  },
-  {
-    id: uuidv4(), name: 'Titanium Smartwatch', description: 'Advanced smartwatch with health monitoring, GPS, and 7-day battery life. Titanium case with sapphire display.',
-    price: 199.99, compare_at_price: 279.99, category: 'Electronics', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop',
-    stock: 30, bargain_enabled: true, bargain_min_price: 159.99, tags: ['watch', 'smart', 'fitness', 'gift']
-  },
-  {
-    id: uuidv4(), name: 'Portable Bluetooth Speaker', description: 'Waterproof 360° sound speaker with deep bass. Perfect for outdoors with 12hr playtime.',
-    price: 49.99, compare_at_price: 69.99, category: 'Electronics', image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
-    stock: 60, bargain_enabled: true, bargain_min_price: 39.99, tags: ['speaker', 'bluetooth', 'portable', 'gift']
-  },
-  {
-    id: uuidv4(), name: 'Performance Running Sneakers', description: 'Lightweight running shoes with responsive cushioning and breathable mesh upper. Carbon fiber plate.',
-    price: 129.99, compare_at_price: 169.99, category: 'Fashion', image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop',
-    stock: 25, bargain_enabled: true, bargain_min_price: 99.99, tags: ['shoes', 'running', 'sneakers', 'fitness']
-  },
-  {
-    id: uuidv4(), name: 'Heritage Leather Backpack', description: 'Full-grain leather backpack with laptop sleeve, RFID protection, and organizer pockets.',
-    price: 79.99, compare_at_price: 119.99, category: 'Fashion', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop',
-    stock: 35, bargain_enabled: true, bargain_min_price: 59.99, tags: ['backpack', 'leather', 'travel', 'gift']
-  },
-  {
-    id: uuidv4(), name: 'Designer Sunglasses', description: 'Polarized UV400 sunglasses with acetate frame. Classic aviator design meets modern engineering.',
-    price: 64.99, compare_at_price: 89.99, category: 'Fashion', image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=400&fit=crop',
-    stock: 40, bargain_enabled: true, bargain_min_price: 49.99, tags: ['sunglasses', 'fashion', 'accessories', 'gift']
-  },
-  {
-    id: uuidv4(), name: 'Artisan Candle Collection', description: 'Hand-poured soy candle set with 3 signature scents. Burns clean for 45+ hours each.',
-    price: 34.99, compare_at_price: 49.99, category: 'Home', image: 'https://images.unsplash.com/photo-1602028915047-37269d1a73f7?w=400&h=400&fit=crop',
-    stock: 55, bargain_enabled: true, bargain_min_price: 24.99, tags: ['candles', 'home', 'gift', 'decor']
-  },
-  {
-    id: uuidv4(), name: 'Premium Coffee Maker', description: 'Precision brew coffee maker with built-in grinder, temperature control, and programmable timer.',
-    price: 149.99, compare_at_price: 199.99, category: 'Home', image: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=400&h=400&fit=crop',
-    stock: 20, bargain_enabled: true, bargain_min_price: 119.99, tags: ['coffee', 'kitchen', 'appliance']
-  },
-  {
-    id: uuidv4(), name: 'Minimalist Jewelry Box', description: 'Elegant walnut wood jewelry organizer with velvet interior and mirror. Perfect gift.',
-    price: 44.99, compare_at_price: 64.99, category: 'Gifts', image: 'https://images.unsplash.com/photo-1515562141589-67f0d569b6e5?w=400&h=400&fit=crop',
-    stock: 40, bargain_enabled: true, bargain_min_price: 34.99, tags: ['jewelry', 'gift', 'organizer', 'wood']
-  },
-  {
-    id: uuidv4(), name: 'Cashmere Throw Blanket', description: 'Luxuriously soft 100% cashmere throw. Lightweight warmth in timeless herringbone pattern.',
-    price: 99.99, compare_at_price: 149.99, category: 'Home', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop',
-    stock: 15, bargain_enabled: true, bargain_min_price: 79.99, tags: ['blanket', 'cashmere', 'home', 'gift', 'luxury']
-  }
+  { id: uuidv4(), name: 'Ethiopian Yirgacheffe', description: 'Bright and citrusy with floral notes. Light roast single origin from the Yirgacheffe region. Tasting notes: bergamot, jasmine, lemon zest.', price: 18.99, compare_at_price: 24.99, category: 'Single Origin', image: 'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=400&h=400&fit=crop', stock: 50, bargain_enabled: true, bargain_min_price: 14.99, tags: ['coffee', 'single origin', 'ethiopian', 'light roast'], weight: '340g' },
+  { id: uuidv4(), name: 'Colombian Supremo', description: 'Smooth and nutty with rich chocolate undertones. Medium roast from Huila region. Tasting notes: dark chocolate, walnut, caramel.', price: 16.99, compare_at_price: 21.99, category: 'Single Origin', image: 'https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=400&fit=crop', stock: 65, bargain_enabled: true, bargain_min_price: 13.99, tags: ['coffee', 'single origin', 'colombian', 'medium roast'], weight: '340g' },
+  { id: uuidv4(), name: 'Kenyan AA', description: 'Bold and fruity with wine-like acidity. Medium-dark roast from Mount Kenya. Tasting notes: blackberry, tomato, brown sugar.', price: 19.99, compare_at_price: 25.99, category: 'Single Origin', image: 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?w=400&h=400&fit=crop', stock: 35, bargain_enabled: true, bargain_min_price: 15.99, tags: ['coffee', 'single origin', 'kenyan', 'medium dark roast'], weight: '340g' },
+  { id: uuidv4(), name: 'House Blend', description: 'Our signature everyday blend. Balanced, smooth, and endlessly drinkable. A harmonious mix of Central and South American beans.', price: 14.99, compare_at_price: 18.99, category: 'Blends', image: 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?w=400&h=400&fit=crop&q=80', stock: 80, bargain_enabled: true, bargain_min_price: 11.99, tags: ['coffee', 'blend', 'house', 'everyday'], weight: '340g' },
+  { id: uuidv4(), name: 'Dark Roast Blend', description: 'Rich, smoky, and bold. Our darkest roast for those who love deep, intense flavor. Notes of dark cocoa and toasted oak.', price: 15.99, compare_at_price: 19.99, category: 'Blends', image: 'https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=400&h=400&fit=crop', stock: 55, bargain_enabled: true, bargain_min_price: 12.99, tags: ['coffee', 'blend', 'dark roast', 'bold'], weight: '340g' },
+  { id: uuidv4(), name: 'Morning Sunrise Blend', description: 'Light and bright with citrus overtones. The perfect way to start your day. Crafted for pour-over and drip methods.', price: 13.99, compare_at_price: 17.99, category: 'Blends', image: 'https://images.unsplash.com/photo-1498804103079-a6351b050096?w=400&h=400&fit=crop', stock: 70, bargain_enabled: true, bargain_min_price: 10.99, tags: ['coffee', 'blend', 'light roast', 'morning'], weight: '340g' },
+  { id: uuidv4(), name: 'Espresso Classico', description: 'Traditional Italian-style espresso with a thick, golden crema. Rich body with sweet chocolate finish.', price: 17.99, compare_at_price: 22.99, category: 'Espresso', image: 'https://images.unsplash.com/photo-1510707577719-ae7c14805e3a?w=400&h=400&fit=crop', stock: 45, bargain_enabled: true, bargain_min_price: 14.99, tags: ['coffee', 'espresso', 'italian', 'crema'], weight: '340g' },
+  { id: uuidv4(), name: 'Italian Roast Espresso', description: 'Deep, bold, and smoky. Our most intense espresso roast. Perfect for lattes and cappuccinos.', price: 19.99, compare_at_price: 24.99, category: 'Espresso', image: 'https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&h=400&fit=crop', stock: 40, bargain_enabled: true, bargain_min_price: 15.99, tags: ['coffee', 'espresso', 'italian roast', 'dark'], weight: '340g' },
+  { id: uuidv4(), name: 'Swiss Water Decaf', description: 'All the flavor, none of the caffeine. Chemical-free Swiss Water process preserves origin character.', price: 15.99, compare_at_price: 19.99, category: 'Decaf', image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop', stock: 30, bargain_enabled: true, bargain_min_price: 12.99, tags: ['coffee', 'decaf', 'swiss water', 'chemical free'], weight: '340g' },
+  { id: uuidv4(), name: 'Decaf Colombian', description: 'Smooth, balanced decaffeinated Colombian. Same great taste, naturally decaffeinated.', price: 14.99, compare_at_price: 18.99, category: 'Decaf', image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop', stock: 25, bargain_enabled: true, bargain_min_price: 11.99, tags: ['coffee', 'decaf', 'colombian', 'smooth'], weight: '340g' },
+  { id: uuidv4(), name: 'Bodum French Press', description: 'Classic 8-cup French press with stainless steel filter. The purest way to brew full-bodied coffee.', price: 34.99, compare_at_price: 44.99, category: 'Equipment', image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=400&h=400&fit=crop', stock: 20, bargain_enabled: true, bargain_min_price: 27.99, tags: ['equipment', 'french press', 'brewing', 'glass'], weight: '680g' },
+  { id: uuidv4(), name: 'Pour-Over Starter Kit', description: 'Complete pour-over set with ceramic dripper, glass server, paper filters, and measuring scoop.', price: 29.99, compare_at_price: 39.99, category: 'Equipment', image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=400&fit=crop', stock: 15, bargain_enabled: true, bargain_min_price: 23.99, tags: ['equipment', 'pour over', 'starter kit', 'ceramic'], weight: '540g' },
+  { id: uuidv4(), name: 'Ceramic Hand Grinder', description: 'Premium ceramic burr hand grinder with 15 grind settings. Consistent grounds for any brew method.', price: 49.99, compare_at_price: 64.99, category: 'Equipment', image: 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=400&h=400&fit=crop', stock: 12, bargain_enabled: true, bargain_min_price: 39.99, tags: ['equipment', 'grinder', 'ceramic', 'hand grinder'], weight: '450g' }
 ]
+
+// ═══════════════════════════════════════════
+// STORE CONFIGURATION
+// ═══════════════════════════════════════════
+const STORE_CONFIG = {
+  name: 'Artisan Coffee Roasters',
+  tagline: 'Best coffee in town',
+  description: 'Premium single origin and blended coffees, roasted fresh to order.',
+  banner: 'FREE GLOBAL SHIPPING ON ORDERS OVER $100 | USE CODE WELCOME TO GET 10% OFF',
+  categories: ['All', 'Single Origin', 'Blends', 'Espresso', 'Decaf', 'Equipment'],
+  ai_name: 'Mark',
+  ai_greeting: 'Hey! Welcome to our store. What are you shopping for today?',
+  hero_image: 'https://images.unsplash.com/photo-1447933601403-56dc2e4c4949?w=1200&h=600&fit=crop',
+  status: 'live'
+}
 
 // ═══════════════════════════════════════════
 // AI CONFIGURATION
 // ═══════════════════════════════════════════
-const SYSTEM_PROMPT = `You are Convos, a sophisticated AI commerce agent for an agentic shopping platform. You help buyers find exactly what they need through intelligent conversation.
+const SYSTEM_PROMPT = `You are Mark, the friendly AI shopping assistant for Artisan Coffee Roasters. You help buyers find the perfect coffee through knowledgeable, warm conversation.
+
+ABOUT THE STORE:
+Artisan Coffee Roasters is a premium coffee shop offering single origin beans, blends, espresso roasts, decaf options, and brewing equipment. All coffee is roasted fresh to order.
 
 CAPABILITIES:
-- Search and recommend products from the catalog
+- Search and recommend coffees from the catalog
 - Create persistent shopping missions for buyer goals
 - Negotiate prices within merchant-approved boundaries
 - Add items to cart and guide toward checkout
-- Provide personalized recommendations
+- Provide coffee expertise and brewing advice
 
 PERSONALITY:
-- Commercially intelligent but never pushy
-- Warm, professional, proactive
-- Transparent about pricing and savings
-- Goal-oriented — naturally guide toward conversion
+- Friendly and approachable (use casual tone, like a barista friend)
+- Knowledgeable about coffee origins, roasts, and brewing
+- Enthusiastic about great coffee
+- Goal-oriented — guide toward finding the right coffee and checking out
 
 RULES:
 1. ALWAYS use search_products before recommending anything
@@ -430,6 +411,11 @@ async function handleRoute(request, { params }) {
       return corsResponse({ status: 'ok', platform: 'Convos Agentic Commerce', version: '2.0' })
     }
 
+    // ─── Store Config ───
+    if (route === '/store' && method === 'GET') {
+      return corsResponse(STORE_CONFIG)
+    }
+
     // ─── Products ───
     if (route === '/products' && method === 'GET') {
       const products = await db.collection('products').find({ status: { $ne: 'deleted' } }).toArray()
@@ -438,7 +424,7 @@ async function handleRoute(request, { params }) {
 
     if (route === '/products/seed' && method === 'POST') {
       const existing = await db.collection('products').countDocuments()
-      if (existing >= 8) return corsResponse({ message: 'Products already seeded', count: existing })
+      if (existing >= 10 && existing <= 15) return corsResponse({ message: 'Products already seeded', count: existing })
       await db.collection('products').deleteMany({})
       const products = DEMO_PRODUCTS.map(p => ({ ...p, status: 'active', created_at: new Date(), updated_at: new Date() }))
       await db.collection('products').insertMany(products)

@@ -1,16 +1,13 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Convos — AI-Powered Agentic Commerce',
-  description: 'Delegate your shopping to intelligent AI agents. The future of commerce is mission-driven, conversational, and agentic.',
+  title: 'Convos — Agentic Commerce Platform',
+  description: 'AI-powered commerce platform where buyers delegate shopping to intelligent agents and merchants supervise live AI-driven missions.',
 }
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <script dangerouslySetInnerHTML={{__html:'window.addEventListener("error",function(e){if(e.error instanceof DOMException&&e.error.name==="DataCloneError"&&e.message&&e.message.includes("PerformanceServerTiming")){e.stopImmediatePropagation();e.preventDefault()}},true);'}} />
-      </head>
+    <html lang="en">
       <body className="min-h-screen bg-background antialiased">
         {children}
       </body>
