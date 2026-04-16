@@ -484,7 +484,7 @@
 ### Test Execution Summary (Testing Agent)
 - **Date**: 2024-12-19
 - **Test Suite**: Comprehensive Backend API Testing
-- **Base URL**: https://merchant-command-6.preview.emergentagent.com/api
+- **Base URL**: https://ai-shopper-command.preview.emergentagent.com/api
 - **Total Test Suites**: 10/10 PASSED ✅
 - **Overall Result**: ALL BACKEND APIS WORKING CORRECTLY
 
