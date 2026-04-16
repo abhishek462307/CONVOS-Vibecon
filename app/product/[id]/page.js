@@ -164,7 +164,7 @@ export default function ProductPage() {
                     {[1,2,3,4,5].map(i => (
                       <Star 
                         key={i} 
-                        className={`w-4 h-4 ${i <= avgRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                        className={`w-4 h-4 ${i <= avgRating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} 
                       />
                     ))}
                   </div>
@@ -188,7 +188,7 @@ export default function ProductPage() {
                     <span className="text-xl text-muted-foreground line-through">
                       ${product.compare_at_price}
                     </span>
-                    <Badge className="bg-green-100 text-green-700 border-0">
+                    <Badge className="bg-emerald-500/12 text-emerald-500 border-0">
                       Save ${(product.compare_at_price - product.price).toFixed(2)}
                     </Badge>
                   </>
@@ -203,7 +203,7 @@ export default function ProductPage() {
             {product.stock && (
               <div className="mb-6">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${product.stock > 10 ? 'bg-green-500' : 'bg-orange-500'}`}></div>
+                  <div className={`w-2 h-2 rounded-full ${product.stock > 10 ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
                   <span className="text-sm font-medium">
                     {product.stock > 10 ? 'In Stock' : `Only ${product.stock} left!`}
                   </span>
@@ -297,7 +297,7 @@ export default function ProductPage() {
                       {[1,2,3,4,5].map(i => (
                         <Star 
                           key={i} 
-                          className={`w-4 h-4 ${i <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                          className={`w-4 h-4 ${i <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} 
                         />
                       ))}
                     </div>

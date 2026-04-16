@@ -35,7 +35,7 @@ function ProductCard({ product, onAddToCart, onNegotiate }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl bg-[#0f0f0f] border border-white/[0.07] hover:border-purple-500/30 transition-all duration-300 hover:shadow-[0_0_32px_rgba(168,85,247,0.08)]"
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-card border border-white/[0.07] hover:border-purple-500/30 transition-all duration-300 hover:shadow-[0_0_32px_rgba(168,85,247,0.08)]"
     >
       <div className="relative overflow-hidden aspect-[4/3]">
         <img
@@ -128,7 +128,7 @@ function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName 
   }
 
   return (
-    <div className="w-[360px] flex-shrink-0 flex flex-col h-[calc(100vh-56px)] sticky top-14 bg-[#0a0a0a] border-l border-white/[0.07]">
+    <div className="w-[360px] flex-shrink-0 flex flex-col h-[calc(100vh-56px)] sticky top-14 bg-card border-l border-white/[0.07]">
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/[0.07] flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
@@ -356,7 +356,7 @@ function App() {
   const cartTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
 
   return (
-    <div className="dark min-h-screen bg-[#050505] text-white">
+    <div className="min-h-screen bg-background text-foreground">
 
       {/* Announcement bar */}
       <div className="bg-gradient-to-r from-purple-900/80 via-purple-800/60 to-pink-900/80 border-b border-white/[0.06] text-center py-2 text-[11px] font-medium tracking-wide text-white/70">
@@ -364,7 +364,7 @@ function App() {
       </div>
 
       {/* Nav */}
-      <nav className="sticky top-0 z-40 border-b" style={{ background: '#050505', borderColor: 'rgba(255,255,255,0.07)' }}>
+      <nav className="sticky top-0 z-40 border-b border-border/70 bg-background">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Left: store name */}
           <div className="flex items-center gap-3 shrink-0">
@@ -417,7 +417,7 @@ function App() {
                   )}
                 </button>
               </SheetTrigger>
-              <SheetContent className="bg-[#0a0a0a] border-white/[0.08] w-[380px] flex flex-col">
+              <SheetContent className="bg-card border-white/[0.08] w-[380px] flex flex-col">
                 <SheetHeader className="border-b border-white/[0.07] pb-4 shrink-0">
                   <SheetTitle className="flex items-center gap-2 text-base font-semibold text-white tracking-tight">
                     <ShoppingCart className="w-4 h-4 text-white/50" /> Cart
@@ -480,7 +480,7 @@ function App() {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/50 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
             <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-14">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-3 py-1 w-fit mb-4">
                 <Sparkles className="w-3 h-3 text-purple-300" />
@@ -568,7 +568,7 @@ function App() {
           className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-white shadow-[0_8px_32px_rgba(168,85,247,0.35)] hover:opacity-90 transition-opacity z-50"
         >
           <Bot className="w-5 h-5" />
-          <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#050505]" />
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-background" />
         </motion.button>
       )}
     </div>

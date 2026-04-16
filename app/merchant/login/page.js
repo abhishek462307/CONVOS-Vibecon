@@ -65,7 +65,7 @@ export default function MerchantLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#000000] flex overflow-hidden">
+    <div className="min-h-screen bg-background flex overflow-hidden">
 
       {/* Left panel — branding */}
       <div className="hidden lg:flex flex-col w-[52%] relative overflow-hidden p-12 xl:p-16">

@@ -669,9 +669,9 @@ function MerchantDashboard() {
   )
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-[240px] bg-card border-r border-border/70 flex-shrink-0 flex flex-col h-screen sticky top-0">
+      <aside className="w-[240px] bg-card border-r border-border/70 flex-shrink-0 flex flex-col">
         <div className="px-4 pb-0 pt-7 flex items-center pb-2">
           <div className="px-2">
             <a href="/" className="flex items-center gap-2.5 h-9">

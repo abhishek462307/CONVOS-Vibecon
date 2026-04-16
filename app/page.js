@@ -216,8 +216,8 @@ function HeroSection() {
     setTimeout(() => setLoadingDemo(false), 1000)
   }
   return (
-    <section className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 pt-20 pb-4 sm:pt-20 md:px-8 md:pt-40 md:pb-0 bg-black">
-      <div className="absolute inset-0 z-0 bg-black" />
+    <section className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-4 pt-20 pb-4 sm:pt-20 md:px-8 md:pt-40 md:pb-0 bg-background">
+      <div className="absolute inset-0 z-0 bg-background" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[320px] sm:w-[500px] md:w-[900px] h-[300px] sm:h-[400px] md:h-[700px] opacity-40 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.35) 0%, rgba(236,72,153,0.2) 35%, rgba(192,38,211,0.1) 55%, transparent 75%)', filter: 'blur(80px)' }} />
       <div className="bg-grid-pattern absolute inset-0 z-0 opacity-20 [mask-image:radial-gradient(ellipse_at_center,black_20%,transparent_80%)]" />
       <div className="relative z-20 flex flex-col items-center text-center">
@@ -275,7 +275,7 @@ function HeroSection() {
 function LogosSection() {
   const duplicated = [...techStack, ...techStack]
   return (
-    <section className="relative w-full py-8 md:py-14 overflow-hidden bg-black border-y border-purple-500/[0.08]">
+    <section className="relative w-full py-8 md:py-14 overflow-hidden bg-background border-y border-purple-500/[0.08]">
       <div className="container mx-auto px-4">
         <p className="text-center text-[11px] md:text-[12px] uppercase tracking-[0.2em] text-purple-300/30 mb-5 md:mb-8 font-medium">Built with</p>
         <div className="relative overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_15%,black_85%,transparent)]">
@@ -294,7 +294,7 @@ function LogosSection() {
 
 function FeaturesGrid() {
   return (
-    <section id="features" className="w-full max-w-7xl mx-auto py-16 sm:py-16 md:py-32 px-4 sm:px-4 md:px-8 bg-black">
+    <section id="features" className="w-full max-w-7xl mx-auto py-16 sm:py-16 md:py-32 px-4 sm:px-4 md:px-8 bg-background">
       <div className="text-center mb-8 sm:mb-12 md:mb-20">
         <ScrollFloat className="text-balance relative z-20 mx-auto mb-4 max-w-4xl text-2xl sm:text-3xl md:text-6xl font-semibold tracking-tight leading-tight text-white">Everything your store needs, agent-first</ScrollFloat>
         <p className="max-w-lg text-sm md:text-base text-center mx-auto mt-4 text-[#737373]">A complete commerce platform where AI agents handle every customer interaction — from browsing to checkout.</p>
@@ -493,7 +493,7 @@ function FeaturesGrid() {
 
 function HowItWorks() {
   return (
-    <section id="how-it-works" className="relative py-16 sm:py-16 md:py-40 bg-black overflow-hidden">
+    <section id="how-it-works" className="relative py-16 sm:py-16 md:py-40 bg-background overflow-hidden">
       <div className="container relative z-10 px-4 sm:px-4 md:px-8 max-w-7xl mx-auto">
         <div className="text-center mb-10 sm:mb-12 md:mb-20">
           <ScrollFloat className="text-balance relative z-20 mx-auto mb-4 max-w-4xl text-2xl sm:text-3xl md:text-6xl font-semibold tracking-tight leading-tight text-white">Launch your agentic store</ScrollFloat>
@@ -606,7 +606,7 @@ function HowItWorks() {
 
 function TestimonialsSection() {
   return (
-    <section className="relative w-full bg-black py-16 sm:py-16 md:py-40 overflow-hidden">
+    <section className="relative w-full bg-background py-16 sm:py-16 md:py-40 overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] opacity-15 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.4) 0%, rgba(236,72,153,0.2) 40%, transparent 70%)', filter: 'blur(100px)' }} />
       <div className="container relative z-10 px-4 sm:px-4 md:px-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-8 sm:gap-8 lg:gap-16 lg:items-start">
         <div className="lg:sticky lg:top-40 lg:w-1/3 space-y-3 md:space-y-4 text-center lg:text-left">
@@ -640,7 +640,7 @@ function TestimonialsSection() {
 
 function PricingSection() {
   return (
-    <section id="pricing" className="relative py-16 sm:py-16 md:py-40 bg-black overflow-hidden">
+    <section id="pricing" className="relative py-16 sm:py-16 md:py-40 bg-background overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[800px] opacity-20 pointer-events-none" style={{ background: 'radial-gradient(circle at center, rgba(168,85,247,0.3) 0%, rgba(236,72,153,0.15) 40%, transparent 70%)', filter: 'blur(100px)' }} />
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
       <div className="container relative z-10 px-4 sm:px-4">
@@ -678,7 +678,7 @@ function PricingSection() {
 function FAQSection() {
   const [openIndex, setOpenIndex] = useState(null)
   return (
-    <section className="relative w-full py-16 md:py-40 bg-black overflow-hidden">
+    <section className="relative w-full py-16 md:py-40 bg-background overflow-hidden">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] opacity-10 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(168,85,247,0.4) 0%, rgba(236,72,153,0.2) 40%, transparent 70%)', filter: 'blur(100px)' }} />
       <div className="container relative z-10 px-4 md:px-8 max-w-7xl mx-auto flex flex-col items-center">
         <div className="text-center mb-10 md:mb-20">
@@ -711,7 +711,7 @@ function CtaFinal() {
     setTimeout(() => setLoadingDemo(false), 1000)
   }
   return (
-    <section className="relative w-full bg-black py-16 sm:py-16 md:py-40 overflow-hidden flex flex-col items-center justify-center">
+    <section className="relative w-full bg-background py-16 sm:py-16 md:py-40 overflow-hidden flex flex-col items-center justify-center">
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-grid-pattern opacity-[0.06]" />
         <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at center, rgba(107,33,168,0.15) 0%, transparent 70%)' }} />
@@ -749,7 +749,7 @@ function Footer() {
     { title: 'Legal', links: [{ label: 'Privacy Policy', href: '/privacy' }, { label: 'Terms of Service', href: '/terms' }] },
   ]
   return (
-    <footer className="w-full bg-black py-12 sm:py-12 md:py-16 px-4 sm:px-4 md:px-12">
+    <footer className="w-full bg-background py-12 sm:py-12 md:py-16 px-4 sm:px-4 md:px-12">
       <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent mb-10 md:mb-16 max-w-7xl mx-auto" />
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8 sm:gap-12">
         <div className="flex flex-col gap-6 w-full md:w-auto">
@@ -779,7 +779,7 @@ function Footer() {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black text-white antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground antialiased overflow-x-hidden">
       <Navigation />
       <main>
         <HeroSection />
