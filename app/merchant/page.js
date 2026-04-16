@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
+import { useRealtimeSync } from '@/components/RealtimeSync'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -13,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   LayoutDashboard, MessageSquare, ShoppingBag, Package, Users, 
-  Truck, Paintbrush, Star, Megaphone, Plus, Search, Filter,
+  Truck, Paintbrush, Star, Plus, Search, Filter,
   Edit, Trash2, Eye, Send, Check, X, Download, Calendar,
   TrendingUp, DollarSign, ShoppingCart, Activity, AlertCircle,
   MoreVertical, ExternalLink, Mail, Phone, MapPin, Clock,
@@ -35,9 +36,6 @@ const SIDEBAR_ITEMS = [
     { key: 'customers', label: 'Customers', icon: Users },
     { key: 'shipments', label: 'Shipments', icon: Truck },
     { key: 'reviews', label: 'Reviews', icon: Star },
-  ]},
-  { section: 'MARKETING', items: [
-    { key: 'campaigns', label: 'Campaigns', icon: Megaphone },
   ]},
   { section: 'SETTINGS', items: [
     { key: 'store-design', label: 'Store Design', icon: Paintbrush },
@@ -154,7 +152,6 @@ export default function MerchantDashboard() {
   const [products, setProducts] = useState([])
   const [customers, setCustomers] = useState([])
   const [reviews, setReviews] = useState([])
-  const [campaigns, setCampaigns] = useState([])
   const [intents, setIntents] = useState([])
   const [storeConfig, setStoreConfig] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -166,7 +163,6 @@ export default function MerchantDashboard() {
   // Modal states
   const [productModal, setProductModal] = useState({ open: false, mode: 'create', data: null })
   const [orderDetailModal, setOrderDetailModal] = useState({ open: false, order: null })
-  const [campaignModal, setCampaignModal] = useState({ open: false, mode: 'create', data: null })
   const [reviewModal, setReviewModal] = useState({ open: false, review: null })
   const [shipmentModal, setShipmentModal] = useState({ open: false, order: null })
   const [customerModal, setCustomerModal] = useState({ open: false, customer: null })
@@ -184,10 +180,6 @@ export default function MerchantDashboard() {
     image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop',
     stock: '', bargain_enabled: true, bargain_min_price: '', tags: [], weight: ''
   })
-  const [campaignForm, setCampaignForm] = useState({
-    name: '', description: '', type: 'email', status: 'draft', audience_count: '',
-    content: { subject: '', body: '', cta: '' }
-  })
   const [reviewReplyText, setReviewReplyText] = useState('')
   const [shipmentForm, setShipmentForm] = useState({
     carrier: '', tracking_number: '', status: 'processing', notes: ''
@@ -196,7 +188,7 @@ export default function MerchantDashboard() {
   const showToast = (message, type = 'success') => setToast({ message, type })
 
   // Check if any modal is open (to pause auto-refresh)
-  const isAnyModalOpen = productModal.open || orderDetailModal.open || campaignModal.open || 
+  const isAnyModalOpen = productModal.open || orderDetailModal.open || 
     reviewModal.open || shipmentModal.open || customerModal.open || deleteConfirm.open
 
   // Modal openers (initialize form state when opening)
@@ -211,17 +203,6 @@ export default function MerchantDashboard() {
   const openProductEdit = (product) => {
     setProductForm({ ...product })
     setProductModal({ open: true, mode: 'edit', data: product })
-  }
-  const openCampaignCreate = () => {
-    setCampaignForm({
-      name: '', description: '', type: 'email', status: 'draft', audience_count: '',
-      content: { subject: '', body: '', cta: '' }
-    })
-    setCampaignModal({ open: true, mode: 'create', data: null })
-  }
-  const openCampaignEdit = (campaign) => {
-    setCampaignForm({ ...campaign })
-    setCampaignModal({ open: true, mode: 'edit', data: campaign })
   }
   const openReviewReply = (review) => {
     setReviewReplyText(review.merchant_reply || '')
@@ -263,13 +244,12 @@ export default function MerchantDashboard() {
     if (!isAuthenticated) return
     
     try {
-      const [statsRes, ordersRes, productsRes, customersRes, reviewsRes, campaignsRes, intentsRes, configRes] = await Promise.all([
+      const [statsRes, ordersRes, productsRes, customersRes, reviewsRes, intentsRes, configRes] = await Promise.all([
         fetch(`${BASE_URL}/stats`).then(r => r.json()),
         fetch(`${BASE_URL}/orders`).then(r => r.json()),
         fetch(`${BASE_URL}/products`).then(r => r.json()),
         fetch(`${BASE_URL}/consumer-matrix`).then(r => r.json()),
         fetch(`${BASE_URL}/reviews`).then(r => r.json()),
-        fetch(`${BASE_URL}/campaigns`).then(r => r.json()),
         fetch(`${BASE_URL}/intents?limit=50`).then(r => r.json()),
         fetch(`${BASE_URL}/store-config`).then(r => r.json())
       ])
@@ -279,7 +259,6 @@ export default function MerchantDashboard() {
       if (Array.isArray(productsRes)) setProducts(productsRes)
       if (Array.isArray(customersRes)) setCustomers(customersRes)
       if (Array.isArray(reviewsRes)) setReviews(reviewsRes)
-      if (Array.isArray(campaignsRes)) setCampaigns(campaignsRes)
       if (Array.isArray(intentsRes)) setIntents(intentsRes)
       if (configRes && !configRes.error) setStoreConfig(configRes)
     } catch (error) {
@@ -289,6 +268,54 @@ export default function MerchantDashboard() {
 
   useEffect(() => {
     fetchData()
+  }, [fetchData])
+
+  // Real-time sync integration
+  useRealtimeSync({
+    isAuthenticated,
+    onDataUpdate: (data) => {
+      // Update orders with new data
+      if (data.orders && data.orders.length > 0) {
+        setOrders(prev => {
+          const existingIds = new Set(prev.map(o => o.id))
+          const newOrders = data.orders.filter(o => !existingIds.has(o.id))
+          return [...newOrders, ...prev].slice(0, 100) // Keep latest 100
+        })
+      }
+
+      // Update intents stream
+      if (data.intents && data.intents.length > 0) {
+        setIntents(prev => {
+          const existingIds = new Set(prev.map(i => i.id))
+          const newIntents = data.intents.filter(i => !existingIds.has(i.id))
+          return [...newIntents, ...prev].slice(0, 50) // Keep latest 50
+        })
+      }
+
+      // Update reviews
+      if (data.reviews && data.reviews.length > 0) {
+        setReviews(prev => {
+          const existingIds = new Set(prev.map(r => r.id))
+          const newReviews = data.reviews.filter(r => !existingIds.has(r.id))
+          return [...newReviews, ...prev].slice(0, 100) // Keep latest 100
+        })
+      }
+
+      // Show toast notification for new activity
+      if (data.orders?.length > 0 || data.intents?.length > 0) {
+        setToast({
+          type: 'success',
+          title: 'New Activity',
+          message: `${(data.orders?.length || 0) + (data.intents?.length || 0)} new updates`
+        })
+        setTimeout(() => setToast(null), 3000)
+      }
+    },
+    interval: 10000, // 10 seconds
+    enabled: true
+  })
+
+  useEffect(() => {
     if (!isAnyModalOpen) {
       const interval = setInterval(fetchData, 10000)
       return () => clearInterval(interval)
@@ -420,47 +447,6 @@ export default function MerchantDashboard() {
     }
   }
 
-  // Campaigns
-  const saveCampaign = async (campaignData) => {
-    try {
-      setLoading(true)
-      const isEdit = campaignModal.mode === 'edit'
-      const url = isEdit ? `${BASE_URL}/campaigns/${campaignData.id}` : `${BASE_URL}/campaigns`
-      const method = isEdit ? 'PUT' : 'POST'
-      
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(campaignData)
-      })
-      if (res.ok) {
-        showToast(isEdit ? 'Campaign updated' : 'Campaign created')
-        setCampaignModal({ open: false, mode: 'create', data: null })
-        await fetchData()
-      }
-    } catch (error) {
-      showToast('Failed to save campaign', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const deleteCampaign = async (id) => {
-    try {
-      setLoading(true)
-      const res = await fetch(`${BASE_URL}/campaigns/${id}`, { method: 'DELETE' })
-      if (res.ok) {
-        showToast('Campaign deleted')
-        setDeleteConfirm({ open: false, type: '', id: '', name: '' })
-        await fetchData()
-      }
-    } catch (error) {
-      showToast('Failed to delete campaign', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   // Store Config
   const updateStoreConfig = async (updates) => {
     try {
@@ -500,7 +486,6 @@ export default function MerchantDashboard() {
     const { type, id } = deleteConfirm
     if (type === 'product') await deleteProduct(id)
     else if (type === 'review') await deleteReview(id)
-    else if (type === 'campaign') await deleteCampaign(id)
   }
 
   // ═══════════════════════════════════════════
@@ -939,73 +924,6 @@ export default function MerchantDashboard() {
     )
   }
 
-  const renderCampaigns = () => (
-    <div>
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-2xl font-bold">Campaigns</h1>
-          <p className="text-muted-foreground text-sm mt-1">{campaigns.length} campaigns</p>
-        </div>
-        <Button size="sm" onClick={openCampaignCreate}>
-          <Plus className="w-4 h-4 mr-2" /> Create Campaign
-        </Button>
-      </div>
-
-      {campaigns.length === 0 ? (
-        <EmptyState 
-          icon={Megaphone} 
-          title="No campaigns yet" 
-          description="Create your first email campaign to engage customers."
-          action={<Button size="sm" onClick={() => setCampaignModal({ open: true, mode: 'create', data: null })}><Plus className="w-4 h-4 mr-2" /> Create Campaign</Button>}
-        />
-      ) : (
-        <div className="space-y-4">
-          {campaigns.map(campaign => (
-            <div key={campaign.id} className="bg-card rounded-xl p-5 border border-border hover:shadow-sm transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold">{campaign.name}</h3>
-                    <Badge variant={campaign.status === 'active' ? 'default' : campaign.status === 'scheduled' ? 'secondary' : 'outline'}>
-                      {campaign.status}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{campaign.description}</p>
-                </div>
-                <div className="flex gap-1 shrink-0 ml-4">
-                  <Button size="sm" variant="ghost" onClick={() => openCampaignEdit(campaign)}>
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" className="text-red-500" onClick={() => setDeleteConfirm({ open: true, type: 'campaign', id: campaign.id, name: campaign.name })}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <div className="grid grid-cols-4 gap-4">
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase">Type</div>
-                  <div className="text-sm font-medium capitalize">{campaign.type}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase">Audience</div>
-                  <div className="text-lg font-bold">{campaign.audience_count || 0}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase">Sent</div>
-                  <div className="text-lg font-bold">{campaign.sent_count || 0}</div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground uppercase">Open Rate</div>
-                  <div className="text-lg font-bold">{campaign.open_rate || 0}%</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-
   const renderShipments = () => {
     const shipments = orders.filter(o => ['processing', 'shipped', 'delivered'].includes(o.status))
 
@@ -1373,81 +1291,6 @@ export default function MerchantDashboard() {
     )
   }
 
-  const CampaignModal = () => {
-    return (
-      <Dialog open={campaignModal.open} onOpenChange={(open) => !open && setCampaignModal({ open: false, mode: 'create', data: null })}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{campaignModal.mode === 'edit' ? 'Edit Campaign' : 'Create Campaign'}</DialogTitle>
-            <DialogDescription>
-              {campaignModal.mode === 'edit' ? 'Update the campaign details.' : 'Set up a new marketing campaign.'}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div>
-              <Label>Campaign Name *</Label>
-              <Input value={campaignForm.name} onChange={(e) => setCampaignForm({...campaignForm, name: e.target.value})} className="mt-1" placeholder="e.g. Summer Sale" />
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea value={campaignForm.description} onChange={(e) => setCampaignForm({...campaignForm, description: e.target.value})} className="mt-1" rows={2} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Type</Label>
-                <Select value={campaignForm.type} onValueChange={(v) => setCampaignForm({...campaignForm, type: v})}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="sms">SMS</SelectItem>
-                    <SelectItem value="push">Push Notification</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Select value={campaignForm.status} onValueChange={(v) => setCampaignForm({...campaignForm, status: v})}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="scheduled">Scheduled</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label>Audience Count</Label>
-              <Input type="number" value={campaignForm.audience_count} onChange={(e) => setCampaignForm({...campaignForm, audience_count: e.target.value})} className="mt-1" placeholder="0" />
-            </div>
-            <Separator />
-            <h4 className="font-semibold text-sm">Content</h4>
-            <div>
-              <Label>Subject Line</Label>
-              <Input value={campaignForm.content?.subject || ''} onChange={(e) => setCampaignForm({...campaignForm, content: {...(campaignForm.content || {}), subject: e.target.value}})} className="mt-1" placeholder="Email subject..." />
-            </div>
-            <div>
-              <Label>Body</Label>
-              <Textarea value={campaignForm.content?.body || ''} onChange={(e) => setCampaignForm({...campaignForm, content: {...(campaignForm.content || {}), body: e.target.value}})} className="mt-1" rows={3} placeholder="Campaign body..." />
-            </div>
-            <div>
-              <Label>CTA Button Text</Label>
-              <Input value={campaignForm.content?.cta || ''} onChange={(e) => setCampaignForm({...campaignForm, content: {...(campaignForm.content || {}), cta: e.target.value}})} className="mt-1" placeholder="e.g. Shop Now" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCampaignModal({ open: false, mode: 'create', data: null })}>Cancel</Button>
-            <Button onClick={() => saveCampaign(campaignForm)} disabled={loading || !campaignForm.name}>
-              {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {campaignModal.mode === 'edit' ? 'Update' : 'Create'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
   const ReviewReplyModal = () => {
     return (
       <Dialog open={reviewModal.open} onOpenChange={(open) => !open && setReviewModal({ open: false, review: null })}>
@@ -1604,7 +1447,6 @@ export default function MerchantDashboard() {
       case 'catalog': return renderCatalog()
       case 'customers': return renderCustomers()
       case 'reviews': return renderReviews()
-      case 'campaigns': return renderCampaigns()
       case 'shipments': return renderShipments()
       case 'store-design': return renderStoreDesign()
       case 'conversations': return renderConversations()
@@ -1693,7 +1535,6 @@ export default function MerchantDashboard() {
       {/* Modals */}
       <ProductModal />
       <OrderDetailModal />
-      <CampaignModal />
       <ReviewReplyModal />
       <ShipmentEditModal />
       <CustomerDetailModal />
