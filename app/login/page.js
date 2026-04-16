@@ -40,10 +40,7 @@ export default function CustomerLoginPage() {
         body: JSON.stringify({ email, password, type: 'customer' })
       })
       const data = await res.json()
-      if (data.success) { 
-        localStorage.setItem('user', JSON.stringify(data.user))
-        window.location.href = '/'
-      }
+      if (data.success) { localStorage.setItem('user', JSON.stringify(data.user)); router.push('/') }
       else setError(data.message || 'Invalid email or password')
     } catch { setError('Something went wrong. Try again.') } finally { setLoading(false) }
   }
@@ -59,10 +56,7 @@ export default function CustomerLoginPage() {
         body: JSON.stringify({ name, email: signupEmail, password: signupPassword, type: 'customer' })
       })
       const data = await res.json()
-      if (data.success) { 
-        localStorage.setItem('user', JSON.stringify(data.user))
-        window.location.href = '/'
-      }
+      if (data.success) { localStorage.setItem('user', JSON.stringify(data.user)); router.push('/') }
       else setError(data.message || 'Could not create account')
     } catch { setError('Something went wrong. Try again.') } finally { setLoading(false) }
   }
@@ -75,7 +69,7 @@ export default function CustomerLoginPage() {
 
       {/* Back to store */}
       <button
-        onClick={() => router.push('/')}
+        onClick={() => router.push('/store')}
         className="absolute top-5 left-5 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
       >
         ← Back to store
@@ -248,7 +242,7 @@ export default function CustomerLoginPage() {
           {/* Footer inside card */}
           <div className="border-t border-border/70 bg-secondary/20 px-6 py-4 flex items-center justify-between">
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/store')}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 font-medium"
             >
               Continue as guest <ArrowRight className="w-3 h-3" />

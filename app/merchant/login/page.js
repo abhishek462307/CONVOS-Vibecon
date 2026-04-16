@@ -148,7 +148,7 @@ export default function MerchantLoginPage() {
             <p className="text-sm text-white/40 mt-1">Sign in to your merchant dashboard</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/40">Email</label>
               <Input
@@ -158,6 +158,8 @@ export default function MerchantLoginPage() {
                 placeholder="you@yourstore.com"
                 required
                 className="h-12 rounded-2xl bg-white/6 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-purple-500/50 focus-visible:border-purple-500/50"
+                autoComplete="email"
+                suppressHydrationWarning
               />
             </div>
 
@@ -170,6 +172,8 @@ export default function MerchantLoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
+                  autoComplete="current-password"
+                  suppressHydrationWarning
                   className="h-12 rounded-2xl bg-white/6 border-white/10 text-white placeholder:text-white/25 focus-visible:ring-purple-500/50 focus-visible:border-purple-500/50 pr-11"
                 />
                 <button
@@ -221,7 +225,7 @@ export default function MerchantLoginPage() {
 
           <div className="mt-5 space-y-2.5">
             <button
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/store')}
               className="w-full h-11 rounded-2xl border border-white/10 bg-white/4 text-sm font-semibold text-white/60 hover:text-white/90 hover:bg-white/8 hover:border-white/20 transition-all flex items-center justify-center gap-2"
             >
               <Globe className="w-4 h-4" /> View Storefront

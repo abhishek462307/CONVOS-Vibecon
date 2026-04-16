@@ -26,7 +26,6 @@ const SIDEBAR_ITEMS = [
   { section: 'OVERVIEW', items: [
     { key: 'home', label: 'Home', icon: LayoutDashboard },
     { key: 'conversations', label: 'Conversations', icon: MessageSquare },
-    { key: 'ai-authority', label: 'AI Authority', icon: Bot },
   ]},
   { section: 'COMMERCE', items: [
     { key: 'orders', label: 'Orders', icon: ShoppingBag },
@@ -38,9 +37,6 @@ const SIDEBAR_ITEMS = [
   ]},
   { section: 'GROWTH', items: [
     { key: 'campaigns', label: 'Campaigns', icon: Megaphone },
-    { key: 'segments', label: 'Segments', icon: PieChart },
-    { key: 'email', label: 'Email', icon: Mail },
-    { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
   ]}
 ]
 
@@ -178,29 +174,6 @@ function MerchantDashboard() {
   const [campaigns, setCampaigns] = useState([])
   const [storeConfig, setStoreConfig] = useState(null)
   const [timeRange, setTimeRange] = useState('7D')
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [authLoading, setAuthLoading] = useState(true)
-
-  // Check authentication
-  useEffect(() => {
-    try {
-      const user = localStorage.getItem('user')
-      if (user) {
-        const userData = JSON.parse(user)
-        if (userData.type === 'merchant') {
-          setIsAuthenticated(true)
-        } else {
-          window.location.href = '/merchant/login'
-        }
-      } else {
-        window.location.href = '/merchant/login'
-      }
-    } catch (e) {
-      window.location.href = '/merchant/login'
-    } finally {
-      setAuthLoading(false)
-    }
-  }, [])
 
   const fetchData = useCallback(async () => {
     try {
@@ -237,7 +210,6 @@ function MerchantDashboard() {
     switch (activeSection) {
       case 'home': return renderOverview()
       case 'conversations': return renderConversations()
-      case 'ai-authority': return renderAIAuthority()
       case 'catalog': return renderCatalog()
       case 'customers': return renderCustomers()
       case 'orders': return renderOrders()
@@ -245,7 +217,7 @@ function MerchantDashboard() {
       case 'store-design': return renderStoreDesign()
       case 'reviews': return renderReviews()
       case 'campaigns': return renderCampaigns()
-      default: return renderPlaceholder(activeSection)
+      default: return renderOverview()
     }
   }
 
@@ -371,28 +343,6 @@ function MerchantDashboard() {
           ) : intents.map(i => <IntentItem key={i.id} intent={i} />)}
         </ScrollArea>
       </div>
-    </div>
-  )
-
-  const renderAIAuthority = () => (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-[28px] font-semibold tracking-tight">AI Authority</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Consumer Matrix — trust scores, risk levels, and buyer intelligence.</p>
-      </div>
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        {profiles.map(p => <ConsumerCard key={p.id || p.session_id} profile={p} />)}
-      </div>
-      <h2 className="text-base font-semibold tracking-tight mb-3 mt-8">Active Missions</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {missions.map(m => <MissionItem key={m.id} mission={m} />)}
-      </div>
-      {profiles.length === 0 && missions.length === 0 && (
-        <div className="text-center py-16 text-muted-foreground">
-          <Shield className="w-8 h-8 mx-auto mb-3 opacity-30" />
-          <p className="text-sm">No consumer intelligence yet. Profiles appear as buyers interact.</p>
-        </div>
-      )}
     </div>
   )
 
@@ -718,21 +668,6 @@ function MerchantDashboard() {
     </div>
   )
 
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <ConvosLogo size={40} />
-          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!isAuthenticated) {
-    return null
-  }
-
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
@@ -795,9 +730,9 @@ function MerchantDashboard() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Live
               </span>
             </div>
-            <a href="/">
+            <a href="/store">
               <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold border-border/70">
-                <Globe className="w-3.5 h-3.5 mr-1.5" /> Store
+                <Globe className="w-3.5 h-3.5 mr-1.5" /> View Store
               </Button>
             </a>
             <a href="/merchant/login">
