@@ -11,7 +11,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://supervisor-hub-9.preview.emergentagent.com/api"
+BASE_URL = "http://localhost:3000/api"
 SESSION_ID = "test-backend-001"
 TIMEOUT = 45  # Extended timeout for AI endpoints
 

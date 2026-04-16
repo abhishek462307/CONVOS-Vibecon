@@ -2,14 +2,18 @@ import { MongoClient } from 'mongodb'
 import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
 
-let client, db
+let mongoClient = null
+let database = null
+
 async function connectToMongo() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
-    await client.connect()
-    db = client.db(process.env.DB_NAME || 'your_database_name')
+  if (!database) {
+    if (!mongoClient) {
+      mongoClient = new MongoClient(process.env.MONGO_URL || 'mongodb://localhost:27017')
+      await mongoClient.connect()
+    }
+    database = mongoClient.db(process.env.DB_NAME || 'your_database_name')
   }
-  return db
+  return database
 }
 
 function corsResponse(data, status = 200) {
@@ -66,6 +70,13 @@ const SYSTEM_PROMPT = `You are Mark, the friendly AI shopping assistant for Arti
 ABOUT THE STORE:
 Artisan Coffee Roasters is a premium coffee shop offering single origin beans, blends, espresso roasts, decaf options, and brewing equipment. All coffee is roasted fresh to order.
 
+PRODUCT CATEGORIES (use these exact names):
+- Single Origin (Ethiopian, Colombian, Kenyan)
+- Blends (House Blend, Dark Roast Blend, Morning Sunrise Blend)
+- Espresso (Espresso Classico, Italian Roast Espresso)
+- Decaf (Swiss Water Decaf, Decaf Colombian)
+- Equipment (French Press, Pour-Over Kit, Grinder)
+
 CAPABILITIES:
 - Search and recommend coffees from the catalog
 - Create persistent shopping missions for buyer goals
@@ -81,13 +92,21 @@ PERSONALITY:
 
 RULES:
 1. ALWAYS use search_products before recommending anything
-2. When a buyer describes a goal, use create_mission to track it
-3. For negotiations, respect the bargain_min_price boundary
-4. Only recommend products from search results
-5. When buyer seems ready, offer to generate checkout
-6. Keep responses concise (2-4 sentences unless detail is needed)
-7. Mention specific prices and savings when relevant
-8. Be enthusiastic about good deals
+2. When searching, use ONLY the query parameter (do not use category parameter unless user explicitly asks for a specific category)
+3. For "blend" searches, search with query="blend" NOT category="coffee" 
+4. When a buyer describes a goal, use create_mission to track it
+5. For negotiations, respect the bargain_min_price boundary
+6. Only recommend products from search results
+7. When buyer seems ready, offer to generate checkout
+8. Keep responses concise (2-4 sentences unless detail is needed)
+9. Mention specific prices and savings when relevant
+10. Be enthusiastic about good deals
+
+SEARCH TOOL USAGE:
+- General queries: search_products({ query: "user's search term" })
+- Category-specific: search_products({ query: "blend" }) for blends
+- Price filtering: search_products({ query: "ethiopian", max_price: 20 })
+- DO NOT use category parameter unless user explicitly says "in the [category] category"
 
 IMPORTANT: When showing products, mention them by name and price. If buyer asks to negotiate, use negotiate_price tool.`
 
@@ -252,6 +271,7 @@ function parseAIResponse(data) {
 // TOOL EXECUTION
 // ═══════════════════════════════════════════
 async function executeTool(name, argsStr, db, sessionId) {
+  console.log('[TOOL] Executing:', name, 'Args:', argsStr);
   let args = {}
   try { args = JSON.parse(argsStr) } catch(e) { args = {} }
 
@@ -269,7 +289,9 @@ async function executeTool(name, argsStr, db, sessionId) {
       }
       if (args.category) filter.category = { $regex: args.category, $options: 'i' }
       if (args.max_price) filter.price = { $lte: args.max_price }
+      console.log('[SEARCH] Filter:', JSON.stringify(filter));
       const products = await db.collection('products').find(filter).limit(6).toArray()
+      console.log('[SEARCH] Found:', products.length, 'products');
       const clean = products.map(({ _id, ...p }) => p)
       await logIntent(db, sessionId, 'search', `Searched: "${query}"${args.max_price ? ` under $${args.max_price}` : ''}`, { query, results: clean.length })
       return JSON.stringify({ products: clean, count: clean.length })
