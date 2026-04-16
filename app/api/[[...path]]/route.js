@@ -616,7 +616,194 @@ async function handleRoute(request, { params }) {
       const recentIntents = await db.collection('intents').countDocuments({ timestamp: { $gt: new Date(Date.now() - 3600000) } })
       const profiles = await db.collection('consumer_profiles').find({}).toArray()
       const avgTrust = profiles.length ? (profiles.reduce((s, p) => s + (p.trust_score || 80), 0) / profiles.length).toFixed(1) : 80
-      return corsResponse({ totalProducts, totalConversations, totalMissions, activeMissions, totalIntents, recentIntents, avgTrustScore: parseFloat(avgTrust), totalBuyers: profiles.length })
+      const totalOrders = await db.collection('orders').countDocuments()
+      const totalRevenue = await db.collection('orders').aggregate([
+        { $match: { payment_status: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$total' } } }
+      ]).toArray()
+      return corsResponse({ 
+        totalProducts, totalConversations, totalMissions, activeMissions, 
+        totalIntents, recentIntents, avgTrustScore: parseFloat(avgTrust), 
+        totalBuyers: profiles.length, totalOrders,
+        totalRevenue: totalRevenue[0]?.total || 0
+      })
+    }
+
+    // ─── Orders ───
+    if (route === '/orders' && method === 'GET') {
+      const orders = await db.collection('orders').find({}).sort({ created_at: -1 }).limit(100).toArray()
+      return corsResponse(orders.map(({ _id, ...o }) => o))
+    }
+
+    if (route === '/orders' && method === 'POST') {
+      const body = await request.json()
+      const order = {
+        id: uuidv4(),
+        order_number: `ORD-${Date.now()}`,
+        session_id: body.session_id || 'unknown',
+        items: body.items || [],
+        subtotal: body.subtotal || 0,
+        shipping: body.shipping || 0,
+        tax: body.tax || 0,
+        total: body.total || 0,
+        status: body.status || 'pending',
+        payment_status: body.payment_status || 'unpaid',
+        stripe_session_id: body.stripe_session_id || null,
+        shipping_address: body.shipping_address || null,
+        tracking_number: body.tracking_number || null,
+        carrier: body.carrier || null,
+        notes: body.notes || '',
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+      await db.collection('orders').insertOne(order)
+      return corsResponse(order, 201)
+    }
+
+    if (route.startsWith('/orders/') && method === 'PUT') {
+      const orderId = route.split('/')[2]
+      const body = await request.json()
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        { $set: { ...body, updated_at: new Date() } }
+      )
+      return corsResponse({ success: true })
+    }
+
+    // ─── Shipments ───
+    if (route === '/shipments' && method === 'GET') {
+      const shipments = await db.collection('orders').find({
+        status: { $in: ['processing', 'shipped', 'delivered'] }
+      }).sort({ updated_at: -1 }).limit(50).toArray()
+      return corsResponse(shipments.map(({ _id, ...s }) => s))
+    }
+
+    if (route.startsWith('/shipments/') && method === 'PUT') {
+      const orderId = route.split('/')[2]
+      const body = await request.json()
+      await db.collection('orders').updateOne(
+        { id: orderId },
+        { $set: { 
+          tracking_number: body.tracking_number,
+          carrier: body.carrier,
+          status: body.status || 'shipped',
+          updated_at: new Date()
+        }}
+      )
+      return corsResponse({ success: true })
+    }
+
+    // ─── Reviews ───
+    if (route === '/reviews' && method === 'GET') {
+      const reviews = await db.collection('reviews').find({}).sort({ created_at: -1 }).limit(100).toArray()
+      // Populate product info
+      const reviewsWithProducts = await Promise.all(reviews.map(async (r) => {
+        if (r.product_id) {
+          const product = await db.collection('products').findOne({ id: r.product_id })
+          return { ...r, _id: undefined, product: product ? { id: product.id, name: product.name, image: product.image } : null }
+        }
+        return { ...r, _id: undefined, product: null }
+      }))
+      return corsResponse(reviewsWithProducts)
+    }
+
+    if (route === '/reviews' && method === 'POST') {
+      const body = await request.json()
+      const review = {
+        id: uuidv4(),
+        product_id: body.product_id,
+        session_id: body.session_id || 'anonymous',
+        author_name: body.author_name || 'Anonymous',
+        rating: body.rating,
+        title: body.title || '',
+        content: body.content || '',
+        status: body.status || 'published',
+        created_at: new Date()
+      }
+      await db.collection('reviews').insertOne(review)
+      return corsResponse(review, 201)
+    }
+
+    if (route.startsWith('/reviews/') && method === 'PUT') {
+      const reviewId = route.split('/')[2]
+      const body = await request.json()
+      await db.collection('orders').updateOne(
+        { id: reviewId },
+        { $set: { status: body.status } }
+      )
+      return corsResponse({ success: true })
+    }
+
+    // ─── Store Config ───
+    if (route === '/store-config' && method === 'GET') {
+      let config = await db.collection('store_config').findOne({})
+      if (!config) {
+        config = {
+          id: uuidv4(),
+          name: STORE_CONFIG.name,
+          tagline: STORE_CONFIG.tagline,
+          description: STORE_CONFIG.description,
+          banner: STORE_CONFIG.banner,
+          categories: STORE_CONFIG.categories,
+          ai_name: STORE_CONFIG.ai_name,
+          ai_greeting: STORE_CONFIG.ai_greeting,
+          hero_image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1200&h=600&fit=crop',
+          logo_url: '',
+          theme: {},
+          status: 'live',
+          created_at: new Date(),
+          updated_at: new Date()
+        }
+        await db.collection('store_config').insertOne(config)
+      }
+      const { _id, ...cfg } = config
+      return corsResponse(cfg)
+    }
+
+    if (route === '/store-config' && method === 'PUT') {
+      const body = await request.json()
+      await db.collection('store_config').updateOne(
+        {},
+        { $set: { ...body, updated_at: new Date() } },
+        { upsert: true }
+      )
+      return corsResponse({ success: true })
+    }
+
+    // ─── Campaigns ───
+    if (route === '/campaigns' && method === 'GET') {
+      const campaigns = await db.collection('campaigns').find({}).sort({ created_at: -1 }).toArray()
+      return corsResponse(campaigns.map(({ _id, ...c }) => c))
+    }
+
+    if (route === '/campaigns' && method === 'POST') {
+      const body = await request.json()
+      const campaign = {
+        id: uuidv4(),
+        name: body.name,
+        description: body.description || '',
+        type: body.type || 'email',
+        status: body.status || 'draft',
+        audience_count: body.audience_count || 0,
+        sent_count: 0,
+        open_rate: 0,
+        content: body.content || {},
+        scheduled_at: body.scheduled_at ? new Date(body.scheduled_at) : null,
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+      await db.collection('campaigns').insertOne(campaign)
+      return corsResponse(campaign, 201)
+    }
+
+    if (route.startsWith('/campaigns/') && method === 'PUT') {
+      const campaignId = route.split('/')[2]
+      const body = await request.json()
+      await db.collection('campaigns').updateOne(
+        { id: campaignId },
+        { $set: { ...body, updated_at: new Date() } }
+      )
+      return corsResponse({ success: true })
     }
 
     return corsResponse({ error: `Route ${route} not found` }, 404)

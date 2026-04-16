@@ -159,22 +159,34 @@ function MerchantDashboard() {
   const [profiles, setProfiles] = useState([])
   const [missions, setMissions] = useState([])
   const [products, setProducts] = useState([])
+  const [orders, setOrders] = useState([])
+  const [reviews, setReviews] = useState([])
+  const [campaigns, setCampaigns] = useState([])
+  const [storeConfig, setStoreConfig] = useState(null)
   const [timeRange, setTimeRange] = useState('7D')
 
   const fetchData = useCallback(async () => {
     try {
-      const [s, i, p, m, pr] = await Promise.all([
+      const [s, i, p, m, pr, o, r, c, sc] = await Promise.all([
         fetch('/api/stats').then(r => r.json()),
         fetch('/api/intents?limit=50').then(r => r.json()),
         fetch('/api/consumer-matrix').then(r => r.json()),
         fetch('/api/missions').then(r => r.json()),
-        fetch('/api/products').then(r => r.json())
+        fetch('/api/products').then(r => r.json()),
+        fetch('/api/orders').then(r => r.json()),
+        fetch('/api/reviews').then(r => r.json()),
+        fetch('/api/campaigns').then(r => r.json()),
+        fetch('/api/store-config').then(r => r.json())
       ])
       if (s && !s.error) setStats(s)
       if (Array.isArray(i)) setIntents(i)
       if (Array.isArray(p)) setProfiles(p)
       if (Array.isArray(m)) setMissions(m)
       if (Array.isArray(pr)) setProducts(pr)
+      if (Array.isArray(o)) setOrders(o)
+      if (Array.isArray(r)) setReviews(r)
+      if (Array.isArray(c)) setCampaigns(c)
+      if (sc && !sc.error) setStoreConfig(sc)
     } catch (e) { console.error(e) }
   }, [])
 
@@ -191,6 +203,11 @@ function MerchantDashboard() {
       case 'ai-authority': return renderAIAuthority()
       case 'catalog': return renderCatalog()
       case 'customers': return renderCustomers()
+      case 'orders': return renderOrders()
+      case 'shipments': return renderShipments()
+      case 'store-design': return renderStoreDesign()
+      case 'reviews': return renderReviews()
+      case 'campaigns': return renderCampaigns()
       default: return renderPlaceholder(activeSection)
     }
   }
@@ -372,6 +389,255 @@ function MerchantDashboard() {
         <div className="text-center py-16 text-muted-foreground">
           <Users className="w-8 h-8 mx-auto mb-3 opacity-30" />
           <p className="text-sm">No customers yet.</p>
+        </div>
+      )}
+    </div>
+  )
+
+  const renderOrders = () => (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Orders</h1>
+          <p className="text-sm text-muted-foreground">{orders.length} total orders</p>
+        </div>
+      </div>
+      <div className="bg-card rounded-xl store-shadow overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Order</th>
+              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Customer</th>
+              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Date</th>
+              <th className="text-right px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Total</th>
+              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Payment</th>
+              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map(o => (
+              <tr key={o.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                <td className="px-4 py-3 font-medium">{o.order_number}</td>
+                <td className="px-4 py-3 text-muted-foreground">{o.shipping_address?.name || 'N/A'}</td>
+                <td className="px-4 py-3 text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</td>
+                <td className="px-4 py-3 text-right font-semibold">${parseFloat(o.total).toFixed(2)}</td>
+                <td className="px-4 py-3">
+                  <Badge className={`text-[10px] border-0 ${o.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                    {o.payment_status}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3">
+                  <Badge variant="outline" className="text-[10px]">{o.status}</Badge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {orders.length === 0 && (
+          <div className="text-center py-16 text-muted-foreground">
+            <ShoppingBag className="w-8 h-8 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">No orders yet.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderShipments = () => {
+    const shipments = orders.filter(o => ['processing', 'shipped', 'delivered'].includes(o.status))
+    return (
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold mb-1">Shipments</h1>
+            <p className="text-sm text-muted-foreground">{shipments.length} active shipments</p>
+          </div>
+        </div>
+        <div className="bg-card rounded-xl store-shadow overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border">
+                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Order</th>
+                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Customer</th>
+                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Carrier</th>
+                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Tracking</th>
+                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Status</th>
+                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {shipments.map(s => (
+                <tr key={s.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                  <td className="px-4 py-3 font-medium">{s.order_number}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{s.shipping_address?.name || 'N/A'}</td>
+                  <td className="px-4 py-3">{s.carrier || '—'}</td>
+                  <td className="px-4 py-3 font-mono text-xs">{s.tracking_number || '—'}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="outline" className="text-[10px]">{s.status}</Badge>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground text-xs">{getTimeAgo(new Date(s.updated_at))}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {shipments.length === 0 && (
+            <div className="text-center py-16 text-muted-foreground">
+              <Truck className="w-8 h-8 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No active shipments.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  const renderReviews = () => (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Reviews</h1>
+          <p className="text-sm text-muted-foreground">{reviews.length} total reviews</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        {reviews.map(r => (
+          <div key={r.id} className="bg-card rounded-xl p-5 store-shadow">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3">
+                {r.product?.image && (
+                  <img src={r.product.image} alt={r.product.name} className="w-12 h-12 rounded-md object-cover" />
+                )}
+                <div>
+                  <p className="font-semibold text-sm">{r.product?.name || 'Product'}</p>
+                  <p className="text-xs text-muted-foreground">{r.author_name}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex">
+                  {[1,2,3,4,5].map(i => (
+                    <Star key={i} className={`w-4 h-4 ${i <= r.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                  ))}
+                </div>
+                <Badge className={`text-[10px] border-0 ${r.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                  {r.status}
+                </Badge>
+              </div>
+            </div>
+            {r.title && <p className="font-medium text-sm mb-1">{r.title}</p>}
+            <p className="text-sm text-muted-foreground">{r.content}</p>
+            <p className="text-xs text-muted-foreground mt-2">{new Date(r.created_at).toLocaleDateString()}</p>
+          </div>
+        ))}
+      </div>
+      {reviews.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground">
+          <Star className="w-8 h-8 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">No reviews yet.</p>
+        </div>
+      )}
+    </div>
+  )
+
+  const renderStoreDesign = () => (
+    <div>
+      <h1 className="text-2xl font-bold mb-1">Store Design</h1>
+      <p className="text-sm text-muted-foreground mb-6">Customize your storefront appearance and branding.</p>
+      {storeConfig && (
+        <div className="space-y-4">
+          <div className="bg-card rounded-xl p-5 store-shadow">
+            <h3 className="font-semibold mb-3">Store Information</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider">Store Name</label>
+                <p className="text-sm font-medium mt-1">{storeConfig.name}</p>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider">Tagline</label>
+                <p className="text-sm font-medium mt-1">{storeConfig.tagline}</p>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider">Description</label>
+                <p className="text-sm text-muted-foreground mt-1">{storeConfig.description}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-5 store-shadow">
+            <h3 className="font-semibold mb-3">AI Assistant Settings</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider">AI Name</label>
+                <p className="text-sm font-medium mt-1">{storeConfig.ai_name}</p>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground uppercase tracking-wider">AI Greeting</label>
+                <p className="text-sm text-muted-foreground mt-1">{storeConfig.ai_greeting}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-card rounded-xl p-5 store-shadow">
+            <h3 className="font-semibold mb-3">Categories</h3>
+            <div className="flex flex-wrap gap-2">
+              {storeConfig.categories?.map((cat, i) => (
+                <Badge key={i} variant="outline">{cat}</Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const renderCampaigns = () => (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Campaigns</h1>
+          <p className="text-sm text-muted-foreground">{campaigns.length} total campaigns</p>
+        </div>
+        <Button size="sm" className="rounded-full h-8 text-xs bg-foreground text-background">
+          <Plus className="w-3.5 h-3.5 mr-1.5" /> Create campaign
+        </Button>
+      </div>
+      <div className="grid grid-cols-1 gap-4">
+        {campaigns.map(c => (
+          <div key={c.id} className="bg-card rounded-xl p-5 store-shadow">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold">{c.name}</h3>
+                  <Badge className={`text-[10px] border-0 ${
+                    c.status === 'active' ? 'bg-emerald-50 text-emerald-700' :
+                    c.status === 'scheduled' ? 'bg-blue-50 text-blue-700' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
+                    {c.status}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">{c.description}</p>
+              </div>
+              <Badge variant="outline" className="text-[10px]">{c.type}</Badge>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Audience</p>
+                <p className="text-lg font-bold mt-1">{c.audience_count}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Sent</p>
+                <p className="text-lg font-bold mt-1">{c.sent_count}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider">Open Rate</p>
+                <p className="text-lg font-bold mt-1">{c.open_rate}%</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {campaigns.length === 0 && (
+        <div className="text-center py-16 text-muted-foreground">
+          <Megaphone className="w-8 h-8 mx-auto mb-3 opacity-30" />
+          <p className="text-sm">No campaigns yet.</p>
         </div>
       )}
     </div>
