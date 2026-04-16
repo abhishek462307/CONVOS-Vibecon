@@ -3,17 +3,24 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import {
   LayoutDashboard, MessageSquare, Bot, ShoppingBag, Package, Users,
   Truck, Paintbrush, Star, Megaphone, PieChart, Mail, MessageCircle,
-  Search, ChevronRight, DollarSign, ClipboardList, TrendingUp, Activity,
-  Sparkles, Plus, ArrowUpRight, Coffee, Globe, Target, Shield
+  Search, DollarSign, ClipboardList, TrendingUp, Activity,
+  Sparkles, Plus, ArrowUpRight, Globe, Shield
 } from 'lucide-react'
+
+function ConvosLogo({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="url(#merchant-g)"/>
+      <defs><linearGradient id="merchant-g" x1="8" y1="2" x2="24" y2="28"><stop stopColor="#a855f7"/><stop offset="0.6" stopColor="#ec4899"/><stop offset="1" stopColor="#f97316"/></linearGradient></defs>
+    </svg>
+  )
+}
 
 const SIDEBAR_ITEMS = [
   { section: 'OVERVIEW', items: [
@@ -37,21 +44,28 @@ const SIDEBAR_ITEMS = [
   ]}
 ]
 
-function StatCard({ label, value, description, icon: Icon, change, changeColor = 'text-red-500' }) {
+function StatCard({ label, value, description, icon: Icon, change, changePositive }) {
+  const trendTone = change === undefined
+    ? 'bg-secondary text-muted-foreground'
+    : changePositive
+      ? 'bg-emerald-500/10 text-emerald-600'
+      : 'bg-red-500/10 text-red-500'
   return (
-    <div className="bg-card rounded-xl p-5 store-shadow">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-muted-foreground">{label}</p>
-          <p className="text-3xl font-bold mt-2 text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground mt-1.5">{description}</p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-            <Icon className="w-4 h-4 text-muted-foreground" />
+    <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card shadow-sm">
+      <div className="p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">{label}</p>
+            <p className="mt-2 text-[28px] font-semibold tracking-tight text-foreground">{value}</p>
           </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
+            <Icon className="h-4 w-4 text-foreground" />
+          </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-xs leading-4 text-muted-foreground">{description}</p>
           {change !== undefined && (
-            <span className={`text-xs font-medium ${changeColor}`}>{change}</span>
+            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${trendTone}`}>{change}</span>
           )}
         </div>
       </div>
@@ -61,31 +75,31 @@ function StatCard({ label, value, description, icon: Icon, change, changeColor =
 
 function PulseItem({ label, description, value }) {
   return (
-    <div className="flex items-center justify-between py-3 px-4">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+    <div className="flex items-center justify-between gap-4 rounded-[16px] border border-border/70 bg-secondary/20 px-3.5 py-2.5">
+      <div className="min-w-0">
+        <p className="text-[13px] font-medium text-foreground">{label}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
       </div>
-      <span className="text-lg font-bold text-foreground">{value}</span>
+      <p className="shrink-0 text-base font-semibold tracking-tight text-foreground">{value}</p>
     </div>
   )
 }
 
 function IntentItem({ intent }) {
   const typeColors = {
-    search: 'bg-blue-100 text-blue-700', negotiate: 'bg-amber-100 text-amber-700',
-    mission_create: 'bg-purple-100 text-purple-700', add_to_cart: 'bg-emerald-100 text-emerald-700',
-    checkout: 'bg-green-100 text-green-700', message: 'bg-gray-100 text-gray-700'
+    search: 'bg-blue-500/12 text-blue-400', negotiate: 'bg-amber-500/12 text-amber-400',
+    mission_create: 'bg-purple-500/12 text-purple-400', add_to_cart: 'bg-emerald-500/12 text-emerald-400',
+    checkout: 'bg-emerald-500/12 text-emerald-500', message: 'bg-secondary text-muted-foreground'
   }
-  const color = typeColors[intent.type] || 'bg-gray-100 text-gray-700'
+  const color = typeColors[intent.type] || 'bg-secondary text-muted-foreground'
   const time = new Date(intent.timestamp)
   const ago = getTimeAgo(time)
   return (
-    <div className="flex items-start gap-3 py-2.5 px-4 hover:bg-muted/50 transition-colors border-b border-border/50 last:border-0">
+    <div className="flex items-start gap-3 py-3 px-5 hover:bg-secondary/25 transition-colors border-b border-border/70 last:border-0">
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-foreground">{intent.description}</p>
-        <div className="flex items-center gap-2 mt-1">
-          <Badge className={`text-[10px] border-0 font-medium ${color}`}>{intent.type}</Badge>
+        <p className="text-sm font-medium text-foreground">{intent.description}</p>
+        <div className="flex items-center gap-2 mt-1.5">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${color}`}>{intent.type}</span>
           <span className="text-[10px] text-muted-foreground">{ago}</span>
           <span className="text-[10px] text-muted-foreground font-mono">{intent.session_id?.slice(0, 8)}</span>
         </div>
@@ -95,9 +109,9 @@ function IntentItem({ intent }) {
 }
 
 function ConsumerCard({ profile }) {
-  const trustColor = profile.trust_score >= 80 ? 'text-emerald-600' : profile.trust_score >= 60 ? 'text-amber-600' : 'text-red-600'
+  const trustColor = profile.trust_score >= 80 ? 'text-emerald-500' : profile.trust_score >= 60 ? 'text-amber-500' : 'text-red-500'
   return (
-    <div className="bg-card rounded-xl p-4 store-shadow">
+    <div className="rounded-[20px] border border-border/70 bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
@@ -108,7 +122,7 @@ function ConsumerCard({ profile }) {
             <p className="text-[10px] text-muted-foreground">{profile.interactions || 0} interactions</p>
           </div>
         </div>
-        <Badge className="text-[10px] bg-emerald-50 text-emerald-700 border-0">{profile.risk_level || 'Low Risk'}</Badge>
+        <span className="inline-flex items-center rounded-full bg-emerald-500/12 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-500">{profile.risk_level || 'Low Risk'}</span>
       </div>
       <div className="grid grid-cols-3 gap-3">
         <div>
@@ -130,9 +144,9 @@ function ConsumerCard({ profile }) {
 
 function MissionItem({ mission }) {
   return (
-    <div className="bg-card rounded-xl p-4 store-shadow">
+    <div className="rounded-[20px] border border-border/70 bg-card p-4 shadow-sm">
       <div className="flex items-start justify-between mb-2">
-        <Badge className={`text-[10px] border-0 ${mission.status === 'active' ? 'bg-purple-50 text-purple-700' : 'bg-emerald-50 text-emerald-700'}`}>{mission.status}</Badge>
+        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${mission.status === 'active' ? 'bg-purple-500/12 text-purple-400' : 'bg-emerald-500/12 text-emerald-500'}`}>{mission.status}</span>
         <span className="text-[10px] text-muted-foreground font-mono">{mission.session_id?.slice(0, 8)}</span>
       </div>
       <p className="text-sm font-medium">{mission.goal}</p>
@@ -214,71 +228,97 @@ function MerchantDashboard() {
 
   const renderOverview = () => (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted text-xs font-medium">
-          <Sparkles className="w-3.5 h-3.5" /> LIVE COMMERCE OPERATIONS
+      <header className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between mb-8">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/85 shadow-sm mb-4">
+            <Sparkles className="h-3.5 w-3.5" /> Live commerce operations
+          </div>
+          <h1 className="text-[28px] font-semibold tracking-tight text-foreground">Overview</h1>
+          <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
+            Watch revenue, AI activity, and storefront readiness from one calmer control surface for {stats ? 'Artisan Coffee Roasters' : 'your store'}.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          {['1D', '7D', '30D'].map(r => (
-            <button key={r} onClick={() => setTimeRange(r)} className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
-              timeRange === r ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:text-foreground'
-            }`}>{r}</button>
-          ))}
-          <Button variant="outline" size="sm" className="text-xs rounded-full h-8 ml-2">
-            <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Conversations
+        <div className="flex flex-wrap items-center gap-4 xl:justify-end">
+          <div className="inline-flex items-center gap-1.5 rounded-2xl border border-border/70 bg-card p-1.5 shadow-sm">
+            {['1D', '7D', '30D'].map(r => (
+              <button key={r} onClick={() => setTimeRange(r)} className={`rounded-xl px-5 py-2.5 text-[11px] font-bold tracking-tight transition-all ${
+                timeRange === r
+                  ? 'bg-primary text-primary-foreground shadow-sm scale-[1.02]'
+                  : 'text-muted-foreground hover:bg-secondary/40 hover:text-foreground'
+              }`}>{r}</button>
+            ))}
+          </div>
+          <Button variant="outline" className="h-11 rounded-2xl border-border/70 bg-card px-6 font-semibold tracking-tight shadow-sm hover:bg-secondary/40 transition-all">
+            <MessageSquare className="mr-2.5 h-4 w-4" /> Conversations
           </Button>
-          <Button size="sm" className="text-xs rounded-full h-8 bg-foreground text-background hover:bg-foreground/90">
-            <Plus className="w-3.5 h-3.5 mr-1.5" /> Create product
+          <Button className="h-11 rounded-2xl px-7 font-semibold tracking-tight shadow-md hover:opacity-90 transition-all">
+            <Plus className="mr-2 h-4 w-4" /> Create product
           </Button>
         </div>
-      </div>
+      </header>
 
-      <h1 className="text-2xl font-bold mb-1">Overview</h1>
-      <p className="text-sm text-muted-foreground mb-6">
-        Watch revenue, AI activity, and storefront readiness from one calmer control surface for {stats ? 'Artisan Coffee Roasters' : 'your store'}.
-      </p>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <StatCard label="Revenue" value={`$${(stats?.totalRevenue || 0).toFixed(2)}`} description="Gross sales in the selected range" icon={DollarSign} change="+0.0%" changeColor="text-muted-foreground" />
-        <StatCard label="Orders" value={stats?.totalOrders || 0} description="Completed and active transactions" icon={ClipboardList} change="+0" changeColor="text-muted-foreground" />
-        <StatCard label="AI Sessions" value={stats?.totalConversations || 0} description="Live assistant-led shopping chats" icon={MessageSquare} />
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Revenue" value={`$${(stats?.totalRevenue || 0).toFixed(2)}`} description="Gross sales in the selected range" icon={DollarSign} />
+        <StatCard label="Orders" value={String(stats?.totalOrders || 0)} description="Completed and active transactions" icon={ClipboardList} />
+        <StatCard label="AI Sessions" value={String(stats?.totalConversations || 0)} description="Live assistant-led shopping chats" icon={MessageSquare} />
         <StatCard label="Conversion" value={`${stats?.totalOrders && stats?.totalConversations ? ((stats.totalOrders / stats.totalConversations * 100).toFixed(1)) : '0.0'}%`} description="Sessions that turned into orders" icon={TrendingUp} />
       </div>
 
-      {/* Sales Performance + Store Pulse */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="col-span-2 bg-card rounded-xl p-5 store-shadow">
-          <h3 className="font-semibold mb-1">Sales performance</h3>
-          <p className="text-xs text-muted-foreground mb-4">A cleaner view of what your store and AI agent generated over the last 7 days.</p>
-          <div className="flex items-center gap-4 mb-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Net Sales</p>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold">${(stats?.totalRevenue || 0).toFixed(2)}</span>
-                <span className="text-xs text-muted-foreground flex items-center gap-0.5"><ArrowUpRight className="w-3 h-3" /> vs prior period</span>
+      <div className="mb-5 grid gap-3 xl:items-start xl:grid-cols-[minmax(0,1.75fr)_320px]">
+        <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
+          <div className="border-b border-border/70 bg-card px-5 py-4 lg:px-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-base font-semibold tracking-tight">Sales performance</p>
+                <p className="mt-1 text-sm text-muted-foreground">A cleaner view of what your store and AI agent generated over the last {timeRange}.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">Net sales</p>
+                  <p className="mt-1 text-[28px] font-semibold tracking-tight">${(stats?.totalRevenue || 0).toFixed(2)}</p>
+                </div>
+                <span className="shrink-0 rounded-full border border-border/70 bg-secondary px-3 py-1 text-xs font-semibold flex items-center gap-1">
+                  <ArrowUpRight className="h-3.5 w-3.5" /> vs prior period
+                </span>
               </div>
             </div>
           </div>
-          {/* Simple chart placeholder */}
-          <div className="h-32 relative">
-            <div className="absolute inset-0 flex items-end gap-1">
-              {[20, 35, 15, 45, 30, 50, 25].map((h, i) => (
-                <div key={i} className="flex-1 bg-muted rounded-t" style={{ height: `${h}%` }} />
-              ))}
+          <div>
+            <div className="h-[200px] border-b border-border/70 px-5 py-4 relative bg-secondary/10">
+              <div className="absolute inset-4 flex items-end gap-1.5">
+                {[20, 35, 15, 45, 30, 50, 25, 40, 28, 55, 33, 48, 22, 38].map((h, i) => (
+                  <div key={i} className="flex-1 bg-foreground/10 rounded-t-md hover:bg-foreground/20 transition-colors" style={{ height: `${h}%` }} />
+                ))}
+              </div>
+              {(stats?.totalRevenue || 0) === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p className="text-xs text-muted-foreground">Sales data will appear as orders come in</p>
+                </div>
+              )}
             </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              {(stats?.totalRevenue || 0) === 0 && <p className="text-xs text-muted-foreground">Sales data will appear as orders come in</p>}
+            <div className="grid gap-2.5 px-5 py-4 md:grid-cols-3 lg:px-6">
+              {[
+                { label: 'Orders captured', value: String(stats?.totalOrders || 0) },
+                { label: 'AI sessions', value: String(stats?.totalConversations || 0) },
+                { label: 'Active missions', value: String(stats?.activeMissions || 0) },
+              ].map(pill => (
+                <div key={pill.label} className="rounded-[18px] border border-border/70 bg-secondary/25 px-4 py-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">{pill.label}</p>
+                  <p className="mt-2 text-base font-semibold tracking-tight">{pill.value}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-        <div className="bg-card rounded-xl p-5 store-shadow">
-          <h3 className="font-semibold mb-4">Store pulse</h3>
-          <div className="divide-y divide-border">
-            <PulseItem label="Orders in range" description="Total transactions captured" value={stats?.totalOrders || 0} />
-            <PulseItem label="AI-assisted orders" description={stats?.totalOrders ? `${stats.totalOrders} AI-assisted orders` : 'No AI-assisted orders yet'} value={stats?.totalOrders || 0} />
-            <PulseItem label="Active AI workflows" description={`${stats?.activeMissions || 0} active workflows`} value={stats?.activeMissions || 0} />
+
+        <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
+          <div className="border-b border-border/70 px-4 py-3.5">
+            <p className="text-sm font-semibold tracking-tight">Store pulse</p>
+          </div>
+          <div className="space-y-2.5 p-4">
+            <PulseItem label="Orders in range" description="Total transactions captured" value={String(stats?.totalOrders || 0)} />
+            <PulseItem label="AI-assisted orders" description={stats?.totalOrders ? 'of all orders' : 'No AI-assisted orders yet'} value={String(stats?.totalOrders || 0)} />
+            <PulseItem label="Active AI workflows" description={`${stats?.activeMissions || 0} completed`} value={String(stats?.activeMissions || 0)} />
           </div>
         </div>
       </div>
@@ -287,15 +327,17 @@ function MerchantDashboard() {
 
   const renderConversations = () => (
     <div>
-      <h1 className="text-2xl font-bold mb-1">Intent Stream</h1>
-      <p className="text-sm text-muted-foreground mb-6">Real-time buyer activity, AI actions, and conversion events.</p>
-      <div className="bg-card rounded-xl store-shadow overflow-hidden">
-        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+      <div className="mb-8">
+        <h1 className="text-[28px] font-semibold tracking-tight">Intent Stream</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Real-time buyer activity, AI actions, and conversion events.</p>
+      </div>
+      <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
+        <div className="px-5 py-3.5 border-b border-border/70 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-medium text-emerald-600">Live</span>
+            <span className="text-xs font-semibold text-emerald-500">Live</span>
           </div>
-          <Badge variant="outline" className="text-[10px]">{intents.length} events</Badge>
+          <span className="rounded-full border border-border/70 bg-secondary px-3 py-0.5 text-[10px] font-semibold">{intents.length} events</span>
         </div>
         <ScrollArea className="h-[500px]">
           {intents.length === 0 ? (
@@ -311,12 +353,14 @@ function MerchantDashboard() {
 
   const renderAIAuthority = () => (
     <div>
-      <h1 className="text-2xl font-bold mb-1">AI Authority</h1>
-      <p className="text-sm text-muted-foreground mb-6">Consumer Matrix - trust scores, risk levels, and buyer intelligence.</p>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-semibold tracking-tight">AI Authority</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Consumer Matrix — trust scores, risk levels, and buyer intelligence.</p>
+      </div>
       <div className="grid grid-cols-2 gap-4 mb-6">
         {profiles.map(p => <ConsumerCard key={p.id || p.session_id} profile={p} />)}
       </div>
-      <h2 className="text-lg font-semibold mb-3 mt-8">Active Missions</h2>
+      <h2 className="text-base font-semibold tracking-tight mb-3 mt-8">Active Missions</h2>
       <div className="grid grid-cols-2 gap-4">
         {missions.map(m => <MissionItem key={m.id} mission={m} />)}
       </div>
@@ -331,25 +375,25 @@ function MerchantDashboard() {
 
   const renderCatalog = () => (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Catalog</h1>
-          <p className="text-sm text-muted-foreground">{products.length} products in your store</p>
+          <h1 className="text-[28px] font-semibold tracking-tight">Catalog</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{products.length} products in your store</p>
         </div>
-        <Button size="sm" className="rounded-full h-8 text-xs bg-foreground text-background">
-          <Plus className="w-3.5 h-3.5 mr-1.5" /> Add product
+        <Button className="h-11 rounded-2xl px-6 font-semibold tracking-tight shadow-md hover:opacity-90 transition-all">
+          <Plus className="mr-2 h-4 w-4" /> Add product
         </Button>
       </div>
-      <div className="bg-card rounded-xl store-shadow overflow-hidden">
+      <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Product</th>
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Category</th>
-              <th className="text-right px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Price</th>
-              <th className="text-right px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Min Price</th>
-              <th className="text-right px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Stock</th>
-              <th className="text-center px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Bargain</th>
+            <tr className="border-b border-border/70 bg-secondary/20">
+              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Product</th>
+              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Category</th>
+              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Price</th>
+              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Min Price</th>
+              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Stock</th>
+              <th className="text-center px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Bargain</th>
             </tr>
           </thead>
           <tbody>
@@ -357,18 +401,18 @@ function MerchantDashboard() {
               <tr key={p.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <img src={p.image} alt={p.name} className="w-9 h-9 rounded-md object-cover" />
+                    <img src={p.image} alt={p.name} className="w-9 h-9 rounded-xl object-cover" />
                     <span className="font-medium">{p.name}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3"><Badge variant="outline" className="text-[10px]">{p.category}</Badge></td>
+                <td className="px-4 py-3"><span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{p.category}</span></td>
                 <td className="px-4 py-3 text-right font-semibold">${p.price}</td>
                 <td className="px-4 py-3 text-right text-muted-foreground">${p.bargain_min_price}</td>
                 <td className="px-4 py-3 text-right">{p.stock}</td>
                 <td className="px-4 py-3 text-center">
-                  <Badge className={`text-[10px] border-0 ${p.bargain_enabled ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${p.bargain_enabled ? 'bg-emerald-500/12 text-emerald-500' : 'bg-secondary text-muted-foreground'}`}>
                     {p.bargain_enabled ? 'Active' : 'Off'}
-                  </Badge>
+                  </span>
                 </td>
               </tr>
             ))}
@@ -380,8 +424,10 @@ function MerchantDashboard() {
 
   const renderCustomers = () => (
     <div>
-      <h1 className="text-2xl font-bold mb-1">Customers</h1>
-      <p className="text-sm text-muted-foreground mb-6">Consumer Matrix overview for all buyers.</p>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-semibold tracking-tight">Customers</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Consumer Matrix overview for all buyers.</p>
+      </div>
       <div className="grid grid-cols-2 gap-4">
         {profiles.map(p => <ConsumerCard key={p.id || p.session_id} profile={p} />)}
       </div>
@@ -396,22 +442,20 @@ function MerchantDashboard() {
 
   const renderOrders = () => (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Orders</h1>
-          <p className="text-sm text-muted-foreground">{orders.length} total orders</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-semibold tracking-tight">Orders</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{orders.length} total orders</p>
       </div>
-      <div className="bg-card rounded-xl store-shadow overflow-hidden">
+      <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border">
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Order</th>
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Customer</th>
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Date</th>
-              <th className="text-right px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Total</th>
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Payment</th>
-              <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Status</th>
+            <tr className="border-b border-border/70 bg-secondary/20">
+              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Order</th>
+              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Customer</th>
+              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Date</th>
+              <th className="text-right px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Total</th>
+              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Payment</th>
+              <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -422,12 +466,12 @@ function MerchantDashboard() {
                 <td className="px-4 py-3 text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</td>
                 <td className="px-4 py-3 text-right font-semibold">${parseFloat(o.total).toFixed(2)}</td>
                 <td className="px-4 py-3">
-                  <Badge className={`text-[10px] border-0 ${o.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${o.payment_status === 'paid' ? 'bg-emerald-500/12 text-emerald-500' : 'bg-amber-500/12 text-amber-500'}`}>
                     {o.payment_status}
-                  </Badge>
+                  </span>
                 </td>
                 <td className="px-4 py-3">
-                  <Badge variant="outline" className="text-[10px]">{o.status}</Badge>
+                  <span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{o.status}</span>
                 </td>
               </tr>
             ))}
@@ -447,22 +491,20 @@ function MerchantDashboard() {
     const shipments = orders.filter(o => ['processing', 'shipped', 'delivered'].includes(o.status))
     return (
       <div>
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold mb-1">Shipments</h1>
-            <p className="text-sm text-muted-foreground">{shipments.length} active shipments</p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-[28px] font-semibold tracking-tight">Shipments</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{shipments.length} active shipments</p>
         </div>
-        <div className="bg-card rounded-xl store-shadow overflow-hidden">
+        <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Order</th>
-                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Customer</th>
-                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Carrier</th>
-                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Tracking</th>
-                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Status</th>
-                <th className="text-left px-4 py-3 text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Updated</th>
+              <tr className="border-b border-border/70 bg-secondary/20">
+                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Order</th>
+                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Customer</th>
+                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Carrier</th>
+                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Tracking</th>
+                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Status</th>
+                <th className="text-left px-4 py-3 text-[10px] text-muted-foreground/85 font-bold uppercase tracking-[0.14em]">Updated</th>
               </tr>
             </thead>
             <tbody>
@@ -473,7 +515,7 @@ function MerchantDashboard() {
                   <td className="px-4 py-3">{s.carrier || '—'}</td>
                   <td className="px-4 py-3 font-mono text-xs">{s.tracking_number || '—'}</td>
                   <td className="px-4 py-3">
-                    <Badge variant="outline" className="text-[10px]">{s.status}</Badge>
+                    <span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{s.status}</span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">{getTimeAgo(new Date(s.updated_at))}</td>
                 </tr>
@@ -493,15 +535,13 @@ function MerchantDashboard() {
 
   const renderReviews = () => (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold mb-1">Reviews</h1>
-          <p className="text-sm text-muted-foreground">{reviews.length} total reviews</p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-semibold tracking-tight">Reviews</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{reviews.length} total reviews</p>
       </div>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-3">
         {reviews.map(r => (
-          <div key={r.id} className="bg-card rounded-xl p-5 store-shadow">
+          <div key={r.id} className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 {r.product?.image && (
@@ -515,12 +555,12 @@ function MerchantDashboard() {
               <div className="flex items-center gap-2">
                 <div className="flex">
                   {[1,2,3,4,5].map(i => (
-                    <Star key={i} className={`w-4 h-4 ${i <= r.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                    <Star key={i} className={`w-4 h-4 ${i <= r.rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/20'}`} />
                   ))}
                 </div>
-                <Badge className={`text-[10px] border-0 ${r.status === 'published' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${r.status === 'published' ? 'bg-emerald-500/12 text-emerald-500' : 'bg-amber-500/12 text-amber-500'}`}>
                   {r.status}
-                </Badge>
+                </span>
               </div>
             </div>
             {r.title && <p className="font-medium text-sm mb-1">{r.title}</p>}
@@ -540,12 +580,14 @@ function MerchantDashboard() {
 
   const renderStoreDesign = () => (
     <div>
-      <h1 className="text-2xl font-bold mb-1">Store Design</h1>
-      <p className="text-sm text-muted-foreground mb-6">Customize your storefront appearance and branding.</p>
+      <div className="mb-8">
+        <h1 className="text-[28px] font-semibold tracking-tight">Store Design</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Customize your storefront appearance and branding.</p>
+      </div>
       {storeConfig && (
         <div className="space-y-4">
-          <div className="bg-card rounded-xl p-5 store-shadow">
-            <h3 className="font-semibold mb-3">Store Information</h3>
+          <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
+            <h3 className="text-sm font-semibold tracking-tight mb-4">Store Information</h3>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider">Store Name</label>
@@ -561,8 +603,8 @@ function MerchantDashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-card rounded-xl p-5 store-shadow">
-            <h3 className="font-semibold mb-3">AI Assistant Settings</h3>
+          <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
+            <h3 className="text-sm font-semibold tracking-tight mb-4">AI Assistant Settings</h3>
             <div className="space-y-3">
               <div>
                 <label className="text-xs text-muted-foreground uppercase tracking-wider">AI Name</label>
@@ -574,11 +616,11 @@ function MerchantDashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-card rounded-xl p-5 store-shadow">
-            <h3 className="font-semibold mb-3">Categories</h3>
+          <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
+            <h3 className="text-sm font-semibold tracking-tight mb-4">Categories</h3>
             <div className="flex flex-wrap gap-2">
               {storeConfig.categories?.map((cat, i) => (
-                <Badge key={i} variant="outline">{cat}</Badge>
+                <span key={i} className="inline-flex items-center rounded-full border border-border/70 px-3 py-1 text-xs font-semibold text-muted-foreground">{cat}</span>
               ))}
             </div>
           </div>
@@ -589,33 +631,33 @@ function MerchantDashboard() {
 
   const renderCampaigns = () => (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold mb-1">Campaigns</h1>
-          <p className="text-sm text-muted-foreground">{campaigns.length} total campaigns</p>
+          <h1 className="text-[28px] font-semibold tracking-tight">Campaigns</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{campaigns.length} total campaigns</p>
         </div>
-        <Button size="sm" className="rounded-full h-8 text-xs bg-foreground text-background">
-          <Plus className="w-3.5 h-3.5 mr-1.5" /> Create campaign
+        <Button className="h-11 rounded-2xl px-6 font-semibold tracking-tight shadow-md hover:opacity-90 transition-all">
+          <Plus className="mr-2 h-4 w-4" /> Create campaign
         </Button>
       </div>
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-3">
         {campaigns.map(c => (
-          <div key={c.id} className="bg-card rounded-xl p-5 store-shadow">
+          <div key={c.id} className="overflow-hidden rounded-[20px] border border-border/70 bg-card p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-semibold">{c.name}</h3>
-                  <Badge className={`text-[10px] border-0 ${
-                    c.status === 'active' ? 'bg-emerald-50 text-emerald-700' :
-                    c.status === 'scheduled' ? 'bg-blue-50 text-blue-700' :
-                    'bg-gray-100 text-gray-600'
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${
+                    c.status === 'active' ? 'bg-emerald-500/12 text-emerald-500' :
+                    c.status === 'scheduled' ? 'bg-blue-500/12 text-blue-400' :
+                    'bg-secondary text-muted-foreground'
                   }`}>
                     {c.status}
-                  </Badge>
+                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground">{c.description}</p>
               </div>
-              <Badge variant="outline" className="text-[10px]">{c.type}</Badge>
+              <span className="inline-flex items-center rounded-full border border-border/70 px-2.5 py-0.5 text-[10px] font-semibold text-muted-foreground">{c.type}</span>
             </div>
             <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-border">
               <div>
@@ -644,75 +686,95 @@ function MerchantDashboard() {
   )
 
   const renderPlaceholder = (section) => (
-    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-      <Package className="w-10 h-10 mb-3 opacity-30" />
-      <p className="text-lg font-semibold capitalize mb-1">{section.replace('-', ' ')}</p>
-      <p className="text-sm">This section is coming soon.</p>
+    <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/70 bg-card mb-4">
+        <Package className="w-6 h-6 opacity-50" />
+      </div>
+      <p className="text-base font-semibold tracking-tight capitalize mb-1">{section.replace('-', ' ')}</p>
+      <p className="text-sm text-muted-foreground">This section is coming soon.</p>
     </div>
   )
 
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-[220px] bg-sidebar-background border-r border-sidebar-border flex-shrink-0 flex flex-col h-screen sticky top-0">
-        <div className="p-4 pb-6">
-          <a href="/" className="flex items-center gap-2">
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none"><path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="url(#g)"/><defs><linearGradient id="g" x1="8" y1="2" x2="24" y2="28"><stop stopColor="#9333ea"/><stop offset="1" stopColor="#ec4899"/></linearGradient></defs></svg>
-            <span className="text-lg font-bold tracking-tight">Convos</span>
-          </a>
+      <aside className="w-[240px] bg-card border-r border-border/70 flex-shrink-0 flex flex-col h-screen sticky top-0">
+        <div className="px-4 pb-0 pt-7 flex items-center pb-2">
+          <div className="px-2">
+            <a href="/" className="flex items-center gap-2.5 h-9">
+              <ConvosLogo size={26} />
+              <span className="text-base font-bold tracking-tight">Convos</span>
+            </a>
+          </div>
         </div>
 
-        <ScrollArea className="flex-1 px-3">
+        <nav className="flex-1 overflow-y-auto px-4 py-6">
           {SIDEBAR_ITEMS.map(group => (
-            <div key={group.section} className="mb-5">
-              <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground px-3 mb-1.5">{group.section}</p>
-              {group.items.map(item => (
-                <button
-                  key={item.key}
-                  onClick={() => setActiveSection(item.key)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all ${
-                    activeSection === item.key
-                      ? 'bg-sidebar-accent text-foreground font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50'
-                  }`}
-                >
-                  <item.icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                  {activeSection === item.key && <div className="w-1.5 h-1.5 rounded-full bg-foreground ml-auto" />}
-                </button>
-              ))}
+            <div key={group.section} className="mb-8 last:mb-0">
+              <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/50">{group.section}</p>
+              <div className="space-y-1">
+                {group.items.map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => setActiveSection(item.key)}
+                    className={`w-full group flex h-11 items-center gap-3.5 rounded-xl px-3 transition-all duration-200 ${
+                      activeSection === item.key
+                        ? 'bg-accent/90 text-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                    }`}
+                  >
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                      activeSection === item.key
+                        ? 'bg-background text-foreground shadow-sm'
+                        : 'text-muted-foreground/80 group-hover:text-foreground'
+                    }`}>
+                      <item.icon className="h-[18px] w-[18px]" />
+                    </div>
+                    <span className={`truncate text-[14px] tracking-tight ${
+                      activeSection === item.key ? 'font-bold' : 'font-semibold'
+                    }`}>{item.label}</span>
+                    {activeSection === item.key && <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/80 ml-auto" />}
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
-        </ScrollArea>
+        </nav>
       </aside>
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6 sticky top-0 z-30">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search orders, missions, or intelligence..." className="pl-9 h-9 rounded-full bg-muted border-0 text-sm" />
+        <header className="h-14 border-b border-border/70 bg-card/90 backdrop-blur-md flex items-center justify-between px-5 sticky top-0 z-30 gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search orders, missions, intelligence..." className="pl-9 h-9 rounded-xl bg-secondary/40 border-border/70 text-sm" />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border">
-              <span className="text-sm font-medium">Artisan Coffee Roasters</span>
-              <Badge className="text-[10px] bg-emerald-50 text-emerald-700 border-0">Live</Badge>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/70 bg-secondary/30">
+              <span className="text-sm font-semibold tracking-tight truncate max-w-[140px]">Artisan Coffee Roasters</span>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Live
+              </span>
             </div>
             <a href="/">
-              <Button variant="outline" size="sm" className="rounded-full h-8 text-xs">
-                <Globe className="w-3.5 h-3.5 mr-1.5" /> Storefront
+              <Button variant="outline" size="sm" className="rounded-xl h-9 text-xs font-semibold border-border/70">
+                <Globe className="w-3.5 h-3.5 mr-1.5" /> Store
               </Button>
             </a>
-            <Button size="sm" className="rounded-full h-8 text-xs bg-foreground text-background hover:bg-foreground/90">
-              <Coffee className="w-3.5 h-3.5 mr-1.5" /> Convos AI
-            </Button>
+            <a href="/merchant/login">
+              <Button variant="ghost" size="sm" className="rounded-xl h-9 text-xs font-semibold text-muted-foreground hover:text-foreground">
+                Log out
+              </Button>
+            </a>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 max-w-[1200px] w-full">
-          {renderContent()}
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-[1440px] px-4 py-5 pb-8 sm:px-6 lg:px-8">
+            {renderContent()}
+          </div>
         </main>
       </div>
     </div>

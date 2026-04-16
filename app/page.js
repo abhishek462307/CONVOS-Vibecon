@@ -4,10 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { Separator } from '@/components/ui/separator'
 import {
   ShoppingCart, Send, User, Search, X, Plus, ArrowRight,
   MessageCircle, Trash2, Loader2, CreditCard, Tag, Sparkles
@@ -33,38 +31,38 @@ const CATEGORIES = [
 
 function ProductCard({ product, onAddToCart, onNegotiate }) {
   return (
-    <div className="bg-card rounded-2xl overflow-hidden store-shadow group hover:store-shadow-md transition-all duration-300 border border-border/60">
+    <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card shadow-sm group hover:shadow-md transition-all duration-300">
       <div className="relative aspect-square overflow-hidden bg-muted">
         <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         {product.compare_at_price && (
-          <div className="absolute top-2 left-2 bg-gradient-purple text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+          <div className="absolute top-2.5 left-2.5 bg-gradient-purple text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
             SALE
           </div>
         )}
         {product.bargain_enabled && (
-          <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+          <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
             <Sparkles className="w-2.5 h-2.5" /> AI Price
           </div>
         )}
       </div>
-      <div className="p-3">
-        <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-1">{product.category}</p>
-        <h4 className="font-semibold text-sm text-foreground leading-tight">{product.name}</h4>
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{product.description}</p>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-base font-bold text-foreground">${product.price}</span>
+      <div className="p-3.5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85 mb-1">{product.category}</p>
+        <h4 className="text-sm font-semibold tracking-tight text-foreground leading-snug">{product.name}</h4>
+        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-4">{product.description}</p>
+        <div className="flex items-center gap-2 mt-2.5">
+          <span className="text-base font-semibold tracking-tight text-foreground">${product.price}</span>
           {product.compare_at_price && (
             <span className="text-xs text-muted-foreground line-through">${product.compare_at_price}</span>
           )}
         </div>
         {product.weight && <p className="text-[10px] text-muted-foreground mt-0.5">{product.weight}</p>}
         <div className="flex gap-1.5 mt-3">
-          <Button size="sm" className="flex-1 h-8 text-xs bg-gradient-purple hover:opacity-90 text-white rounded-full border-0" onClick={() => onAddToCart(product)}>
+          <Button size="sm" className="flex-1 h-9 text-xs bg-gradient-purple hover:opacity-90 text-white rounded-xl border-0 font-semibold" onClick={() => onAddToCart(product)}>
             <Plus className="w-3 h-3 mr-1" /> Add to Cart
           </Button>
           {product.bargain_enabled && (
-            <Button size="sm" variant="outline" className="h-8 text-xs rounded-full border-purple-500/30 text-purple-600 hover:bg-purple-50" onClick={() => onNegotiate(product)}>
-              <Tag className="w-3 h-3" />
+            <Button size="sm" variant="outline" className="h-9 w-9 rounded-xl border-border/70 text-muted-foreground hover:text-foreground hover:bg-secondary/40" onClick={() => onNegotiate(product)}>
+              <Tag className="w-3.5 h-3.5" />
             </Button>
           )}
         </div>
@@ -102,29 +100,29 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
   }
 
   return (
-    <div className="w-[340px] flex-shrink-0 border-l border-border bg-card flex flex-col h-[calc(100vh-88px)]">
+    <div className="w-[340px] flex-shrink-0 border-l border-border/70 bg-card flex flex-col h-[calc(100vh-88px)] sticky top-14">
       {/* Chat Header */}
-      <div className="p-3 border-b border-border flex items-center justify-between">
+      <div className="px-4 py-3.5 border-b border-border/70 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-full bg-gradient-purple flex items-center justify-center text-white flex-shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gradient-purple flex items-center justify-center text-white flex-shrink-0">
             <ConvosLogo size={18} />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-semibold">Convos AI</span>
-              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-sm font-semibold tracking-tight">Convos AI</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
             </div>
             <p className="text-[11px] text-muted-foreground">Agentic shopping assistant</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={onClear} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><Trash2 className="w-4 h-4" /></button>
-          <button onClick={onToggle} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"><X className="w-4 h-4" /></button>
+          <button onClick={onClear} className="p-1.5 rounded-xl hover:bg-secondary/60 text-muted-foreground transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+          <button onClick={onToggle} className="p-1.5 rounded-xl hover:bg-secondary/60 text-muted-foreground transition-colors"><X className="w-3.5 h-3.5" /></button>
         </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 px-3 py-3">
+      <ScrollArea className="flex-1 px-3 py-4">
         <div className="space-y-3">
           <AnimatePresence>
             {messages.map((msg, i) => {
@@ -137,14 +135,14 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
                   className={`flex ${isUser ? 'justify-end' : 'justify-start gap-2'}`}
                 >
                   {!isUser && (
-                    <div className="w-7 h-7 rounded-full bg-gradient-purple flex items-center justify-center text-white flex-shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-purple flex items-center justify-center text-white flex-shrink-0 mt-0.5">
                       <ConvosLogo size={14} />
                     </div>
                   )}
-                  <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
+                  <div className={`max-w-[85%] rounded-[18px] px-3.5 py-2.5 text-sm leading-relaxed ${
                     isUser
-                      ? 'bg-gradient-purple text-white rounded-br-sm'
-                      : 'bg-muted text-foreground rounded-bl-sm'
+                      ? 'bg-foreground text-background rounded-br-sm font-medium'
+                      : 'bg-secondary/60 text-foreground rounded-bl-sm'
                   }`}>
                     {msg.content}
                   </div>
@@ -157,11 +155,11 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
           {messages.length > 0 && messages[messages.length - 1].products?.length > 0 && (
             <div className="space-y-2 pl-9">
               {messages[messages.length - 1].products.map(p => (
-                <div key={p.id} className="bg-muted rounded-xl p-2 flex gap-2 border border-border/50">
-                  <img src={p.image} alt={p.name} className="w-12 h-12 rounded-lg object-cover" />
+                <div key={p.id} className="rounded-[16px] border border-border/70 bg-secondary/20 p-2.5 flex gap-2.5">
+                  <img src={p.image} alt={p.name} className="w-12 h-12 rounded-[12px] object-cover" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{p.name}</p>
-                    <p className="text-xs font-bold text-gradient-purple">${p.price}</p>
+                    <p className="text-xs font-semibold tracking-tight truncate">{p.name}</p>
+                    <p className="text-xs font-semibold text-foreground mt-0.5">${p.price}</p>
                   </div>
                 </div>
               ))}
@@ -172,7 +170,7 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
           {messages.length > 0 && messages[messages.length - 1].checkout_url && (
             <div className="pl-9">
               <a href={messages[messages.length - 1].checkout_url} target="_blank" rel="noopener noreferrer">
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded-full">
+                <Button size="sm" className="h-9 rounded-xl bg-gradient-purple hover:opacity-90 text-white border-0 text-xs font-semibold">
                   <CreditCard className="w-3 h-3 mr-1.5" /> Complete Checkout <ArrowRight className="w-3 h-3 ml-1.5" />
                 </Button>
               </a>
@@ -181,10 +179,10 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
 
           {isLoading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-purple flex items-center justify-center text-white flex-shrink-0">
+              <div className="w-7 h-7 rounded-xl bg-gradient-purple flex items-center justify-center text-white flex-shrink-0">
                 <ConvosLogo size={14} />
               </div>
-              <div className="bg-muted rounded-2xl rounded-bl-sm px-3.5 py-2 text-sm text-muted-foreground flex items-center gap-1.5">
+              <div className="bg-secondary/60 rounded-[18px] rounded-bl-sm px-3.5 py-2.5 text-sm text-muted-foreground flex items-center gap-1.5">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" /> Thinking...
               </div>
             </motion.div>
@@ -194,18 +192,18 @@ function ChatWidget({ messages, isLoading, onSend, onClear, isOpen, onToggle }) 
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border/70">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Search or ask anything..."
-            className="text-sm bg-muted border-0 rounded-full h-9 focus-visible:ring-purple-500/30"
+            placeholder="Ask anything..."
+            className="text-sm bg-secondary/40 border-border/70 rounded-xl h-10 focus-visible:ring-1 focus-visible:ring-ring"
             disabled={isLoading}
           />
-          <Button type="submit" size="sm" className="h-9 w-9 rounded-full bg-gradient-purple hover:opacity-90 p-0 flex-shrink-0 border-0" disabled={!input.trim() || isLoading}>
-            <Send className="w-3.5 h-3.5 text-white" />
+          <Button type="submit" size="sm" className="h-10 w-10 rounded-xl bg-foreground hover:opacity-80 p-0 flex-shrink-0 border-0" disabled={!input.trim() || isLoading}>
+            <Send className="w-3.5 h-3.5 text-background" />
           </Button>
         </form>
       </div>
@@ -330,28 +328,28 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Banner */}
-      <div className="bg-gradient-purple text-white text-center py-2 text-xs font-medium tracking-wide">
-        {store?.banner || 'FREE GLOBAL SHIPPING ON ORDERS OVER $100 · USE CODE WELCOME FOR 10% OFF'}
+      {/* Banner + Nav wrapper — banner scrolls, nav sticks */}
+      <div className="bg-gradient-purple text-white text-center py-2 text-[11px] font-semibold tracking-[0.04em]">
+        {store?.banner || 'FREE GLOBAL SHIPPING OVER $100 · CODE WELCOME FOR 10% OFF'}
       </div>
 
       {/* Navigation */}
-      <nav className="bg-card/90 backdrop-blur border-b border-border sticky top-0 z-40">
-        <div className="max-w-[1400px] mx-auto px-4 h-14 flex items-center justify-between">
+      <nav className="bg-card/95 backdrop-blur-md border-b border-border/70 sticky top-0 z-40">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <ConvosLogo size={24} />
-              <span className="font-bold text-base tracking-tight hidden sm:inline">{store?.name || 'Artisan Coffee Roasters'}</span>
+              <span className="text-base font-bold tracking-tight hidden sm:inline">{store?.name || 'Artisan Coffee Roasters'}</span>
             </div>
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-0.5">
               {CATEGORIES.map(c => (
                 <button
                   key={c.name}
                   onClick={() => setSelectedCategory(c.name)}
-                  className={`px-3 py-1.5 text-sm rounded-full transition-all ${
+                  className={`px-3 py-1.5 text-sm rounded-xl transition-all font-medium ${
                     selectedCategory === c.name
-                      ? 'bg-foreground text-background font-medium'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      ? 'bg-secondary text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                   }`}
                 >
                   {c.name}
@@ -359,63 +357,66 @@ function App() {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="relative hidden sm:block">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
-                className="pl-9 h-9 w-48 rounded-full bg-muted border-0 text-sm"
+                className="pl-9 h-9 w-48 rounded-xl bg-muted border-0 text-sm"
               />
             </div>
             <a href="/login">
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-8">
-                <User className="w-4 h-4 mr-1" /> Login
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-9 rounded-xl font-semibold">
+                <User className="w-3.5 h-3.5 mr-1.5" /> Login
               </Button>
             </a>
-            <a href="/merchant">
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-8">Merchant</Button>
+            <a href="/merchant/login">
+              <Button variant="outline" size="sm" className="text-xs h-9 rounded-xl border-border/70 font-semibold">Merchant</Button>
             </a>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative h-8">
+                <Button variant="ghost" size="sm" className="relative h-9 w-9 rounded-xl p-0">
                   <ShoppingCart className="w-4 h-4" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gradient-purple rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-gradient-purple rounded-full text-[9px] font-bold flex items-center justify-center text-white leading-none">
                       {cartCount}
                     </span>
                   )}
                 </Button>
               </SheetTrigger>
-              <SheetContent className="bg-card w-[380px]">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2 text-base">
-                    <ShoppingCart className="w-4 h-4" /> Cart ({cartCount})
+              <SheetContent className="bg-card border-border/70 w-[380px]">
+                <SheetHeader className="border-b border-border/70 pb-4">
+                  <SheetTitle className="flex items-center gap-2 text-base font-semibold tracking-tight">
+                    <ShoppingCart className="w-4 h-4" /> Cart
+                    <span className="rounded-full border border-border/70 bg-secondary px-2 py-0.5 text-xs font-bold ml-1">{cartCount}</span>
                   </SheetTitle>
                 </SheetHeader>
                 <div className="mt-4 space-y-3">
                   {cart.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">Your cart is empty</p>
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                      <ShoppingCart className="w-8 h-8 mb-3 opacity-30" />
+                      <p className="text-sm">Your cart is empty</p>
+                    </div>
                   ) : (
                     <>
                       {cart.map((item, i) => (
-                        <div key={i} className="rounded-2xl border border-border p-3 flex gap-3">
-                          <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{item.name}</p>
-                            <p className="text-sm font-bold text-gradient-purple">${item.price.toFixed(2)}</p>
-                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                        <div key={i} className="rounded-[18px] border border-border/70 bg-secondary/20 p-3 flex gap-3">
+                          <img src={item.image} alt={item.name} className="w-14 h-14 rounded-[14px] object-cover" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold tracking-tight truncate">{item.name}</p>
+                            <p className="text-sm font-semibold text-foreground mt-0.5">${item.price.toFixed(2)}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Qty: {item.quantity}</p>
                           </div>
                         </div>
                       ))}
-                      <Separator />
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Total</span>
-                        <span className="text-xl font-bold">${cartTotal.toFixed(2)}</span>
+                      <div className="rounded-[18px] border border-border/70 bg-secondary/20 px-4 py-3 flex justify-between items-center">
+                        <span className="text-sm text-muted-foreground font-medium">Total</span>
+                        <span className="text-xl font-semibold tracking-tight">${cartTotal.toFixed(2)}</span>
                       </div>
                       <a href="/checkout">
-                        <Button className="w-full bg-gradient-purple hover:opacity-90 text-white rounded-full border-0">
+                        <Button className="w-full h-11 rounded-2xl bg-gradient-purple hover:opacity-90 text-white border-0 font-semibold tracking-tight">
                           Checkout <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                       </a>
@@ -447,15 +448,15 @@ function App() {
                   <span className="text-white/90 text-xs font-medium">AI-Powered Shopping</span>
                 </div>
               </div>
-              <h1 className="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-3">
+              <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-white leading-tight mb-3">
                 {store?.name || 'Artisan Coffee Roasters'}
               </h1>
-              <p className="text-white/75 text-base mb-6 max-w-lg">
+              <p className="text-white/65 text-base mb-6 max-w-lg leading-relaxed">
                 {store?.description || 'Premium single origin and blended coffees, roasted fresh to order.'}
               </p>
               <button
                 onClick={() => { setSelectedCategory('All'); document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' }) }}
-                className="flex items-center gap-2 bg-gradient-purple hover:opacity-90 text-white px-6 py-3 rounded-full text-sm font-semibold w-fit transition-opacity"
+                className="flex items-center gap-2 bg-gradient-purple hover:opacity-90 text-white px-6 py-3 rounded-2xl text-sm font-semibold w-fit transition-opacity shadow-lg shadow-purple-500/20"
               >
                 Shop Collection <ArrowRight className="w-4 h-4" />
               </button>
@@ -463,8 +464,8 @@ function App() {
           </div>
 
           {/* Browse by Category */}
-          <div className="max-w-[1200px] mx-auto px-4 py-8">
-            <h2 className="text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground mb-5">Browse by Category</h2>
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85 mb-5">Browse by Category</p>
             <div className="flex gap-5 overflow-x-auto pb-2">
               {CATEGORIES.map(c => (
                 <button
@@ -492,12 +493,14 @@ function App() {
           </div>
 
           {/* Products Grid */}
-          <div id="products" className="max-w-[1200px] mx-auto px-4 pb-12">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">
-                {selectedCategory === 'All' ? 'All Products' : selectedCategory}
-                <span className="text-sm font-normal text-muted-foreground ml-2">({filteredProducts.length})</span>
-              </h2>
+          <div id="products" className="max-w-[1440px] mx-auto px-4 sm:px-6 pb-12">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-[28px] font-semibold tracking-tight">
+                  {selectedCategory === 'All' ? 'All Products' : selectedCategory}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">{filteredProducts.length} items available</p>
+              </div>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredProducts.map(p => (
@@ -505,7 +508,13 @@ function App() {
               ))}
             </div>
             {filteredProducts.length === 0 && (
-              <p className="text-center text-muted-foreground py-12">No products found in this category.</p>
+              <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted-foreground">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-border/70 bg-card mb-4">
+                  <Search className="w-5 h-5 opacity-40" />
+                </div>
+                <p className="text-sm font-medium">No products found</p>
+                <p className="text-xs mt-1 opacity-60">Try a different category or search term</p>
+              </div>
             )}
           </div>
         </div>
@@ -527,9 +536,9 @@ function App() {
       {!chatOpen && (
         <button
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-purple rounded-full flex items-center justify-center text-white shadow-lg hover:opacity-90 transition-all z-50 glow-purple"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-purple rounded-2xl flex items-center justify-center text-white shadow-lg hover:opacity-90 transition-all z-50 glow-purple"
         >
-          <MessageCircle className="w-6 h-6" />
+          <MessageCircle className="w-5 h-5" />
         </button>
       )}
     </div>

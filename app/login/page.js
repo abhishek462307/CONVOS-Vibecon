@@ -2,256 +2,263 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Coffee, User, Store, ArrowRight } from 'lucide-react'
+import { Loader2, ArrowRight, Eye, EyeOff, ShoppingBag, Sparkles } from 'lucide-react'
 
-export default function LoginPage() {
+function ConvosLogo({ size = 28 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="url(#cl-g)"/>
+      <defs><linearGradient id="cl-g" x1="8" y1="2" x2="24" y2="28"><stop stopColor="#a855f7"/><stop offset="0.6" stopColor="#ec4899"/><stop offset="1" stopColor="#f97316"/></linearGradient></defs>
+    </svg>
+  )
+}
+
+export default function CustomerLoginPage() {
   const router = useRouter()
+  const [mode, setMode] = useState('login')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
-  // Customer Login
-  const [customerEmail, setCustomerEmail] = useState('')
-  const [customerPassword, setCustomerPassword] = useState('')
-
-  // Merchant Login
-  const [merchantEmail, setMerchantEmail] = useState('')
-  const [merchantPassword, setMerchantPassword] = useState('')
-
-  // Customer Sign Up
-  const [signupName, setSignupName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
   const [signupEmail, setSignupEmail] = useState('')
   const [signupPassword, setSignupPassword] = useState('')
 
-  const handleCustomerLogin = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: customerEmail, password: customerPassword, type: 'customer' })
+        body: JSON.stringify({ email, password, type: 'customer' })
       })
-
       const data = await res.json()
-
-      if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-        router.push('/')
-      } else {
-        setError(data.message || 'Login failed')
-      }
-    } catch (err) {
-      setError('An error occurred')
-    } finally {
-      setLoading(false)
-    }
+      if (data.success) { localStorage.setItem('user', JSON.stringify(data.user)); router.push('/') }
+      else setError(data.message || 'Invalid email or password')
+    } catch { setError('Something went wrong. Try again.') } finally { setLoading(false) }
   }
 
-  const handleMerchantLogin = async (e) => {
+  const handleSignup = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: merchantEmail, password: merchantPassword, type: 'merchant' })
-      })
-
-      const data = await res.json()
-
-      if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-        router.push('/merchant')
-      } else {
-        setError(data.message || 'Login failed')
-      }
-    } catch (err) {
-      setError('An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCustomerSignup = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
     try {
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: signupName, email: signupEmail, password: signupPassword, type: 'customer' })
+        body: JSON.stringify({ name, email: signupEmail, password: signupPassword, type: 'customer' })
       })
-
       const data = await res.json()
-
-      if (data.success) {
-        localStorage.setItem('user', JSON.stringify(data.user))
-        router.push('/')
-      } else {
-        setError(data.message || 'Signup failed')
-      }
-    } catch (err) {
-      setError('An error occurred')
-    } finally {
-      setLoading(false)
-    }
+      if (data.success) { localStorage.setItem('user', JSON.stringify(data.user)); router.push('/') }
+      else setError(data.message || 'Could not create account')
+    } catch { setError('Something went wrong. Try again.') } finally { setLoading(false) }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-orange-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient background */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gradient-to-b from-purple-500/8 via-pink-500/5 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-80 h-80 bg-orange-400/5 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Back to store */}
+      <button
+        onClick={() => router.push('/')}
+        className="absolute top-5 left-5 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors font-medium"
+      >
+        ← Back to store
+      </button>
+
+      <div className="w-full max-w-[400px] relative z-10">
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Coffee className="w-10 h-10 text-[#8B6F47]" />
-            <h1 className="text-4xl font-bold text-foreground">Convos</h1>
+          <div className="flex items-center justify-center gap-2.5 mb-3">
+            <ConvosLogo size={32} />
+            <span className="text-2xl font-semibold tracking-tight">Convos</span>
           </div>
-          <p className="text-muted-foreground">Agentic Commerce Platform</p>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-secondary/40 px-3 py-1 text-[11px] font-semibold text-muted-foreground">
+            <ShoppingBag className="w-3 h-3" /> Customer Portal
+          </div>
         </div>
 
-        <Tabs defaultValue="customer" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="customer" className="flex items-center gap-2">
-              <User className="w-4 h-4" /> Customer
-            </TabsTrigger>
-            <TabsTrigger value="merchant" className="flex items-center gap-2">
-              <Store className="w-4 h-4" /> Merchant
-            </TabsTrigger>
-          </TabsList>
+        {/* Mode toggle */}
+        <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-secondary/30 p-1.5 mb-6">
+          {['login', 'signup'].map(m => (
+            <button
+              key={m}
+              onClick={() => { setMode(m); setError('') }}
+              className={`flex-1 rounded-xl py-2.5 text-xs font-bold tracking-tight transition-all ${
+                mode === m
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {m === 'login' ? 'Sign In' : 'Create Account'}
+            </button>
+          ))}
+        </div>
 
-          {/* Customer Tab */}
-          <TabsContent value="customer">
-            <div className="grid md:grid-cols-2 gap-4">
-              {/* Login */}
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Customer Login</h2>
-                <form onSubmit={handleCustomerLogin} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
+        {/* Card */}
+        <div className="overflow-hidden rounded-[22px] border border-border/70 bg-card shadow-sm">
+          <div className="p-6">
+            <AnimatePresence mode="wait">
+              {mode === 'login' ? (
+                <motion.form
+                  key="login"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.18 }}
+                  onSubmit={handleLogin}
+                  className="space-y-4"
+                  autoComplete="off"
+                >
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">Email</label>
                     <Input
                       type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      placeholder="customer@example.com"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@example.com"
                       required
+                      autoComplete="email"
+                      suppressHydrationWarning
+                      className="h-11 rounded-2xl border-border/70 bg-secondary/20"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">Password</label>
-                    <Input
-                      type="password"
-                      value={customerPassword}
-                      onChange={(e) => setCustomerPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                    />
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">Password</label>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        autoComplete="current-password"
+                        suppressHydrationWarning
+                        className="h-11 rounded-2xl border-border/70 bg-secondary/20 pr-11"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(v => !v)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Logging in...' : 'Login'}
+                  {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 rounded-2xl bg-foreground hover:opacity-80 text-background font-semibold tracking-tight border-0"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Sign In'}
                   </Button>
-                  <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
-                    <strong>Demo:</strong> customer@demo.com / password123
+                  <div className="rounded-[16px] border border-border/70 bg-secondary/20 px-4 py-3 text-xs text-muted-foreground">
+                    <span className="font-semibold text-foreground">Demo:</span> customer@demo.com / password123
                   </div>
-                </form>
-              </Card>
-
-              {/* Signup */}
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Create Account</h2>
-                <form onSubmit={handleCustomerSignup} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Name</label>
+                </motion.form>
+              ) : (
+                <motion.form
+                  key="signup"
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.18 }}
+                  onSubmit={handleSignup}
+                  className="space-y-4"
+                  autoComplete="off"
+                >
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">Full Name</label>
                     <Input
                       type="text"
-                      value={signupName}
-                      onChange={(e) => setSignupName(e.target.value)}
-                      placeholder="John Doe"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Jane Smith"
                       required
+                      autoComplete="name"
+                      suppressHydrationWarning
+                      className="h-11 rounded-2xl border-border/70 bg-secondary/20"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">Email</label>
                     <Input
                       type="email"
                       value={signupEmail}
-                      onChange={(e) => setSignupEmail(e.target.value)}
+                      onChange={e => setSignupEmail(e.target.value)}
                       placeholder="you@example.com"
                       required
+                      autoComplete="email"
+                      suppressHydrationWarning
+                      className="h-11 rounded-2xl border-border/70 bg-secondary/20"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">Password</label>
-                    <Input
-                      type="password"
-                      value={signupPassword}
-                      onChange={(e) => setSignupPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                      minLength={6}
-                    />
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85">Password</label>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? 'text' : 'password'}
+                        value={signupPassword}
+                        onChange={e => setSignupPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                        autoComplete="new-password"
+                        suppressHydrationWarning
+                        className="h-11 rounded-2xl border-border/70 bg-secondary/20 pr-11"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(v => !v)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Creating Account...' : 'Sign Up'}
+                  {error && <p className="text-sm text-destructive font-medium">{error}</p>}
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 rounded-2xl bg-foreground hover:opacity-80 text-background font-semibold tracking-tight border-0"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Account'}
                   </Button>
-                </form>
-              </Card>
-            </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
+          </div>
 
-            <div className="mt-6 text-center">
-              <Button variant="link" onClick={() => router.push('/')}>
-                Continue as Guest <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </TabsContent>
+          {/* Footer inside card */}
+          <div className="border-t border-border/70 bg-secondary/20 px-6 py-4 flex items-center justify-between">
+            <button
+              onClick={() => router.push('/')}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 font-medium"
+            >
+              Continue as guest <ArrowRight className="w-3 h-3" />
+            </button>
+            <button
+              onClick={() => router.push('/merchant/login')}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1.5 font-medium"
+            >
+              <Sparkles className="w-3 h-3" /> Merchant login
+            </button>
+          </div>
+        </div>
 
-          {/* Merchant Tab */}
-          <TabsContent value="merchant">
-            <div className="max-w-md mx-auto">
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Merchant Dashboard Access</h2>
-                <form onSubmit={handleMerchantLogin} className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Email</label>
-                    <Input
-                      type="email"
-                      value={merchantEmail}
-                      onChange={(e) => setMerchantEmail(e.target.value)}
-                      placeholder="merchant@example.com"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Password</label>
-                    <Input
-                      type="password"
-                      value={merchantPassword}
-                      onChange={(e) => setMerchantPassword(e.target.value)}
-                      placeholder="••••••••"
-                      required
-                    />
-                  </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Logging in...' : 'Access Dashboard'}
-                  </Button>
-                  <div className="text-xs text-muted-foreground bg-muted p-3 rounded">
-                    <strong>Demo:</strong> merchant@demo.com / merchant123
-                  </div>
-                </form>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
+        <p className="text-center text-[11px] text-muted-foreground/50 mt-6">
+          Powered by Convos Agentic Commerce
+        </p>
       </div>
     </div>
   )
