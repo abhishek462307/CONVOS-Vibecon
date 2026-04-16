@@ -178,7 +178,64 @@ export default function MerchantDashboard() {
   const [productSearch, setProductSearch] = useState('')
   const [reviewFilter, setReviewFilter] = useState('all')
 
+  // Lifted form states (prevents auto-refresh from resetting modal form data)
+  const [productForm, setProductForm] = useState({
+    name: '', description: '', price: '', compare_at_price: '', category: 'Single Origin',
+    image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop',
+    stock: '', bargain_enabled: true, bargain_min_price: '', tags: [], weight: ''
+  })
+  const [campaignForm, setCampaignForm] = useState({
+    name: '', description: '', type: 'email', status: 'draft', audience_count: '',
+    content: { subject: '', body: '', cta: '' }
+  })
+  const [reviewReplyText, setReviewReplyText] = useState('')
+  const [shipmentForm, setShipmentForm] = useState({
+    carrier: '', tracking_number: '', status: 'processing', notes: ''
+  })
+
   const showToast = (message, type = 'success') => setToast({ message, type })
+
+  // Check if any modal is open (to pause auto-refresh)
+  const isAnyModalOpen = productModal.open || orderDetailModal.open || campaignModal.open || 
+    reviewModal.open || shipmentModal.open || customerModal.open || deleteConfirm.open
+
+  // Modal openers (initialize form state when opening)
+  const openProductCreate = () => {
+    setProductForm({
+      name: '', description: '', price: '', compare_at_price: '', category: 'Single Origin',
+      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop',
+      stock: '', bargain_enabled: true, bargain_min_price: '', tags: [], weight: ''
+    })
+    setProductModal({ open: true, mode: 'create', data: null })
+  }
+  const openProductEdit = (product) => {
+    setProductForm({ ...product })
+    setProductModal({ open: true, mode: 'edit', data: product })
+  }
+  const openCampaignCreate = () => {
+    setCampaignForm({
+      name: '', description: '', type: 'email', status: 'draft', audience_count: '',
+      content: { subject: '', body: '', cta: '' }
+    })
+    setCampaignModal({ open: true, mode: 'create', data: null })
+  }
+  const openCampaignEdit = (campaign) => {
+    setCampaignForm({ ...campaign })
+    setCampaignModal({ open: true, mode: 'edit', data: campaign })
+  }
+  const openReviewReply = (review) => {
+    setReviewReplyText(review.merchant_reply || '')
+    setReviewModal({ open: true, review })
+  }
+  const openShipmentEdit = (order) => {
+    setShipmentForm({
+      carrier: order.carrier || '',
+      tracking_number: order.tracking_number || '',
+      status: order.status || 'processing',
+      notes: order.notes || ''
+    })
+    setShipmentModal({ open: true, order })
+  }
 
   // Auth check
   useEffect(() => {
@@ -232,9 +289,11 @@ export default function MerchantDashboard() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 10000)
-    return () => clearInterval(interval)
-  }, [fetchData])
+    if (!isAnyModalOpen) {
+      const interval = setInterval(fetchData, 10000)
+      return () => clearInterval(interval)
+    }
+  }, [fetchData, isAnyModalOpen])
 
   // ═══════════════════════════════════════════
   // CRUD OPERATIONS
@@ -655,7 +714,7 @@ export default function MerchantDashboard() {
             <Button variant="outline" size="sm" onClick={() => handleExport('products')}>
               <Download className="w-4 h-4 mr-2" /> Export
             </Button>
-            <Button size="sm" onClick={() => setProductModal({ open: true, mode: 'create', data: null })}>
+            <Button size="sm" onClick={openProductCreate}>
               <Plus className="w-4 h-4 mr-2" /> Add Product
             </Button>
           </div>
@@ -716,7 +775,7 @@ export default function MerchantDashboard() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex gap-1 justify-center">
-                        <Button size="sm" variant="ghost" onClick={() => setProductModal({ open: true, mode: 'edit', data: product })}>
+                        <Button size="sm" variant="ghost" onClick={() => openProductEdit(product)}>
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-600" onClick={() => setDeleteConfirm({ open: true, type: 'product', id: product.id, name: product.name })}>
@@ -864,7 +923,7 @@ export default function MerchantDashboard() {
                         </Button>
                       </>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => setReviewModal({ open: true, review })}>
+                    <Button size="sm" variant="ghost" onClick={() => openReviewReply(review)}>
                       <Reply className="w-4 h-4" />
                     </Button>
                     <Button size="sm" variant="ghost" className="text-red-500" onClick={() => setDeleteConfirm({ open: true, type: 'review', id: review.id, name: review.title || 'this review' })}>
@@ -887,7 +946,7 @@ export default function MerchantDashboard() {
           <h1 className="text-2xl font-bold">Campaigns</h1>
           <p className="text-muted-foreground text-sm mt-1">{campaigns.length} campaigns</p>
         </div>
-        <Button size="sm" onClick={() => setCampaignModal({ open: true, mode: 'create', data: null })}>
+        <Button size="sm" onClick={openCampaignCreate}>
           <Plus className="w-4 h-4 mr-2" /> Create Campaign
         </Button>
       </div>
@@ -914,7 +973,7 @@ export default function MerchantDashboard() {
                   <p className="text-sm text-muted-foreground">{campaign.description}</p>
                 </div>
                 <div className="flex gap-1 shrink-0 ml-4">
-                  <Button size="sm" variant="ghost" onClick={() => setCampaignModal({ open: true, mode: 'edit', data: campaign })}>
+                  <Button size="sm" variant="ghost" onClick={() => openCampaignEdit(campaign)}>
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button size="sm" variant="ghost" className="text-red-500" onClick={() => setDeleteConfirm({ open: true, type: 'campaign', id: campaign.id, name: campaign.name })}>
@@ -997,7 +1056,7 @@ export default function MerchantDashboard() {
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <Button size="sm" variant="ghost" onClick={() => setShipmentModal({ open: true, order: shipment })}>
+                        <Button size="sm" variant="ghost" onClick={() => openShipmentEdit(shipment)}>
                           <Edit className="w-4 h-4" />
                         </Button>
                       </td>
@@ -1150,12 +1209,6 @@ export default function MerchantDashboard() {
   // ═══════════════════════════════════════════
 
   const ProductModal = () => {
-    const [form, setForm] = useState(productModal.data || {
-      name: '', description: '', price: '', compare_at_price: '', category: 'Single Origin',
-      image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=400&fit=crop',
-      stock: '', bargain_enabled: true, bargain_min_price: '', tags: [], weight: ''
-    })
-
     return (
       <Dialog open={productModal.open} onOpenChange={(open) => !open && setProductModal({ open: false, mode: 'create', data: null })}>
         <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
@@ -1169,23 +1222,23 @@ export default function MerchantDashboard() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <Label>Product Name *</Label>
-                <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="mt-1" placeholder="e.g. Ethiopian Yirgacheffe" />
+                <Input value={productForm.name} onChange={(e) => setProductForm({...productForm, name: e.target.value})} className="mt-1" placeholder="e.g. Ethiopian Yirgacheffe" />
               </div>
               <div className="col-span-2">
                 <Label>Description</Label>
-                <Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} className="mt-1" rows={3} placeholder="Product description..." />
+                <Textarea value={productForm.description} onChange={(e) => setProductForm({...productForm, description: e.target.value})} className="mt-1" rows={3} placeholder="Product description..." />
               </div>
               <div>
                 <Label>Price *</Label>
-                <Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} className="mt-1" placeholder="0.00" />
+                <Input type="number" step="0.01" value={productForm.price} onChange={(e) => setProductForm({...productForm, price: e.target.value})} className="mt-1" placeholder="0.00" />
               </div>
               <div>
                 <Label>Compare at Price</Label>
-                <Input type="number" step="0.01" value={form.compare_at_price} onChange={(e) => setForm({...form, compare_at_price: e.target.value})} className="mt-1" placeholder="0.00" />
+                <Input type="number" step="0.01" value={productForm.compare_at_price} onChange={(e) => setProductForm({...productForm, compare_at_price: e.target.value})} className="mt-1" placeholder="0.00" />
               </div>
               <div>
                 <Label>Category</Label>
-                <Select value={form.category || 'Single Origin'} onValueChange={(v) => setForm({...form, category: v})}>
+                <Select value={productForm.category || 'Single Origin'} onValueChange={(v) => setProductForm({...productForm, category: v})}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {PRODUCT_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -1194,29 +1247,29 @@ export default function MerchantDashboard() {
               </div>
               <div>
                 <Label>Stock</Label>
-                <Input type="number" value={form.stock} onChange={(e) => setForm({...form, stock: e.target.value})} className="mt-1" placeholder="0" />
+                <Input type="number" value={productForm.stock} onChange={(e) => setProductForm({...productForm, stock: e.target.value})} className="mt-1" placeholder="0" />
               </div>
               <div className="col-span-2">
                 <Label>Image URL</Label>
-                <Input value={form.image} onChange={(e) => setForm({...form, image: e.target.value})} className="mt-1" placeholder="https://..." />
+                <Input value={productForm.image} onChange={(e) => setProductForm({...productForm, image: e.target.value})} className="mt-1" placeholder="https://..." />
               </div>
               <div>
                 <Label>Weight</Label>
-                <Input value={form.weight} onChange={(e) => setForm({...form, weight: e.target.value})} className="mt-1" placeholder="e.g. 340g" />
+                <Input value={productForm.weight} onChange={(e) => setProductForm({...productForm, weight: e.target.value})} className="mt-1" placeholder="e.g. 340g" />
               </div>
               <div>
                 <Label>Min Bargain Price</Label>
-                <Input type="number" step="0.01" value={form.bargain_min_price} onChange={(e) => setForm({...form, bargain_min_price: e.target.value})} className="mt-1" placeholder="0.00" />
+                <Input type="number" step="0.01" value={productForm.bargain_min_price} onChange={(e) => setProductForm({...productForm, bargain_min_price: e.target.value})} className="mt-1" placeholder="0.00" />
               </div>
               <div className="col-span-2 flex items-center gap-2">
-                <Switch checked={form.bargain_enabled ?? true} onCheckedChange={(v) => setForm({...form, bargain_enabled: v})} />
+                <Switch checked={productForm.bargain_enabled ?? true} onCheckedChange={(v) => setProductForm({...productForm, bargain_enabled: v})} />
                 <Label>Enable price negotiation</Label>
               </div>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setProductModal({ open: false, mode: 'create', data: null })}>Cancel</Button>
-            <Button onClick={() => saveProduct(form)} disabled={loading || !form.name || !form.price}>
+            <Button onClick={() => saveProduct(productForm)} disabled={loading || !productForm.name || !productForm.price}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {productModal.mode === 'edit' ? 'Update Product' : 'Create Product'}
             </Button>
@@ -1321,11 +1374,6 @@ export default function MerchantDashboard() {
   }
 
   const CampaignModal = () => {
-    const [form, setForm] = useState(campaignModal.data || {
-      name: '', description: '', type: 'email', status: 'draft', audience_count: '',
-      content: { subject: '', body: '', cta: '' }
-    })
-
     return (
       <Dialog open={campaignModal.open} onOpenChange={(open) => !open && setCampaignModal({ open: false, mode: 'create', data: null })}>
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
@@ -1338,16 +1386,16 @@ export default function MerchantDashboard() {
           <div className="space-y-4 py-2">
             <div>
               <Label>Campaign Name *</Label>
-              <Input value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} className="mt-1" placeholder="e.g. Summer Sale" />
+              <Input value={campaignForm.name} onChange={(e) => setCampaignForm({...campaignForm, name: e.target.value})} className="mt-1" placeholder="e.g. Summer Sale" />
             </div>
             <div>
               <Label>Description</Label>
-              <Textarea value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} className="mt-1" rows={2} />
+              <Textarea value={campaignForm.description} onChange={(e) => setCampaignForm({...campaignForm, description: e.target.value})} className="mt-1" rows={2} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Type</Label>
-                <Select value={form.type} onValueChange={(v) => setForm({...form, type: v})}>
+                <Select value={campaignForm.type} onValueChange={(v) => setCampaignForm({...campaignForm, type: v})}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="email">Email</SelectItem>
@@ -1358,7 +1406,7 @@ export default function MerchantDashboard() {
               </div>
               <div>
                 <Label>Status</Label>
-                <Select value={form.status} onValueChange={(v) => setForm({...form, status: v})}>
+                <Select value={campaignForm.status} onValueChange={(v) => setCampaignForm({...campaignForm, status: v})}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="draft">Draft</SelectItem>
@@ -1371,26 +1419,26 @@ export default function MerchantDashboard() {
             </div>
             <div>
               <Label>Audience Count</Label>
-              <Input type="number" value={form.audience_count} onChange={(e) => setForm({...form, audience_count: e.target.value})} className="mt-1" placeholder="0" />
+              <Input type="number" value={campaignForm.audience_count} onChange={(e) => setCampaignForm({...campaignForm, audience_count: e.target.value})} className="mt-1" placeholder="0" />
             </div>
             <Separator />
             <h4 className="font-semibold text-sm">Content</h4>
             <div>
               <Label>Subject Line</Label>
-              <Input value={form.content?.subject || ''} onChange={(e) => setForm({...form, content: {...(form.content || {}), subject: e.target.value}})} className="mt-1" placeholder="Email subject..." />
+              <Input value={campaignForm.content?.subject || ''} onChange={(e) => setCampaignForm({...campaignForm, content: {...(campaignForm.content || {}), subject: e.target.value}})} className="mt-1" placeholder="Email subject..." />
             </div>
             <div>
               <Label>Body</Label>
-              <Textarea value={form.content?.body || ''} onChange={(e) => setForm({...form, content: {...(form.content || {}), body: e.target.value}})} className="mt-1" rows={3} placeholder="Campaign body..." />
+              <Textarea value={campaignForm.content?.body || ''} onChange={(e) => setCampaignForm({...campaignForm, content: {...(campaignForm.content || {}), body: e.target.value}})} className="mt-1" rows={3} placeholder="Campaign body..." />
             </div>
             <div>
               <Label>CTA Button Text</Label>
-              <Input value={form.content?.cta || ''} onChange={(e) => setForm({...form, content: {...(form.content || {}), cta: e.target.value}})} className="mt-1" placeholder="e.g. Shop Now" />
+              <Input value={campaignForm.content?.cta || ''} onChange={(e) => setCampaignForm({...campaignForm, content: {...(campaignForm.content || {}), cta: e.target.value}})} className="mt-1" placeholder="e.g. Shop Now" />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCampaignModal({ open: false, mode: 'create', data: null })}>Cancel</Button>
-            <Button onClick={() => saveCampaign(form)} disabled={loading || !form.name}>
+            <Button onClick={() => saveCampaign(campaignForm)} disabled={loading || !campaignForm.name}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {campaignModal.mode === 'edit' ? 'Update' : 'Create'}
             </Button>
@@ -1401,8 +1449,6 @@ export default function MerchantDashboard() {
   }
 
   const ReviewReplyModal = () => {
-    const [replyText, setReplyText] = useState(reviewModal.review?.merchant_reply || '')
-
     return (
       <Dialog open={reviewModal.open} onOpenChange={(open) => !open && setReviewModal({ open: false, review: null })}>
         <DialogContent className="sm:max-w-md">
@@ -1423,15 +1469,15 @@ export default function MerchantDashboard() {
             </div>
             <div>
               <Label>Your Reply</Label>
-              <Textarea value={replyText} onChange={(e) => setReplyText(e.target.value)} className="mt-1" rows={3} placeholder="Thank you for your feedback..." />
+              <Textarea value={reviewReplyText} onChange={(e) => setReviewReplyText(e.target.value)} className="mt-1" rows={3} placeholder="Thank you for your feedback..." />
             </div>
             <div>
               <Label className="text-xs">Review Status</Label>
               <div className="flex gap-2 mt-1">
-                <Button size="sm" variant={reviewModal.review?.status === 'published' ? 'default' : 'outline'} onClick={() => updateReview(reviewModal.review?.id, { status: 'published', merchant_reply: replyText })}>
+                <Button size="sm" variant={reviewModal.review?.status === 'published' ? 'default' : 'outline'} onClick={() => updateReview(reviewModal.review?.id, { status: 'published', merchant_reply: reviewReplyText })}>
                   <Check className="w-3 h-3 mr-1" /> Publish
                 </Button>
-                <Button size="sm" variant={reviewModal.review?.status === 'rejected' ? 'destructive' : 'outline'} onClick={() => updateReview(reviewModal.review?.id, { status: 'rejected', merchant_reply: replyText })}>
+                <Button size="sm" variant={reviewModal.review?.status === 'rejected' ? 'destructive' : 'outline'} onClick={() => updateReview(reviewModal.review?.id, { status: 'rejected', merchant_reply: reviewReplyText })}>
                   <X className="w-3 h-3 mr-1" /> Reject
                 </Button>
               </div>
@@ -1439,7 +1485,7 @@ export default function MerchantDashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewModal({ open: false, review: null })}>Cancel</Button>
-            <Button onClick={() => updateReview(reviewModal.review?.id, { merchant_reply: replyText })} disabled={loading}>
+            <Button onClick={() => updateReview(reviewModal.review?.id, { merchant_reply: reviewReplyText })} disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
               Save Reply
             </Button>
@@ -1450,13 +1496,6 @@ export default function MerchantDashboard() {
   }
 
   const ShipmentEditModal = () => {
-    const [form, setForm] = useState({
-      carrier: shipmentModal.order?.carrier || '',
-      tracking_number: shipmentModal.order?.tracking_number || '',
-      status: shipmentModal.order?.status || 'processing',
-      notes: shipmentModal.order?.notes || ''
-    })
-
     return (
       <Dialog open={shipmentModal.open} onOpenChange={(open) => !open && setShipmentModal({ open: false, order: null })}>
         <DialogContent className="sm:max-w-md">
@@ -1469,7 +1508,7 @@ export default function MerchantDashboard() {
           <div className="space-y-4 py-2">
             <div>
               <Label>Carrier</Label>
-              <Select value={form.carrier || 'none'} onValueChange={(v) => setForm({...form, carrier: v === 'none' ? '' : v})}>
+              <Select value={shipmentForm.carrier || 'none'} onValueChange={(v) => setShipmentForm({...shipmentForm, carrier: v === 'none' ? '' : v})}>
                 <SelectTrigger className="mt-1"><SelectValue placeholder="Select carrier" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Select carrier</SelectItem>
@@ -1483,11 +1522,11 @@ export default function MerchantDashboard() {
             </div>
             <div>
               <Label>Tracking Number</Label>
-              <Input value={form.tracking_number} onChange={(e) => setForm({...form, tracking_number: e.target.value})} className="mt-1" placeholder="Enter tracking number" />
+              <Input value={shipmentForm.tracking_number} onChange={(e) => setShipmentForm({...shipmentForm, tracking_number: e.target.value})} className="mt-1" placeholder="Enter tracking number" />
             </div>
             <div>
               <Label>Status</Label>
-              <Select value={form.status} onValueChange={(v) => setForm({...form, status: v})}>
+              <Select value={shipmentForm.status} onValueChange={(v) => setShipmentForm({...shipmentForm, status: v})}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="processing">Processing</SelectItem>
@@ -1498,12 +1537,12 @@ export default function MerchantDashboard() {
             </div>
             <div>
               <Label>Notes</Label>
-              <Textarea value={form.notes} onChange={(e) => setForm({...form, notes: e.target.value})} className="mt-1" rows={2} placeholder="Internal notes..." />
+              <Textarea value={shipmentForm.notes} onChange={(e) => setShipmentForm({...shipmentForm, notes: e.target.value})} className="mt-1" rows={2} placeholder="Internal notes..." />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShipmentModal({ open: false, order: null })}>Cancel</Button>
-            <Button onClick={() => updateShipment(shipmentModal.order?.id, form)} disabled={loading}>
+            <Button onClick={() => updateShipment(shipmentModal.order?.id, shipmentForm)} disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Update Shipment
             </Button>
