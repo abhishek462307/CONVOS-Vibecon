@@ -422,6 +422,14 @@ async function handleRoute(request, { params }) {
       return corsResponse(products.map(({ _id, ...p }) => p))
     }
 
+    if (route.startsWith('/products/') && method === 'GET') {
+      const productId = route.split('/')[2]
+      const product = await db.collection('products').findOne({ id: productId })
+      if (!product) return corsResponse({ error: 'Product not found' }, 404)
+      const { _id, ...clean } = product
+      return corsResponse(clean)
+    }
+
     if (route === '/products/seed' && method === 'POST') {
       const existing = await db.collection('products').countDocuments()
       if (existing >= 10 && existing <= 15) return corsResponse({ message: 'Products already seeded', count: existing })

@@ -32,22 +32,26 @@ const CATEGORIES = [
 function ProductCard({ product, onAddToCart, onNegotiate }) {
   return (
     <div className="overflow-hidden rounded-[20px] border border-border/70 bg-card shadow-sm group hover:shadow-md transition-all duration-300">
-      <div className="relative aspect-square overflow-hidden bg-muted">
-        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        {product.compare_at_price && (
-          <div className="absolute top-2.5 left-2.5 bg-gradient-purple text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
-            SALE
-          </div>
-        )}
-        {product.bargain_enabled && (
-          <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
-            <Sparkles className="w-2.5 h-2.5" /> AI Price
-          </div>
-        )}
-      </div>
+      <a href={`/product/${product.id}`} className="block">
+        <div className="relative aspect-square overflow-hidden bg-muted">
+          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          {product.compare_at_price && (
+            <div className="absolute top-2.5 left-2.5 bg-gradient-purple text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+              SALE
+            </div>
+          )}
+          {product.bargain_enabled && (
+            <div className="absolute top-2.5 right-2.5 bg-black/60 backdrop-blur-sm text-white text-[10px] font-semibold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+              <Sparkles className="w-2.5 h-2.5" /> AI Price
+            </div>
+          )}
+        </div>
+      </a>
       <div className="p-3.5">
         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/85 mb-1">{product.category}</p>
-        <h4 className="text-sm font-semibold tracking-tight text-foreground leading-snug">{product.name}</h4>
+        <a href={`/product/${product.id}`}>
+          <h4 className="text-sm font-semibold tracking-tight text-foreground leading-snug hover:text-primary transition-colors">{product.name}</h4>
+        </a>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-4">{product.description}</p>
         <div className="flex items-center gap-2 mt-2.5">
           <span className="text-base font-semibold tracking-tight text-foreground">${product.price}</span>
@@ -57,11 +61,20 @@ function ProductCard({ product, onAddToCart, onNegotiate }) {
         </div>
         {product.weight && <p className="text-[10px] text-muted-foreground mt-0.5">{product.weight}</p>}
         <div className="flex gap-1.5 mt-3">
-          <Button size="sm" className="flex-1 h-9 text-xs bg-gradient-purple hover:opacity-90 text-white rounded-xl border-0 font-semibold" onClick={() => onAddToCart(product)}>
+          <Button 
+            size="sm" 
+            className="flex-1 h-9 text-xs bg-gradient-purple hover:opacity-90 text-white rounded-xl border-0 font-semibold" 
+            onClick={(e) => { e.preventDefault(); onAddToCart(product); }}
+          >
             <Plus className="w-3 h-3 mr-1" /> Add to Cart
           </Button>
           {product.bargain_enabled && (
-            <Button size="sm" variant="outline" className="h-9 w-9 rounded-xl border-border/70 text-muted-foreground hover:text-foreground hover:bg-secondary/40" onClick={() => onNegotiate(product)}>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-9 w-9 rounded-xl border-border/70 text-muted-foreground hover:text-foreground hover:bg-secondary/40" 
+              onClick={(e) => { e.preventDefault(); onNegotiate(product); }}
+            >
               <Tag className="w-3.5 h-3.5" />
             </Button>
           )}
