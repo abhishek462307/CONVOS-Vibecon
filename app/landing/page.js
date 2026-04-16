@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { motion, AnimatePresence, useInView, useMotionValue, useSpring } from 'framer-motion'
 import {
   Menu, X, ArrowRight, Play, Loader2, ChevronRight, Sparkles,
@@ -12,13 +11,9 @@ import {
   Package, ChevronDown,
 } from 'lucide-react'
 
-const DARK_LOGO = 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/document-uploads/Blue-and-Black-Minimalist-Brand-Logo-3-1768609870958.png?width=8000&height=8000&resize=contain'
+const DARK_LOGO = 'https://convos.store/_next/image?q=75&url=https%3A%2F%2Fslelguoygbfzlpylpxfs.supabase.co%2Fstorage%2Fv1%2Frender%2Fimage%2Fpublic%2Fdocument-uploads%2FBlue-and-Black-Minimalist-Brand-Logo-3-1768609870958.png%3Fwidth%3D8000%26height%3D8000%26resize%3Dcontain&w=256'
+const DASHBOARD_IMG = 'https://convos.store/_next/image?q=75&url=%2Fscreenshot-dashboard.webp&w=1200'
 
-function Logo({ size = 'sm' }) {
-  const dims = { sm: [100, 28], md: [140, 38], lg: [180, 48] }
-  const [w, h] = dims[size]
-  return <Image src={DARK_LOGO} alt="Convos" width={w} height={h} className="object-contain w-auto h-auto" priority unoptimized />
-}
 
 function GradientText({ children, className = '', colors = ['#a855f7', '#ec4899', '#f97316', '#ec4899', '#a855f7'], animationSpeed = 8 }) {
   return (
@@ -97,11 +92,11 @@ const fadeUp = {
 const rotatingWords = ['sell', 'talk', 'negotiate', 'convert']
 
 const techStack = [
-  { name: 'Next.js', src: '/logos/nextjs-logotype-dark-background.svg', h: 22 },
-  { name: 'Supabase', src: '/logos/supabase-logo-wordmark--dark.png', h: 24 },
-  { name: 'Tailwind CSS', src: '/logos/tailwindcss-logotype-white.svg', h: 18 },
-  { name: 'Stripe', src: '/logos/Stripe wordmark - White - Large.png', h: 32 },
-  { name: 'OpenAI', src: '/logos/openai-combined.svg', h: 26 },
+  { name: 'Next.js', src: 'https://convos.store/logos/nextjs-logotype-dark-background.svg', h: 22 },
+  { name: 'Supabase', src: 'https://convos.store/_next/image?q=75&url=%2Flogos%2Fsupabase-logo-wordmark--dark.png&w=1200', h: 24 },
+  { name: 'Tailwind CSS', src: 'https://convos.store/logos/tailwindcss-logotype-white.svg', h: 18 },
+  { name: 'Stripe', src: 'https://convos.store/_next/image?q=75&url=%2Flogos%2FStripe+wordmark+-+White+-+Large.png&w=1200', h: 32 },
+  { name: 'OpenAI', src: 'https://convos.store/logos/openai-combined.svg', h: 26 },
 ]
 
 const testimonials = [
@@ -126,34 +121,81 @@ const faqData = [
   { question: 'Is there a free plan available?', answer: "Yes! Our Starter plan is free forever with up to 100 AI conversations per month and one storefront agent. Upgrade to Pro when you need more agents and advanced features like autonomous pricing." },
 ]
 
+function NavLogo() {
+  return (
+    <Link href="/" className="flex items-center shrink-0">
+      <img src={DARK_LOGO} alt="Convos" style={{ height: 28, width: 'auto', maxWidth: 110, objectFit: 'contain', display: 'block' }} />
+    </Link>
+  )
+}
+
+function NavLinks({ links, onClick }) {
+  return (
+    <>
+      {links.map(item => (
+        <Link key={item.label} href={item.href} onClick={onClick}
+          className="text-white/70 px-3 py-1.5 transition-colors hover:text-white text-sm font-medium">
+          {item.label}
+        </Link>
+      ))}
+    </>
+  )
+}
+
+function NavCta({ onClose }) {
+  return (
+    <>
+      <Link href="/merchant/login" onClick={onClose}
+        className="text-sm text-white/60 hover:text-white transition-colors px-3 py-1.5">
+        Log in
+      </Link>
+      <Link href="/merchant/login" onClick={onClose}
+        className="px-4 py-2 text-sm font-bold rounded-full text-white bg-gradient-purple hover:-translate-y-0.5 transition duration-200">
+        Get Started
+      </Link>
+    </>
+  )
+}
+
 function Navigation() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const links = [{ label: 'Features', href: '#features' }, { label: 'How it Works', href: '#how-it-works' }, { label: 'Pricing', href: '#pricing' }]
+  const links = [
+    { label: 'Features', href: '#features' },
+    { label: 'How it Works', href: '#how-it-works' },
+    { label: 'Pricing', href: '#pricing' },
+  ]
   return (
     <nav className="w-full fixed top-4 inset-x-0 z-50 px-4">
-      <div className="hidden lg:flex flex-row items-center justify-between py-2 mx-auto px-6 rounded-full backdrop-saturate-[1.8] backdrop-blur-lg bg-black/60 border border-white/10 max-w-5xl">
-        <Link href="/" className="flex items-center gap-2 shrink-0"><Logo size="sm" /></Link>
-        <div className="flex flex-row flex-1 items-center justify-center space-x-6 text-sm">
-          {links.map(item => <Link key={item.label} href={item.href} className="text-white/70 px-3 py-1.5 transition-colors hover:text-white text-sm">{item.label}</Link>)}
+      {/* Desktop */}
+      <div className="hidden lg:grid grid-cols-3 items-center py-2 mx-auto px-6 rounded-full backdrop-saturate-[1.8] backdrop-blur-lg bg-black/60 border border-white/10 max-w-5xl">
+        <NavLogo />
+        <div className="flex items-center justify-center gap-1">
+          <NavLinks links={links} />
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors px-3 py-1.5">Log in</Link>
-          <Link href="/login" className="px-4 py-2 text-sm font-bold rounded-full text-white bg-gradient-purple hover:-translate-y-0.5 transition duration-200">Get Started</Link>
+        <div className="flex items-center justify-end gap-3">
+          <NavCta />
         </div>
       </div>
+      {/* Mobile */}
       <div className="flex relative flex-col lg:hidden w-full max-w-[95%] mx-auto z-50 backdrop-blur-lg backdrop-saturate-[1.8] border border-white/10 bg-black/40 rounded-2xl px-4 py-2">
-        <div className="flex flex-row justify-between items-center w-full">
-          <Link href="/"><Logo size="sm" /></Link>
-          <button className="p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+        <div className="flex flex-row justify-between items-center w-full h-11">
+          <NavLogo />
+          <button className="p-2" onClick={() => setMobileOpen(p => !p)}>
             {mobileOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
           </button>
         </div>
         {mobileOpen && (
-          <div className="flex flex-col py-4 gap-2">
-            {links.map(item => <Link key={item.label} href={item.href} className="text-white/70 px-3 py-2 text-sm hover:text-white" onClick={() => setMobileOpen(false)}>{item.label}</Link>)}
-            <div className="flex gap-3 pt-3 border-t border-white/10">
-              <Link href="/login" className="flex-1 text-center py-2.5 text-sm text-white/60 border border-white/10 rounded-full" onClick={() => setMobileOpen(false)}>Log in</Link>
-              <Link href="/login" className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-gradient-purple rounded-full" onClick={() => setMobileOpen(false)}>Get Started</Link>
+          <div className="flex flex-col py-3 gap-1 border-t border-white/[0.06] mt-2">
+            <NavLinks links={links} onClick={() => setMobileOpen(false)} />
+            <div className="flex gap-3 pt-3 mt-1 border-t border-white/[0.06]">
+              <Link href="/merchant/login" onClick={() => setMobileOpen(false)}
+                className="flex-1 text-center py-2.5 text-sm text-white/60 border border-white/10 rounded-full">
+                Log in
+              </Link>
+              <Link href="/merchant/login" onClick={() => setMobileOpen(false)}
+                className="flex-1 text-center py-2.5 text-sm font-bold text-white bg-gradient-purple rounded-full">
+                Get Started
+              </Link>
             </div>
           </div>
         )}
@@ -171,7 +213,7 @@ function HeroSection() {
   }, [])
   const handleViewDemo = () => {
     setLoadingDemo(true)
-    window.open('https://artisancoffee.convos.store', '_blank')
+    window.open('/store', '_blank')
     setTimeout(() => setLoadingDemo(false), 1000)
   }
   return (
@@ -204,7 +246,7 @@ function HeroSection() {
           Convos is a conversational commerce platform where AI agents power your entire storefront. They talk to customers, negotiate deals, and close sales — all without you lifting a finger.
         </p>
         <div className="mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-          <Link href="/login" className="relative w-full sm:w-auto px-6 py-3 rounded-full text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2 bg-gradient-purple">
+          <Link href="/merchant/login" className="relative w-full sm:w-auto px-6 py-3 rounded-full text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2 bg-gradient-purple">
             Get early access <ArrowRight className="h-4 w-4" />
           </Link>
           <button onClick={handleViewDemo} disabled={loadingDemo} className="w-full sm:w-auto px-6 py-3 rounded-full text-sm font-medium text-white/80 border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06] transition-all flex items-center justify-center gap-2">
@@ -215,14 +257,9 @@ function HeroSection() {
       </div>
       <motion.div initial={{ opacity: 0, y: 60, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }} className="relative z-20 mx-auto mt-6 md:mt-16 w-full max-w-7xl px-0 md:px-4 mb-2 md:mb-8">
         <div className="relative p-1.5 md:p-3 rounded-[20px] md:rounded-[40px] backdrop-blur-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 0 80px rgba(255,255,255,0.03), 0 0 160px rgba(0,0,0,0.5)' }}>
-          <div className="relative rounded-[16px] md:rounded-[32px] overflow-hidden bg-[#0a0a0a] border border-[#1f1f1f] aspect-video flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-pink-900/10" />
-            <div className="relative z-10 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-purple flex items-center justify-center mx-auto mb-4 glow-purple">
-                <Bot className="w-8 h-8 text-white" />
-              </div>
-              <p className="text-white/40 text-sm">Dashboard Preview</p>
-            </div>
+          <div className="relative rounded-[16px] md:rounded-[32px] overflow-hidden bg-[#0a0a0a] border border-[#1f1f1f] aspect-video">
+            <img src={DASHBOARD_IMG} alt="Convos Dashboard" className="w-full h-full object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
           </div>
         </div>
       </motion.div>
@@ -241,7 +278,7 @@ function LogosSection() {
           <div className="flex items-center gap-12 md:gap-20 animate-marquee w-max">
             {duplicated.map((tech, i) => (
               <div key={i} className="flex items-center opacity-60 hover:opacity-100 transition-opacity shrink-0">
-                <Image src={tech.src} alt={tech.name} width={200} height={60} className="object-contain" style={{ height: `${tech.h}px`, width: 'auto' }} unoptimized />
+                <img src={tech.src} alt={tech.name} style={{ height: `${tech.h}px`, width: 'auto', objectFit: 'contain', display: 'block' }} />
               </div>
             ))}
           </div>
@@ -622,7 +659,7 @@ function PricingSection() {
               <div className="flex-1 flex flex-col gap-2 sm:gap-3 mb-4 sm:mb-7">
                 {plan.features.map((f, i) => <div key={i} className="flex items-center gap-2 sm:gap-3"><Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white flex-shrink-0" /><span className="text-xs sm:text-sm text-neutral-300">{f}</span></div>)}
               </div>
-              <Link href={plan.ctaHref} className="w-full h-10 sm:h-12 rounded-full relative overflow-hidden flex items-center justify-center transition-transform hover:-translate-y-0.5 active:scale-95 duration-200 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+              <Link href="/merchant/login" className="w-full h-10 sm:h-12 rounded-full relative overflow-hidden flex items-center justify-center transition-transform hover:-translate-y-0.5 active:scale-95 duration-200 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/20 hover:border-purple-500/40 hover:shadow-[0_0_20px_rgba(168,85,247,0.15)]">
                 <span className="relative z-10 text-xs sm:text-sm font-bold text-white">{plan.ctaText}</span>
               </Link>
               {plan.footerText && <p className="text-center text-[12px] text-[#737373] mt-4">{plan.footerText}</p>}
@@ -666,7 +703,7 @@ function CtaFinal() {
   const [loadingDemo, setLoadingDemo] = useState(false)
   const handleViewDemo = () => {
     setLoadingDemo(true)
-    window.open('https://artisancoffee.convos.store', '_blank')
+    window.open('/store', '_blank')
     setTimeout(() => setLoadingDemo(false), 1000)
   }
   return (
@@ -679,7 +716,7 @@ function CtaFinal() {
         <ScrollFloat containerClassName="text-2xl sm:text-3xl md:text-7xl font-semibold tracking-tight leading-[1.1] text-white mb-4 md:mb-6 max-w-4xl px-3 sm:px-4">Your store deserves an AI upgrade</ScrollFloat>
         <p className="mx-auto mt-3 sm:mt-4 max-w-xl px-3 sm:px-4 text-center text-sm sm:text-base md:text-lg text-[#737373] font-normal leading-relaxed">We pre-launched the most powerful agentic commerce platform ever built. Be among the first to experience it.</p>
         <div className="mt-6 sm:mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full max-w-md mx-auto sm:max-w-none sm:w-auto px-3 sm:px-0">
-          <Link href="/login" className="relative w-full sm:w-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500">
+          <Link href="/merchant/login" className="relative w-full sm:w-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_0_30px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500">
             Start free trial <ArrowRight className="h-4 w-4" />
           </Link>
           <button onClick={handleViewDemo} disabled={loadingDemo} className="w-full sm:w-auto px-8 py-3 rounded-full text-sm font-medium text-white/80 border border-white/[0.1] bg-white/[0.03] hover:bg-white/[0.06] transition-all flex items-center justify-center gap-2">
@@ -712,7 +749,9 @@ function Footer() {
       <div className="w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent mb-10 md:mb-16 max-w-7xl mx-auto" />
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-8 sm:gap-12">
         <div className="flex flex-col gap-6 w-full md:w-auto">
-          <Link href="/"><Logo size="sm" /></Link>
+          <Link href="/" className="flex items-center shrink-0">
+            <img src={DARK_LOGO} alt="Convos" style={{ height: 28, width: 'auto', maxWidth: 110, objectFit: 'contain', display: 'block' }} />
+          </Link>
           <p className="text-[13px] text-white/30 max-w-[280px] leading-relaxed">Agentic commerce. AI agents run your store.</p>
           <div className="flex gap-3">
             {[Twitter, Linkedin, Github].map((Icon, i) => (
