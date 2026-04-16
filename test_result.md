@@ -96,6 +96,79 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
+## user_problem_statement: "Convos - Agentic Commerce Platform with AI-powered shopping, missions, negotiation, merchant command center"
+## backend:
+##   - task: "GET /api/health - Health check endpoint"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "low"
+##     needs_retesting: false
+##   - task: "GET /api/products - List all products"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##   - task: "POST /api/products/seed - Seed demo products"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##   - task: "POST /api/ai/chat - AI chat with Azure OpenAI tool calling (search, negotiate, add_to_cart, create_mission)"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##   - task: "GET /api/missions - List missions"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "medium"
+##     needs_retesting: false
+##   - task: "GET /api/intents - Intent Stream for merchants"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##   - task: "GET /api/consumer-matrix - Consumer profiles"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##   - task: "GET /api/stats - Dashboard stats"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "medium"
+##     needs_retesting: false
+##   - task: "POST /api/checkout - Stripe checkout"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: true
+##   - task: "GET /api/cart - Get cart for session"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "medium"
+##     needs_retesting: false
+
 
 
 #====================================================================================================
