@@ -270,6 +270,11 @@ function App() {
   const [store, setStore] = useState(null)
 
   useEffect(() => {
+    document.documentElement.classList.add('dark')
+    return () => document.documentElement.classList.remove('dark')
+  }, [])
+
+  useEffect(() => {
     let sid = null
     try { sid = localStorage.getItem('convos_session_id') } catch(e) {}
     if (!sid) { sid = crypto.randomUUID(); try { localStorage.setItem('convos_session_id', sid) } catch(e) {} }
@@ -359,7 +364,7 @@ function App() {
       </div>
 
       {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-[#050505]/90 backdrop-blur-xl border-b border-white/[0.07]">
+      <nav className="sticky top-0 z-40 border-b" style={{ background: '#050505', borderColor: 'rgba(255,255,255,0.07)' }}>
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
           {/* Left: store name */}
           <div className="flex items-center gap-3 shrink-0">
