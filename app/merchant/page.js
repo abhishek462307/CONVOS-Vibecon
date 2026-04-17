@@ -219,6 +219,30 @@ export default function MerchantDashboard() {
   const [chartRange, setChartRange] = useState('7D')
   const [catalogView, setCatalogView] = useState('grid')
 
+  const [headerSearch, setHeaderSearch] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await fetchData()
+    setTimeout(() => setRefreshing(false), 800)
+  }
+
+  const searchResults = useMemo(() => {
+    if (!headerSearch.trim() || headerSearch.length < 2) return []
+    const q = headerSearch.toLowerCase()
+    const results = []
+    orders.filter(o => o.order_number?.toLowerCase().includes(q) || o.shipping_address?.name?.toLowerCase().includes(q))
+      .slice(0, 3).forEach(o => results.push({ type: 'order', label: o.order_number, sub: o.shipping_address?.name || 'N/A', id: o.id, section: 'orders' }))
+    products.filter(p => p.name?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q))
+      .slice(0, 3).forEach(p => results.push({ type: 'product', label: p.name, sub: `$${p.price} · ${p.category}`, id: p.id, section: 'catalog' }))
+    customers.filter(c => c.session_id?.toLowerCase().includes(q))
+      .slice(0, 2).forEach(c => results.push({ type: 'customer', label: `Session #${c.session_id?.slice(0, 8)}`, sub: `${c.interactions || 0} interactions`, id: c.id, section: 'customers' }))
+    return results
+  }, [headerSearch, orders, products, customers])
+
   const [productModal, setProductModal] = useState({ open: false, mode: 'create', data: null })
   const [orderModal, setOrderModal] = useState({ open: false, order: null })
   const [campaignModal, setCampaignModal] = useState({ open: false, mode: 'create', data: null })
@@ -1188,63 +1212,140 @@ export default function MerchantDashboard() {
     }}>
 
       {/* ── TOP HEADER ──────────────────────────────────────── */}
-      <header className="h-[58px] shrink-0 flex items-center px-5 gap-4" style={{ background: '#F5F3EF', borderBottom: '1px solid #E8E4DE' }}>
-        {/* Logo */}
-        <div className="flex items-center gap-2.5 shrink-0">
+      <header className="h-[58px] shrink-0 flex items-center px-5 gap-4 relative z-30" style={{ background: '#F5F3EF', borderBottom: '1px solid #E8E4DE' }}>
+        {/* Logo — click goes home */}
+        <button onClick={() => setActiveSection('home')} className="flex items-center gap-2.5 shrink-0 hover:opacity-80 transition-opacity">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)' }}>
             <svg width="13" height="13" viewBox="0 0 32 32" fill="none">
               <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" />
             </svg>
           </div>
           <span className="text-sm font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>Convos</span>
-        </div>
+        </button>
 
-        {/* Search */}
-        <div className="flex-1 max-w-lg mx-4">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#B5AFA8' }} />
-            <input
-              placeholder="Search orders, missions, or intelligence…"
-              className="w-full h-9 pl-10 pr-4 rounded-xl text-sm outline-none transition-all"
-              style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#7A6F66' }}
-              onFocus={e => { e.target.style.borderColor = '#C4B5A8'; e.target.style.color = '#1C0A04' }}
-              onBlur={e => { e.target.style.borderColor = '#E8E4DE'; e.target.style.color = '#7A6F66' }}
-            />
-          </div>
+        {/* Global Search */}
+        <div className="flex-1 max-w-lg mx-4 relative">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: '#B5AFA8' }} />
+          <input
+            value={headerSearch}
+            onChange={e => { setHeaderSearch(e.target.value); setSearchOpen(true) }}
+            onFocus={() => setSearchOpen(true)}
+            onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
+            placeholder="Search orders, products, customers…"
+            className="w-full h-9 pl-10 pr-4 rounded-xl text-sm outline-none transition-all"
+            style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#1C0A04' }}
+            onFocus={e => { e.target.style.borderColor = '#C4B5A8'; setSearchOpen(true) }}
+          />
+
+          {/* Search results dropdown */}
+          {searchOpen && headerSearch.length >= 2 && (
+            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden z-50" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+              {searchResults.length === 0 ? (
+                <div className="px-4 py-5 text-center">
+                  <p className="text-sm text-gray-400">No results for "<span className="font-medium text-gray-600">{headerSearch}</span>"</p>
+                </div>
+              ) : (
+                <div className="py-1.5">
+                  {['order', 'product', 'customer'].map(type => {
+                    const group = searchResults.filter(r => r.type === type)
+                    if (!group.length) return null
+                    const icons = { order: ShoppingBag, product: Package, customer: Users }
+                    const labels = { order: 'Orders', product: 'Products', customer: 'Customers' }
+                    const Icon = icons[type]
+                    return (
+                      <div key={type}>
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 px-4 py-1.5">{labels[type]}</p>
+                        {group.map((r, i) => (
+                          <button key={i} onMouseDown={() => { setActiveSection(r.section); setHeaderSearch(''); setSearchOpen(false) }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-left">
+                            <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                              <Icon className="w-3.5 h-3.5 text-gray-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">{r.label}</p>
+                              <p className="text-xs text-gray-400 truncate">{r.sub}</p>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Store info + actions */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Store name pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+          {/* Store name pill — click to go Store Design */}
+          <button onClick={() => setActiveSection('store-design')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all"
+            style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = '#C4B5A8'}
+            onMouseLeave={e => e.currentTarget.style.borderColor = '#E8E4DE'}>
             <span className="text-sm font-semibold" style={{ color: '#1C0A04' }}>{storeConfig?.name || 'Your Store'}</span>
             <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
             </span>
-          </div>
+          </button>
 
-          {/* Storefront */}
+          {/* Storefront — opens buyer store */}
           <a href="/store" target="_blank" rel="noopener noreferrer">
-            <button className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-xs font-semibold transition-all" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#7A6F66' }}
+            <button className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-xs font-semibold transition-all"
+              style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#7A6F66' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#C4B5A8'; e.currentTarget.style.color = '#1C0A04' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.color = '#7A6F66' }}>
               <ExternalLink className="w-3.5 h-3.5" /> Storefront
             </button>
           </a>
 
-          {/* Refresh */}
-          <button
-            onClick={fetchData}
+          {/* Refresh — with spin animation */}
+          <button onClick={handleRefresh} title="Refresh data"
             className="h-9 w-9 rounded-xl flex items-center justify-center transition-all"
             style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#B5AFA8' }}
             onMouseEnter={e => { e.currentTarget.style.borderColor = '#C4B5A8'; e.currentTarget.style.color = '#1C0A04' }}
             onMouseLeave={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.color = '#B5AFA8' }}>
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
 
-          {/* User avatar */}
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0" style={{ background: '#1C0A04', color: '#F5EBE0' }}>
-            M
+          {/* Avatar — with dropdown */}
+          <div className="relative">
+            <button onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 transition-all"
+              style={{ background: '#1C0A04', color: '#F5EBE0' }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+              M
+            </button>
+
+            {avatarMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setAvatarMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 overflow-hidden" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+                  <div className="px-4 py-3.5 border-b border-gray-100">
+                    <p className="text-sm font-bold text-gray-900">Merchant</p>
+                    <p className="text-xs text-gray-400 mt-0.5">merchant@demo.com</p>
+                  </div>
+                  <div className="py-1.5">
+                    <button onClick={() => { setActiveSection('store-design'); setAvatarMenuOpen(false) }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Paintbrush className="w-4 h-4 text-gray-400" /> Store Settings
+                    </button>
+                    <button onClick={() => { setActiveSection('home'); setAvatarMenuOpen(false) }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      <LayoutDashboard className="w-4 h-4 text-gray-400" /> Dashboard
+                    </button>
+                    <div className="my-1 border-t border-gray-100" />
+                    <button onClick={() => { localStorage.removeItem('user'); window.location.href = '/merchant/login' }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                      <LogOut className="w-4 h-4" /> Sign Out
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
