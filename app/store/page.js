@@ -405,7 +405,7 @@ function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName,
   return (
     <div
       className="w-[360px] flex-shrink-0 flex flex-col bg-white"
-      style={{ borderLeft: '1px solid #E5D0BC', height: 'calc(100vh - 56px)', position: 'sticky', top: '56px' }}
+      style={{ borderLeft: '1px solid #E5D0BC' }}
     >
       {/* Header */}
       <div className="px-4 py-3.5 flex items-center justify-between shrink-0 bg-white" style={{ borderBottom: '1px solid #E5D0BC' }}>
