@@ -565,6 +565,201 @@ function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName,
   )
 }
 
+// ── Product Focus Panel (single product, embedded) ─────────────
+function ProductFocusPanel({ product, onClose, onAddToCart, onNegotiate }) {
+  const [qty, setQty] = useState(1)
+  const [added, setAdded] = useState(false)
+  const discount = product.compare_at_price > product.price
+    ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0
+
+  return (
+    <div className="flex-1 flex flex-col overflow-y-auto" style={{ background: '#FAF6F1' }}>
+      {/* Back bar */}
+      <div className="flex items-center justify-between px-6 py-3 bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #E5D0BC' }}>
+        <button onClick={onClose} className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: '#9B7B6B' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#4A2512'} onMouseLeave={e => e.currentTarget.style.color = '#9B7B6B'}>
+          ← Back to store
+        </button>
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8732A' }}>Product Detail</span>
+      </div>
+
+      <div className="max-w-2xl mx-auto w-full px-6 py-8 space-y-6">
+        {/* Hero image */}
+        <div className="relative rounded-2xl overflow-hidden aspect-video bg-[#F5EBE0]">
+          <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+          {discount > 0 && <span className="absolute top-4 left-4 text-[10px] font-black px-3 py-1 rounded-full text-white uppercase" style={{ background: '#B8732A' }}>-{discount}% OFF</span>}
+          {product.bargain_enabled && <span className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full text-[#F5EBE0]" style={{ background: '#4A2512' }}><Zap className="w-3 h-3" /> AI Price</span>}
+        </div>
+
+        {/* Info */}
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: '#B8732A' }}>{product.category}</p>
+          <h2 className="text-2xl font-extrabold mb-2" style={{ color: '#1C0A04' }}>{product.name}</h2>
+          <div className="flex items-baseline gap-3 mb-4">
+            <span className="text-3xl font-extrabold" style={{ color: '#1C0A04' }}>${product.price}</span>
+            {product.compare_at_price > product.price && <span className="text-base line-through font-medium" style={{ color: '#C4A898' }}>${product.compare_at_price}</span>}
+            {discount > 0 && <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">Save ${(product.compare_at_price - product.price).toFixed(2)}</span>}
+          </div>
+          <p className="text-sm leading-relaxed mb-4" style={{ color: '#6B3A2A' }}>{product.description}</p>
+          {product.tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {product.tags.map(t => <span key={t} className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F5EBE0', color: '#7C4B2A', border: '1px solid #E5D0BC' }}>{t}</span>)}
+            </div>
+          )}
+          {product.stock !== undefined && (
+            <div className="flex items-center gap-2 mb-4">
+              <div className={`w-2 h-2 rounded-full ${product.stock > 20 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+              <p className="text-xs font-semibold" style={{ color: '#9B7B6B' }}>{product.stock > 20 ? 'In stock' : product.stock > 0 ? `Only ${product.stock} left` : 'Out of stock'}</p>
+            </div>
+          )}
+          {product.bargain_enabled && (
+            <div className="rounded-xl px-4 py-3 flex items-start gap-2.5 mb-4" style={{ background: '#F5EBE0', border: '1px solid #E5D0BC' }}>
+              <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#B8732A' }} />
+              <div><p className="text-xs font-bold" style={{ color: '#4A2512' }}>AI Negotiation Available</p><p className="text-[10px] mt-0.5" style={{ color: '#9B7B6B' }}>Best deal starts at ${product.bargain_min_price || 'flexible'}</p></div>
+            </div>
+          )}
+        </div>
+
+        {/* Qty + actions */}
+        <div className="space-y-3 pb-6">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold" style={{ color: '#4A2512' }}>Quantity</span>
+            <div className="flex items-center gap-3 rounded-xl px-4 py-2" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: '#9B7B6B' }}><Minus className="w-3.5 h-3.5" /></button>
+              <span className="text-sm font-extrabold w-5 text-center" style={{ color: '#1C0A04' }}>{qty}</span>
+              <button onClick={() => setQty(q => q + 1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: '#9B7B6B' }}><Plus className="w-3.5 h-3.5" /></button>
+            </div>
+          </div>
+          <div className="flex justify-between px-1"><span className="text-xs" style={{ color: '#9B7B6B' }}>Total</span><span className="text-lg font-extrabold" style={{ color: '#1C0A04' }}>${(product.price * qty).toFixed(2)}</span></div>
+          <button onClick={() => { for(let i=0;i<qty;i++) onAddToCart(product); setAdded(true); setTimeout(()=>setAdded(false),2000) }}
+            className="w-full h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-white"
+            style={{ background: added ? '#059669' : '#4A2512' }}>
+            {added ? '✓ Added to Cart!' : <><ShoppingCart className="w-4 h-4" /> Add {qty > 1 ? `${qty} ×` : ''} to Cart — ${(product.price * qty).toFixed(2)}</>}
+          </button>
+          {product.bargain_enabled && (
+            <button onClick={() => onNegotiate(product)} className="w-full h-10 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all"
+              style={{ border: '1px solid #E5D0BC', background: '#FAF6F1', color: '#7C4B2A' }}>
+              <Tag className="w-3.5 h-3.5" /> Negotiate Price with AI
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Category / Results Panel ──────────────────────────────────
+function CategoryFocusPanel({ title, panelProducts, onClose, onAddToCart, onNegotiate, onOpenProduct }) {
+  return (
+    <div className="flex-1 flex flex-col overflow-y-auto" style={{ background: '#FAF6F1' }}>
+      <div className="flex items-center justify-between px-6 py-3 bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #E5D0BC' }}>
+        <button onClick={onClose} className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: '#9B7B6B' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#4A2512'} onMouseLeave={e => e.currentTarget.style.color = '#9B7B6B'}>
+          ← Browse all
+        </button>
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8732A' }}>{title} · {panelProducts.length} items</span>
+      </div>
+      <div className="p-6">
+        <h2 className="text-xl font-extrabold mb-1" style={{ color: '#1C0A04' }}>{title}</h2>
+        <p className="text-xs mb-5" style={{ color: '#9B7B6B' }}>{panelProducts.length} product{panelProducts.length !== 1 ? 's' : ''} recommended by AI</p>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {panelProducts.map(p => (
+            <ProductCard key={p.id} product={p} onAddToCart={onAddToCart} onNegotiate={onNegotiate} onOpen={onOpenProduct} />
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Comparison Panel ──────────────────────────────────────────
+function ComparisonPanel({ panelProducts, onClose, onAddToCart, onNegotiate }) {
+  // Pick best value product
+  const bestValue = panelProducts.reduce((best, p) => (!best || p.price < best.price) ? p : best, null)
+  const compareRows = [
+    { label: 'Price', key: 'price', render: (p) => <span className="font-bold text-lg" style={{ color: '#1C0A04' }}>${p.price}</span> },
+    { label: 'Category', key: 'category', render: (p) => <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#F5EBE0', color: '#7C4B2A' }}>{p.category}</span> },
+    { label: 'Weight', key: 'weight', render: (p) => <span className="text-sm text-gray-600">{p.weight || '—'}</span> },
+    { label: 'AI Price', key: 'bargain_enabled', render: (p) => p.bargain_enabled ? <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 justify-center"><Zap className="w-3 h-3" /> Min ${p.bargain_min_price}</span> : <span className="text-xs text-gray-400">—</span> },
+    { label: 'Stock', key: 'stock', render: (p) => <span className={`text-xs font-semibold ${(p.stock||0) > 20 ? 'text-emerald-600' : 'text-amber-600'}`}>{(p.stock||0) > 20 ? 'In Stock' : `${p.stock||0} left`}</span> },
+  ]
+
+  return (
+    <div className="flex-1 flex flex-col overflow-y-auto" style={{ background: '#FAF6F1' }}>
+      <div className="flex items-center justify-between px-6 py-3 bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #E5D0BC' }}>
+        <button onClick={onClose} className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: '#9B7B6B' }}
+          onMouseEnter={e => e.currentTarget.style.color = '#4A2512'} onMouseLeave={e => e.currentTarget.style.color = '#9B7B6B'}>
+          ← Back to store
+        </button>
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8732A' }}>Product Comparison</span>
+      </div>
+
+      <div className="p-6 pb-12">
+        <h2 className="text-xl font-extrabold mb-1" style={{ color: '#1C0A04' }}>Compare Products</h2>
+        <p className="text-xs mb-6" style={{ color: '#9B7B6B' }}>Comparing {panelProducts.length} products — AI recommends the best pick</p>
+
+        {/* Comparison table */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr>
+                <th className="text-left py-3 pr-4 text-xs font-semibold w-24" style={{ color: '#9B7B6B' }}>Feature</th>
+                {panelProducts.map(p => (
+                  <th key={p.id} className="px-3 py-3 min-w-[160px]">
+                    <div className={`rounded-2xl p-3 text-center transition-all ${p.id === bestValue?.id ? 'ring-2' : ''}`}
+                      style={p.id === bestValue?.id ? { background: '#FFF8F0', ringColor: '#B8732A', border: '2px solid #B8732A' } : { background: '#FFFFFF', border: '1px solid #E5D0BC' }}>
+                      {p.id === bestValue?.id && (
+                        <div className="text-[9px] font-black uppercase tracking-widest mb-2 px-2 py-0.5 rounded-full inline-block" style={{ background: '#B8732A', color: 'white' }}>
+                          ⭐ Best Pick
+                        </div>
+                      )}
+                      <img src={p.image} alt={p.name} className="w-16 h-16 rounded-xl object-cover mx-auto mb-2" />
+                      <p className="text-xs font-bold leading-tight" style={{ color: '#1C0A04' }}>{p.name}</p>
+                    </div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {compareRows.map((row, ri) => (
+                <tr key={row.label} style={{ background: ri % 2 === 0 ? '#FAF6F1' : '#FFFFFF', borderTop: '1px solid #F0E8DE' }}>
+                  <td className="py-3 pr-4 text-xs font-semibold" style={{ color: '#9B7B6B' }}>{row.label}</td>
+                  {panelProducts.map(p => (
+                    <td key={p.id} className="px-3 py-3 text-center">
+                      {row.render(p)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Action buttons per product */}
+        <div className="grid mt-6" style={{ gridTemplateColumns: `6rem repeat(${panelProducts.length}, 1fr)`, gap: '0 12px' }}>
+          <div />
+          {panelProducts.map(p => (
+            <div key={p.id} className="space-y-2">
+              <button onClick={() => onAddToCart(p)}
+                className="w-full h-10 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 text-white transition-all"
+                style={{ background: p.id === bestValue?.id ? '#B8732A' : '#4A2512' }}>
+                <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
+              </button>
+              {p.bargain_enabled && (
+                <button onClick={() => onNegotiate(p)}
+                  className="w-full h-8 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
+                  style={{ border: '1px solid #E5D0BC', background: '#FAF6F1', color: '#7C4B2A' }}>
+                  <Tag className="w-3 h-3" /> Negotiate
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const [sessionId, setSessionId] = useState(null)
   const [products, setProducts] = useState([])
@@ -576,6 +771,8 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(true)
   const [store, setStore] = useState(null)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [contextPanel, setContextPanel] = useState(null)
+  // contextPanel: null | { type: 'product'|'category'|'comparison', data: any, title?: string }
 
   // Force light mode
   useEffect(() => {
@@ -626,6 +823,27 @@ export default function App() {
           products: data.response.products || [],
           checkout_url: data.response.checkout_url || null
         }])
+
+        // ── Smart context panel detection ────────────────────
+        const prods = data.response.products || []
+        const isComparison = /compar|vs\b|versus|difference|better|which.*best|side.by.side/i.test(text)
+        const isCategoryBrowse = /show.*all|all.*product|browse|list|what.*do you have/i.test(text)
+
+        if (prods.length === 1 && !isCategoryBrowse) {
+          // Single product mentioned → product focus panel
+          setContextPanel({ type: 'product', data: prods[0] })
+        } else if (prods.length >= 2 && isComparison) {
+          // Multiple products + compare intent → comparison panel
+          setContextPanel({ type: 'comparison', data: prods })
+        } else if (prods.length >= 2) {
+          // Multiple products → category/results panel
+          const title = prods.every(p => p.category === prods[0].category) ? prods[0].category : 'Recommended for you'
+          setContextPanel({ type: 'category', data: prods, title })
+        } else if (prods.length === 0 && /bye|thanks|ok|great|awesome|got it/i.test(text)) {
+          // Closing phrase → clear panel
+          setContextPanel(null)
+        }
+        // If no products in response, keep existing context
       }
       if (data.cart) setCart(data.cart)
     } catch {
@@ -823,140 +1041,169 @@ export default function App() {
       </nav>
 
       {/* Main */}
-      <div className="flex">
-        <div className="flex-1 min-w-0">
+      <div className="flex" style={contextPanel ? { height: 'calc(100vh - 56px)', overflow: 'hidden' } : {}}>
 
-          {/* Hero */}
-          <div className="relative h-[400px] overflow-hidden">
-            <img
-              src={store?.hero_image || 'https://images.unsplash.com/photo-1447933601403-56dc2e4c4949?w=1400&h=600&fit=crop'}
-              alt="Store hero"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(28,10,4,0.82) 0%, rgba(28,10,4,0.45) 55%, transparent 100%)' }} />
-            <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-14">
-              <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 w-fit mb-4" style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                <Sparkles className="w-3 h-3" style={{ color: '#F5D5A8' }} />
-                <span className="text-white text-[11px] font-semibold">AI-Powered Shopping</span>
-              </div>
-              <h1 className="text-4xl md:text-[52px] font-extrabold tracking-tight text-white leading-[1.05] mb-3 max-w-lg">
-                {store?.name || 'Artisan Coffee Roasters'}
-              </h1>
-              <p className="text-base mb-7 max-w-md leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>
-                {store?.description || 'Premium single origin and blended coffees, roasted fresh to order.'}
-              </p>
-              <button
-                onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold w-fit transition-all shadow-lg"
-                style={{ background: '#FFFFFF', color: '#1C0A04' }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F5EBE0'}
-                onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
-              >
-                Shop Collection <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
+        {/* Left: Context panel OR normal browsing */}
+        {contextPanel ? (
+          <div className="flex-1 min-w-0 flex overflow-hidden">
+            {contextPanel.type === 'product' && (
+              <ProductFocusPanel
+                product={contextPanel.data}
+                onClose={() => setContextPanel(null)}
+                onAddToCart={addToCart}
+                onNegotiate={negotiate}
+              />
+            )}
+            {contextPanel.type === 'category' && (
+              <CategoryFocusPanel
+                title={contextPanel.title || 'Recommended'}
+                panelProducts={contextPanel.data}
+                onClose={() => setContextPanel(null)}
+                onAddToCart={addToCart}
+                onNegotiate={negotiate}
+                onOpenProduct={setSelectedProduct}
+              />
+            )}
+            {contextPanel.type === 'comparison' && (
+              <ComparisonPanel
+                panelProducts={contextPanel.data}
+                onClose={() => setContextPanel(null)}
+                onAddToCart={addToCart}
+                onNegotiate={negotiate}
+              />
+            )}
           </div>
+        ) : (
+          <div className="flex-1 min-w-0">
 
-          {/* Trust bar */}
-          <div className="bg-white" style={{ borderBottom: '1px solid #E5D0BC' }}>
-            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-center gap-8 text-xs font-semibold" style={{ color: '#9B7B6B' }}>
-              <span className="flex items-center gap-1.5"><TruckIcon className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> Free shipping over $100</span>
-              <span className="hidden sm:flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> Secure &amp; encrypted checkout</span>
-              <span className="hidden md:flex items-center gap-1.5"><Package className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> 30-day free returns</span>
-              <span className="hidden lg:flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> AI negotiates best prices for you</span>
-            </div>
-          </div>
-
-          {/* Category pills */}
-          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-7 pb-4">
-            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {CATEGORIES.map(c => (
-                <button
-                  key={c.name}
-                  onClick={() => setSelectedCategory(c.name)}
-                  className="flex items-center gap-2 shrink-0 rounded-full px-4 py-2 text-[12px] font-bold transition-all"
-                  style={selectedCategory === c.name
-                    ? { background: '#4A2512', color: '#FFFFFF' }
-                    : { background: '#FFFFFF', color: '#6B3A2A', border: '1px solid #E5D0BC' }
-                  }
-                  onMouseEnter={e => { if (selectedCategory !== c.name) { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.background = '#F5EBE0'; e.currentTarget.style.color = '#4A2512' } }}
-                  onMouseLeave={e => { if (selectedCategory !== c.name) { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.color = '#6B3A2A' } }}
-                >
-                  {c.image && <img src={c.image} alt="" className="w-4 h-4 rounded-full object-cover" />}
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Products grid */}
-          <div id="products" className="max-w-[1440px] mx-auto px-4 sm:px-6 pb-16">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-xl font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>
-                  {selectedCategory === 'All' ? 'All Products' : selectedCategory}
-                </h2>
-                <p className="text-xs mt-0.5 font-medium" style={{ color: '#C4A898' }}>
-                  {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''}
+            {/* Hero */}
+            <div className="relative h-[400px] overflow-hidden">
+              <img
+                src={store?.hero_image || 'https://images.unsplash.com/photo-1447933601403-56dc2e4c4949?w=1400&h=600&fit=crop'}
+                alt="Store hero"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(28,10,4,0.82) 0%, rgba(28,10,4,0.45) 55%, transparent 100%)' }} />
+              <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-14">
+                <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 w-fit mb-4" style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                  <Sparkles className="w-3 h-3" style={{ color: '#F5D5A8' }} />
+                  <span className="text-white text-[11px] font-semibold">AI-Powered Shopping</span>
+                </div>
+                <h1 className="text-4xl md:text-[52px] font-extrabold tracking-tight text-white leading-[1.05] mb-3 max-w-lg">
+                  {store?.name || 'Artisan Coffee Roasters'}
+                </h1>
+                <p className="text-base mb-7 max-w-md leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>
+                  {store?.description || 'Premium single origin and blended coffees, roasted fresh to order.'}
                 </p>
-              </div>
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="text-xs font-semibold flex items-center gap-1 transition-colors" style={{ color: '#B8732A' }}>
-                  <X className="w-3 h-3" /> Clear search
+                <button
+                  onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold w-fit transition-all shadow-lg"
+                  style={{ background: '#FFFFFF', color: '#1C0A04' }}
+                  onMouseEnter={e => e.currentTarget.style.background = '#F5EBE0'}
+                  onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
+                >
+                  Shop Collection <ArrowRight className="w-4 h-4" />
                 </button>
+              </div>
+            </div>
+
+            {/* Trust bar */}
+            <div className="bg-white" style={{ borderBottom: '1px solid #E5D0BC' }}>
+              <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-center gap-8 text-xs font-semibold" style={{ color: '#9B7B6B' }}>
+                <span className="flex items-center gap-1.5"><TruckIcon className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> Free shipping over $100</span>
+                <span className="hidden sm:flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> Secure &amp; encrypted checkout</span>
+                <span className="hidden md:flex items-center gap-1.5"><Package className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> 30-day free returns</span>
+                <span className="hidden lg:flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> AI negotiates best prices for you</span>
+              </div>
+            </div>
+
+            {/* Category pills */}
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-7 pb-4">
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                {CATEGORIES.map(c => (
+                  <button
+                    key={c.name}
+                    onClick={() => setSelectedCategory(c.name)}
+                    className="flex items-center gap-2 shrink-0 rounded-full px-4 py-2 text-[12px] font-bold transition-all"
+                    style={selectedCategory === c.name
+                      ? { background: '#4A2512', color: '#FFFFFF' }
+                      : { background: '#FFFFFF', color: '#6B3A2A', border: '1px solid #E5D0BC' }
+                    }
+                    onMouseEnter={e => { if (selectedCategory !== c.name) { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.background = '#F5EBE0'; e.currentTarget.style.color = '#4A2512' } }}
+                    onMouseLeave={e => { if (selectedCategory !== c.name) { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.color = '#6B3A2A' } }}
+                  >
+                    {c.image && <img src={c.image} alt="" className="w-4 h-4 rounded-full object-cover" />}
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Products grid */}
+            <div id="products" className="max-w-[1440px] mx-auto px-4 sm:px-6 pb-16">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-xl font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>
+                    {selectedCategory === 'All' ? 'All Products' : selectedCategory}
+                  </h2>
+                  <p className="text-xs mt-0.5 font-medium" style={{ color: '#C4A898' }}>
+                    {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="text-xs font-semibold flex items-center gap-1 transition-colors" style={{ color: '#B8732A' }}>
+                    <X className="w-3 h-3" /> Clear search
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {filteredProducts.map(p => (
+                  <ProductCard key={p.id} product={p} onAddToCart={addToCart} onNegotiate={negotiate} onOpen={setSelectedProduct} />
+                ))}
+              </div>
+
+              {filteredProducts.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20">
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#F5EBE0' }}>
+                    <Search className="w-7 h-7" style={{ color: '#C4A898' }} />
+                  </div>
+                  <p className="text-base font-bold mb-1" style={{ color: '#4A2512' }}>No products found</p>
+                  <p className="text-sm" style={{ color: '#9B7B6B' }}>Try a different category or search term</p>
+                </div>
               )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filteredProducts.map(p => (
-                <ProductCard key={p.id} product={p} onAddToCart={addToCart} onNegotiate={negotiate} onOpen={setSelectedProduct} />
-              ))}
-            </div>
-
-            {filteredProducts.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#F5EBE0' }}>
-                  <Search className="w-7 h-7" style={{ color: '#C4A898' }} />
+            {/* Footer */}
+            <footer className="bg-white py-10" style={{ borderTop: '1px solid #E5D0BC' }}>
+              <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col items-center gap-8 text-sm" style={{ color: '#C4A898' }}>
+                <div className="flex flex-col items-center gap-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#C4A898]">Secure Payments via</p>
+                  <div className="flex flex-wrap items-center justify-center gap-6 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                    {PAYMENT_LOGOS.map(logo => (
+                      <img key={logo.name} src={logo.src} alt={logo.name} style={{ height: `${logo.h}px`, width: 'auto' }} />
+                    ))}
+                  </div>
                 </div>
-                <p className="text-base font-bold mb-1" style={{ color: '#4A2512' }}>No products found</p>
-                <p className="text-sm" style={{ color: '#9B7B6B' }}>Try a different category or search term</p>
+                <div className="w-24 h-px bg-[#E5D0BC]" />
+                <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4A2512, #7C4B2A)' }}>
+                      <svg width="10" height="10" viewBox="0 0 32 32" fill="none">
+                        <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" />
+                      </svg>
+                    </div>
+                    <span className="font-bold" style={{ color: '#4A2512' }}>{store?.name || 'Artisan Coffee'}</span>
+                  </div>
+                  <p className="text-xs">
+                    © {new Date().getFullYear()} {store?.name || 'Artisan Coffee'}. Powered by{' '}
+                    <span className="font-semibold" style={{ color: '#B8732A' }}>Convos AI</span>
+                  </p>
+                </div>
               </div>
-            )}
+            </footer>
           </div>
-
-          {/* Footer */}
-          <footer className="bg-white py-10" style={{ borderTop: '1px solid #E5D0BC' }}>
-            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col items-center gap-8 text-sm" style={{ color: '#C4A898' }}>
-              
-              {/* Payment methods */}
-              <div className="flex flex-col items-center gap-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#C4A898]">Secure Payments via</p>
-                <div className="flex flex-wrap items-center justify-center gap-6 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                  {PAYMENT_LOGOS.map(logo => (
-                    <img key={logo.name} src={logo.src} alt={logo.name} style={{ height: `${logo.h}px`, width: 'auto' }} />
-                  ))}
-                </div>
-              </div>
-
-              <div className="w-24 h-px bg-[#E5D0BC]" />
-
-              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4A2512, #7C4B2A)' }}>
-                  <svg width="10" height="10" viewBox="0 0 32 32" fill="none">
-                    <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" />
-                  </svg>
-                </div>
-                <span className="font-bold" style={{ color: '#4A2512' }}>{store?.name || 'Artisan Coffee'}</span>
-              </div>
-              <p className="text-xs">
-                © {new Date().getFullYear()} {store?.name || 'Artisan Coffee'}. Powered by{' '}
-                <span className="font-semibold" style={{ color: '#B8732A' }}>Convos AI</span>
-              </p>
-            </div>
-            </div>
-          </footer>
-        </div>
+        )}
 
         {/* Chat widget */}
         {chatOpen && (
