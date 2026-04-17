@@ -590,9 +590,9 @@ function ProductFocusPanel({ product, onClose, onAddToCart, onNegotiate }) {
     ? Math.round((1 - product.price / product.compare_at_price) * 100) : 0
 
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto" style={{ background: '#FAF6F1' }}>
+    <div className="flex-1 flex flex-col overflow-hidden" style={{ background: '#FAF6F1' }}>
       {/* Back bar */}
-      <div className="flex items-center justify-between px-6 py-3 bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #E5D0BC' }}>
+      <div className="flex items-center justify-between px-5 py-2.5 bg-white shrink-0" style={{ borderBottom: '1px solid #E5D0BC' }}>
         <button onClick={onClose} className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: '#9B7B6B' }}
           onMouseEnter={e => e.currentTarget.style.color = '#4A2512'} onMouseLeave={e => e.currentTarget.style.color = '#9B7B6B'}>
           ← Back to store
@@ -600,65 +600,90 @@ function ProductFocusPanel({ product, onClose, onAddToCart, onNegotiate }) {
         <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8732A' }}>Product Detail</span>
       </div>
 
-      <div className="max-w-2xl mx-auto w-full px-6 py-8 space-y-6">
-        {/* Hero image */}
-        <div className="relative rounded-2xl overflow-hidden aspect-video bg-[#F5EBE0]">
+      {/* Two-column layout — fits entire viewport without scroll */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Left: full-height image */}
+        <div className="w-[42%] shrink-0 relative overflow-hidden" style={{ background: '#F5EBE0' }}>
           <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-          {discount > 0 && <span className="absolute top-4 left-4 text-[10px] font-black px-3 py-1 rounded-full text-white uppercase" style={{ background: '#B8732A' }}>-{discount}% OFF</span>}
-          {product.bargain_enabled && <span className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full text-[#F5EBE0]" style={{ background: '#4A2512' }}><Zap className="w-3 h-3" /> AI Price</span>}
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+            {discount > 0 && <span className="text-[9px] font-black px-2.5 py-0.5 rounded-full text-white uppercase shadow-sm" style={{ background: '#B8732A' }}>-{discount}% OFF</span>}
+            {product.bargain_enabled && <span className="flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm" style={{ background: '#4A2512', color: '#F5EBE0' }}><Zap className="w-2.5 h-2.5" /> AI Price</span>}
+          </div>
         </div>
 
-        {/* Info */}
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: '#B8732A' }}>{product.category}</p>
-          <h2 className="text-2xl font-extrabold mb-2" style={{ color: '#1C0A04' }}>{product.name}</h2>
-          <div className="flex items-baseline gap-3 mb-4">
-            <span className="text-3xl font-extrabold" style={{ color: '#1C0A04' }}>${product.price}</span>
-            {product.compare_at_price > product.price && <span className="text-base line-through font-medium" style={{ color: '#C4A898' }}>${product.compare_at_price}</span>}
-            {discount > 0 && <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">Save ${(product.compare_at_price - product.price).toFixed(2)}</span>}
+        {/* Right: details + actions, scrollable */}
+        <div className="flex-1 flex flex-col overflow-y-auto px-6 py-5 gap-3">
+          {/* Title + price */}
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: '#B8732A' }}>{product.category}</p>
+            <h2 className="text-xl font-extrabold leading-tight mb-2.5" style={{ color: '#1C0A04' }}>{product.name}</h2>
+            <div className="flex items-baseline gap-2.5">
+              <span className="text-2xl font-extrabold" style={{ color: '#1C0A04' }}>${product.price}</span>
+              {product.compare_at_price > product.price && <span className="text-sm line-through" style={{ color: '#C4A898' }}>${product.compare_at_price}</span>}
+              {discount > 0 && <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Save ${(product.compare_at_price - product.price).toFixed(2)}</span>}
+            </div>
+            {product.weight && <p className="text-xs mt-1" style={{ color: '#9B7B6B' }}>{product.weight} · {product.category}</p>}
           </div>
-          <p className="text-sm leading-relaxed mb-4" style={{ color: '#6B3A2A' }}>{product.description}</p>
+
+          {/* Description */}
+          <p className="text-xs leading-relaxed" style={{ color: '#6B3A2A' }}>{product.description}</p>
+
+          {/* Tags */}
           {product.tags?.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {product.tags.map(t => <span key={t} className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F5EBE0', color: '#7C4B2A', border: '1px solid #E5D0BC' }}>{t}</span>)}
+            <div className="flex flex-wrap gap-1.5">
+              {product.tags.map(t => <span key={t} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#F5EBE0', color: '#7C4B2A', border: '1px solid #E5D0BC' }}>{t}</span>)}
             </div>
           )}
+
+          {/* Stock */}
           {product.stock !== undefined && (
-            <div className="flex items-center gap-2 mb-4">
-              <div className={`w-2 h-2 rounded-full ${product.stock > 20 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+            <div className="flex items-center gap-1.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 20 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
               <p className="text-xs font-semibold" style={{ color: '#9B7B6B' }}>{product.stock > 20 ? 'In stock' : product.stock > 0 ? `Only ${product.stock} left` : 'Out of stock'}</p>
             </div>
           )}
-          {product.bargain_enabled && (
-            <div className="rounded-xl px-4 py-3 flex items-start gap-2.5 mb-4" style={{ background: '#F5EBE0', border: '1px solid #E5D0BC' }}>
-              <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#B8732A' }} />
-              <div><p className="text-xs font-bold" style={{ color: '#4A2512' }}>AI Negotiation Available</p><p className="text-[10px] mt-0.5" style={{ color: '#9B7B6B' }}>Best deal starts at ${product.bargain_min_price || 'flexible'}</p></div>
-            </div>
-          )}
-        </div>
 
-        {/* Qty + actions */}
-        <div className="space-y-3 pb-6">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold" style={{ color: '#4A2512' }}>Quantity</span>
-            <div className="flex items-center gap-3 rounded-xl px-4 py-2" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: '#9B7B6B' }}><Minus className="w-3.5 h-3.5" /></button>
-              <span className="text-sm font-extrabold w-5 text-center" style={{ color: '#1C0A04' }}>{qty}</span>
-              <button onClick={() => setQty(q => q + 1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ color: '#9B7B6B' }}><Plus className="w-3.5 h-3.5" /></button>
-            </div>
-          </div>
-          <div className="flex justify-between px-1"><span className="text-xs" style={{ color: '#9B7B6B' }}>Total</span><span className="text-lg font-extrabold" style={{ color: '#1C0A04' }}>${(product.price * qty).toFixed(2)}</span></div>
-          <button onClick={() => { for(let i=0;i<qty;i++) onAddToCart(product); setAdded(true); setTimeout(()=>setAdded(false),2000) }}
-            className="w-full h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all text-white"
-            style={{ background: added ? '#059669' : '#4A2512' }}>
-            {added ? '✓ Added to Cart!' : <><ShoppingCart className="w-4 h-4" /> Add {qty > 1 ? `${qty} ×` : ''} to Cart — ${(product.price * qty).toFixed(2)}</>}
-          </button>
+          {/* AI bargain info */}
           {product.bargain_enabled && (
-            <button onClick={() => onNegotiate(product)} className="w-full h-10 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all"
-              style={{ border: '1px solid #E5D0BC', background: '#FAF6F1', color: '#7C4B2A' }}>
-              <Tag className="w-3.5 h-3.5" /> Negotiate Price with AI
-            </button>
+            <div className="rounded-xl px-3.5 py-2.5 flex items-center gap-2.5" style={{ background: '#F5EBE0', border: '1px solid #E5D0BC' }}>
+              <Zap className="w-3.5 h-3.5 shrink-0" style={{ color: '#B8732A' }} />
+              <div>
+                <p className="text-xs font-bold" style={{ color: '#4A2512' }}>AI Negotiation Available</p>
+                <p className="text-[10px]" style={{ color: '#9B7B6B' }}>Best deal from ${product.bargain_min_price || 'flexible'}</p>
+              </div>
+            </div>
           )}
+
+          {/* Spacer to push CTA to bottom */}
+          <div className="flex-1" />
+
+          {/* Qty + CTA — pinned at bottom */}
+          <div className="space-y-2 pt-3" style={{ borderTop: '1px solid #F0E8DE' }}>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold" style={{ color: '#4A2512' }}>Qty</span>
+              <div className="flex items-center gap-3 rounded-xl px-3 py-1.5" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ color: '#9B7B6B' }}><Minus className="w-3.5 h-3.5" /></button>
+                <span className="text-sm font-extrabold w-4 text-center" style={{ color: '#1C0A04' }}>{qty}</span>
+                <button onClick={() => setQty(q => q + 1)} style={{ color: '#9B7B6B' }}><Plus className="w-3.5 h-3.5" /></button>
+              </div>
+              <span className="text-base font-extrabold" style={{ color: '#1C0A04' }}>${(product.price * qty).toFixed(2)}</span>
+            </div>
+            <button
+              onClick={() => { for (let i = 0; i < qty; i++) onAddToCart(product); setAdded(true); setTimeout(() => setAdded(false), 2000) }}
+              className="w-full h-11 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 text-white transition-all"
+              style={{ background: added ? '#059669' : '#4A2512' }}>
+              {added ? '✓ Added to Cart!' : <><ShoppingCart className="w-4 h-4" /> Add {qty > 1 ? `${qty} × ` : ''}to Cart — ${(product.price * qty).toFixed(2)}</>}
+            </button>
+            {product.bargain_enabled && (
+              <button onClick={() => onNegotiate(product)}
+                className="w-full h-9 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                style={{ border: '1px solid #E5D0BC', background: '#FAF6F1', color: '#7C4B2A' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.background = '#F5EBE0' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.background = '#FAF6F1' }}>
+                <Tag className="w-3.5 h-3.5" /> Negotiate Price with AI
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
