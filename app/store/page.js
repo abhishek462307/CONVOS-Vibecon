@@ -674,86 +674,186 @@ function CategoryFocusPanel({ title, panelProducts, onClose, onAddToCart, onNego
 
 // ── Comparison Panel ──────────────────────────────────────────
 function ComparisonPanel({ panelProducts, onClose, onAddToCart, onNegotiate }) {
-  // Pick best value product
-  const bestValue = panelProducts.reduce((best, p) => (!best || p.price < best.price) ? p : best, null)
-  const compareRows = [
-    { label: 'Price', key: 'price', render: (p) => <span className="font-bold text-lg" style={{ color: '#1C0A04' }}>${p.price}</span> },
-    { label: 'Category', key: 'category', render: (p) => <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: '#F5EBE0', color: '#7C4B2A' }}>{p.category}</span> },
-    { label: 'Weight', key: 'weight', render: (p) => <span className="text-sm text-gray-600">{p.weight || '—'}</span> },
-    { label: 'AI Price', key: 'bargain_enabled', render: (p) => p.bargain_enabled ? <span className="text-xs font-bold text-emerald-600 flex items-center gap-1 justify-center"><Zap className="w-3 h-3" /> Min ${p.bargain_min_price}</span> : <span className="text-xs text-gray-400">—</span> },
-    { label: 'Stock', key: 'stock', render: (p) => <span className={`text-xs font-semibold ${(p.stock||0) > 20 ? 'text-emerald-600' : 'text-amber-600'}`}>{(p.stock||0) > 20 ? 'In Stock' : `${p.stock||0} left`}</span> },
+  const [addedId, setAddedId] = useState(null)
+
+  // Pick best value product (lowest price) and premium (highest price)
+  const sortedByPrice = [...panelProducts].sort((a, b) => a.price - b.price)
+  const bestValue = sortedByPrice[0]
+  const premium = sortedByPrice[sortedByPrice.length - 1]
+
+  const handleAdd = (p) => {
+    onAddToCart(p)
+    setAddedId(p.id)
+    setTimeout(() => setAddedId(null), 2000)
+  }
+
+  const features = [
+    {
+      icon: '💰',
+      label: 'Price',
+      render: (p) => {
+        const isCheapest = p.id === bestValue?.id
+        return (
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-2xl font-extrabold" style={{ color: '#1C0A04' }}>${p.price}</span>
+            {p.compare_at_price > p.price && (
+              <span className="text-xs line-through" style={{ color: '#C4A898' }}>${p.compare_at_price}</span>
+            )}
+            {isCheapest && panelProducts.length > 1 && (
+              <span className="text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full text-emerald-700 bg-emerald-50 border border-emerald-200">Best Value</span>
+            )}
+          </div>
+        )
+      }
+    },
+    {
+      icon: '📦',
+      label: 'Category',
+      render: (p) => <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: '#F5EBE0', color: '#7C4B2A', border: '1px solid #E5D0BC' }}>{p.category}</span>
+    },
+    {
+      icon: '⚖️',
+      label: 'Weight',
+      render: (p) => <span className="text-sm font-semibold" style={{ color: '#4A2512' }}>{p.weight || '—'}</span>
+    },
+    {
+      icon: '🤖',
+      label: 'AI Deal',
+      render: (p) => p.bargain_enabled
+        ? <div className="flex flex-col items-center gap-0.5"><span className="text-xs font-bold" style={{ color: '#059669' }}>Available</span><span className="text-[10px]" style={{ color: '#9B7B6B' }}>from ${p.bargain_min_price}</span></div>
+        : <span className="text-xs" style={{ color: '#C4A898' }}>Not available</span>
+    },
+    {
+      icon: '📊',
+      label: 'Stock',
+      render: (p) => (
+        <div className="flex flex-col items-center gap-1">
+          <div className={`w-2 h-2 rounded-full ${(p.stock || 0) > 20 ? 'bg-emerald-500' : (p.stock || 0) > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+          <span className="text-xs font-semibold" style={{ color: (p.stock || 0) > 20 ? '#059669' : '#D97706' }}>
+            {(p.stock || 0) > 20 ? 'In Stock' : (p.stock || 0) > 0 ? `${p.stock} left` : 'Sold Out'}
+          </span>
+        </div>
+      )
+    },
   ]
 
   return (
     <div className="flex-1 flex flex-col overflow-y-auto" style={{ background: '#FAF6F1' }}>
+      {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-white sticky top-0 z-10" style={{ borderBottom: '1px solid #E5D0BC' }}>
         <button onClick={onClose} className="flex items-center gap-1.5 text-xs font-semibold transition-colors" style={{ color: '#9B7B6B' }}
           onMouseEnter={e => e.currentTarget.style.color = '#4A2512'} onMouseLeave={e => e.currentTarget.style.color = '#9B7B6B'}>
           ← Back to store
         </button>
-        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8732A' }}>Product Comparison</span>
+        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#B8732A' }}>AI Comparison</span>
       </div>
 
-      <div className="p-6 pb-12">
-        <h2 className="text-xl font-extrabold mb-1" style={{ color: '#1C0A04' }}>Compare Products</h2>
-        <p className="text-xs mb-6" style={{ color: '#9B7B6B' }}>Comparing {panelProducts.length} products — AI recommends the best pick</p>
-
-        {/* Comparison table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr>
-                <th className="text-left py-3 pr-4 text-xs font-semibold w-24" style={{ color: '#9B7B6B' }}>Feature</th>
-                {panelProducts.map(p => (
-                  <th key={p.id} className="px-3 py-3 min-w-[160px]">
-                    <div className={`rounded-2xl p-3 text-center transition-all ${p.id === bestValue?.id ? 'ring-2' : ''}`}
-                      style={p.id === bestValue?.id ? { background: '#FFF8F0', ringColor: '#B8732A', border: '2px solid #B8732A' } : { background: '#FFFFFF', border: '1px solid #E5D0BC' }}>
-                      {p.id === bestValue?.id && (
-                        <div className="text-[9px] font-black uppercase tracking-widest mb-2 px-2 py-0.5 rounded-full inline-block" style={{ background: '#B8732A', color: 'white' }}>
-                          ⭐ Best Pick
-                        </div>
-                      )}
-                      <img src={p.image} alt={p.name} className="w-16 h-16 rounded-xl object-cover mx-auto mb-2" />
-                      <p className="text-xs font-bold leading-tight" style={{ color: '#1C0A04' }}>{p.name}</p>
-                    </div>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {compareRows.map((row, ri) => (
-                <tr key={row.label} style={{ background: ri % 2 === 0 ? '#FAF6F1' : '#FFFFFF', borderTop: '1px solid #F0E8DE' }}>
-                  <td className="py-3 pr-4 text-xs font-semibold" style={{ color: '#9B7B6B' }}>{row.label}</td>
-                  {panelProducts.map(p => (
-                    <td key={p.id} className="px-3 py-3 text-center">
-                      {row.render(p)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="p-6 pb-12 max-w-4xl mx-auto w-full">
+        {/* Heading */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-extrabold mb-1" style={{ color: '#1C0A04' }}>Side-by-Side Comparison</h2>
+          <p className="text-sm" style={{ color: '#9B7B6B' }}>
+            Comparing <strong style={{ color: '#4A2512' }}>{panelProducts.length} products</strong> · AI highlights the best pick for you
+          </p>
         </div>
 
-        {/* Action buttons per product */}
-        <div className="grid mt-6" style={{ gridTemplateColumns: `6rem repeat(${panelProducts.length}, 1fr)`, gap: '0 12px' }}>
-          <div />
-          {panelProducts.map(p => (
-            <div key={p.id} className="space-y-2">
-              <button onClick={() => onAddToCart(p)}
-                className="w-full h-10 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 text-white transition-all"
-                style={{ background: p.id === bestValue?.id ? '#B8732A' : '#4A2512' }}>
-                <ShoppingCart className="w-3.5 h-3.5" /> Add to Cart
-              </button>
-              {p.bargain_enabled && (
-                <button onClick={() => onNegotiate(p)}
-                  className="w-full h-8 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all"
-                  style={{ border: '1px solid #E5D0BC', background: '#FAF6F1', color: '#7C4B2A' }}>
-                  <Tag className="w-3 h-3" /> Negotiate
-                </button>
-              )}
+        {/* Product header cards */}
+        <div className="grid gap-4 mb-6" style={{ gridTemplateColumns: `repeat(${panelProducts.length}, 1fr)` }}>
+          {panelProducts.map(p => {
+            const isBest = p.id === bestValue?.id
+            return (
+              <div key={p.id} className="relative rounded-2xl overflow-hidden flex flex-col"
+                style={isBest
+                  ? { border: '2px solid #B8732A', background: '#FFFAF5', boxShadow: '0 4px 20px rgba(184,115,42,0.15)' }
+                  : { border: '1px solid #E5D0BC', background: '#FFFFFF', boxShadow: '0 1px 4px rgba(74,37,18,0.06)' }}>
+
+                {/* Best pick ribbon */}
+                {isBest && (
+                  <div className="absolute top-0 left-0 right-0 py-1.5 text-center text-[10px] font-black uppercase tracking-widest text-white z-10"
+                    style={{ background: 'linear-gradient(90deg, #B8732A, #6B3A2A)' }}>
+                    ⭐ AI Best Pick
+                  </div>
+                )}
+
+                {/* Product image */}
+                <div className={`relative overflow-hidden ${isBest ? 'mt-7' : ''}`} style={{ aspectRatio: '1', background: '#F5EBE0' }}>
+                  <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  {p.compare_at_price > p.price && (
+                    <span className="absolute top-2 left-2 text-[9px] font-black uppercase px-2 py-0.5 rounded-full text-white" style={{ background: '#B8732A' }}>
+                      -{Math.round((1 - p.price / p.compare_at_price) * 100)}%
+                    </span>
+                  )}
+                </div>
+
+                {/* Product name + price */}
+                <div className="p-4">
+                  <p className="text-[9px] font-black uppercase tracking-widest mb-1" style={{ color: '#B8732A' }}>{p.category}</p>
+                  <h3 className="text-base font-extrabold leading-tight mb-2" style={{ color: '#1C0A04' }}>{p.name}</h3>
+                  <p className="text-xs leading-relaxed line-clamp-2 mb-3" style={{ color: '#9B7B6B' }}>{p.description}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-extrabold" style={{ color: '#1C0A04' }}>${p.price}</span>
+                    {p.compare_at_price > p.price && (
+                      <span className="text-sm line-through" style={{ color: '#C4A898' }}>${p.compare_at_price}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Feature comparison rows */}
+        <div className="rounded-2xl overflow-hidden mb-6" style={{ border: '1px solid #E5D0BC' }}>
+          {features.map((feat, fi) => (
+            <div key={feat.label} className="grid items-center"
+              style={{
+                gridTemplateColumns: `140px repeat(${panelProducts.length}, 1fr)`,
+                background: fi % 2 === 0 ? '#FFFFFF' : '#FAF6F1',
+                borderBottom: fi < features.length - 1 ? '1px solid #F0E8DE' : 'none'
+              }}>
+              {/* Feature label */}
+              <div className="px-5 py-4 flex items-center gap-2.5">
+                <span className="text-base">{feat.icon}</span>
+                <span className="text-xs font-bold" style={{ color: '#6B3A2A' }}>{feat.label}</span>
+              </div>
+              {/* Values per product */}
+              {panelProducts.map(p => (
+                <div key={p.id} className="px-4 py-4 text-center flex items-center justify-center"
+                  style={p.id === bestValue?.id ? { background: 'rgba(184,115,42,0.04)' } : {}}>
+                  {feat.render(p)}
+                </div>
+              ))}
             </div>
           ))}
+        </div>
+
+        {/* Action buttons */}
+        <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${panelProducts.length}, 1fr)` }}>
+          {panelProducts.map(p => {
+            const isBest = p.id === bestValue?.id
+            return (
+              <div key={p.id} className="space-y-2">
+                <button
+                  onClick={() => handleAdd(p)}
+                  className="w-full h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 text-white transition-all"
+                  style={{ background: addedId === p.id ? '#059669' : isBest ? '#B8732A' : '#4A2512' }}>
+                  {addedId === p.id
+                    ? '✓ Added to Cart!'
+                    : <><ShoppingCart className="w-4 h-4" /> {isBest ? '⭐ Add Best Pick' : 'Add to Cart'}</>}
+                </button>
+                {p.bargain_enabled && (
+                  <button
+                    onClick={() => onNegotiate(p)}
+                    className="w-full h-9 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                    style={{ border: '1px solid #E5D0BC', background: '#FAF6F1', color: '#7C4B2A' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.background = '#F5EBE0' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.background = '#FAF6F1' }}>
+                    <Tag className="w-3.5 h-3.5" /> Negotiate Price
+                  </button>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
