@@ -52,9 +52,10 @@ const border_tan   = 'border-[#E5D0BC]'
 const bg_latte     = 'bg-[#F5EBE0]'
 const bg_cream     = 'bg-[#FAF6F1]'
 
-function ProductCard({ product, onAddToCart, onNegotiate }) {
+function ProductCard({ product, onAddToCart, onNegotiate, onOpen }) {
   const [added, setAdded] = useState(false)
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    e.stopPropagation()
     onAddToCart(product)
     setAdded(true)
     setTimeout(() => setAdded(false), 1400)
@@ -68,7 +69,8 @@ function ProductCard({ product, onAddToCart, onNegotiate }) {
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`group relative flex flex-col overflow-hidden rounded-2xl bg-white border ${border_tan} hover:border-[#B8732A] hover:shadow-lg transition-all duration-300`}
+      onClick={() => onOpen(product)}
+      className={`group relative flex flex-col overflow-hidden rounded-2xl bg-white border ${border_tan} hover:border-[#B8732A] hover:shadow-lg transition-all duration-300 cursor-pointer`}
       style={{ boxShadow: '0 1px 3px rgba(74,37,18,0.06)' }}
     >
       {/* Image */}
@@ -90,6 +92,12 @@ function ProductCard({ product, onAddToCart, onNegotiate }) {
             <Zap className="w-2.5 h-2.5" /> AI Price
           </div>
         )}
+        {/* Quick view hint on hover */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <span className="bg-white/90 backdrop-blur-sm text-[#4A2512] text-xs font-bold px-3 py-1.5 rounded-full shadow">
+            Quick View
+          </span>
+        </div>
       </div>
 
       {/* Content */}
@@ -118,7 +126,7 @@ function ProductCard({ product, onAddToCart, onNegotiate }) {
           </button>
           {product.bargain_enabled && (
             <button
-              onClick={() => onNegotiate(product)}
+              onClick={e => { e.stopPropagation(); onNegotiate(product) }}
               className={`h-9 w-9 rounded-xl flex items-center justify-center ${btn_outline}`}
               title="Negotiate price with AI"
             >
@@ -128,6 +136,221 @@ function ProductCard({ product, onAddToCart, onNegotiate }) {
         </div>
       </div>
     </motion.div>
+  )
+}
+
+// ── Product Detail Popup ────────────────────────────────────
+function ProductPopup({ product, onClose, onAddToCart, onNegotiate }) {
+  const [qty, setQty] = useState(1)
+  const [added, setAdded] = useState(false)
+
+  const discount = product.compare_at_price > product.price
+    ? Math.round((1 - product.price / product.compare_at_price) * 100)
+    : 0
+
+  const handleAdd = () => {
+    for (let i = 0; i < qty; i++) onAddToCart(product)
+    setAdded(true)
+    setTimeout(() => { setAdded(false) }, 1800)
+  }
+
+  const handleNegotiate = () => {
+    onNegotiate(product)
+    onClose()
+  }
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = e => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [onClose])
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+        style={{ background: 'rgba(28,10,4,0.55)', backdropFilter: 'blur(4px)' }}
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 16 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          className="w-full max-w-3xl bg-white rounded-3xl overflow-hidden shadow-2xl"
+          style={{ maxHeight: '90vh' }}
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="grid md:grid-cols-2" style={{ maxHeight: '90vh' }}>
+
+            {/* Left — Image */}
+            <div className="relative bg-[#F5EBE0] aspect-square md:aspect-auto overflow-hidden">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+              {/* Badges */}
+              <div className="absolute top-4 left-4 flex flex-col gap-1.5">
+                {discount > 0 && (
+                  <span className="bg-[#B8732A] text-white text-[10px] font-black px-2.5 py-1 rounded-full tracking-wide uppercase shadow">
+                    -{discount}% OFF
+                  </span>
+                )}
+                {product.bargain_enabled && (
+                  <span className="bg-[#4A2512] text-[#F5EBE0] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
+                    <Zap className="w-3 h-3" /> AI Price
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Right — Details */}
+            <div className="flex flex-col overflow-y-auto" style={{ maxHeight: '90vh' }}>
+              {/* Header */}
+              <div className="flex items-start justify-between px-6 pt-6 pb-4" style={{ borderBottom: '1px solid #F5EBE0' }}>
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] mb-1.5" style={{ color: '#B8732A' }}>{product.category}</p>
+                  <h2 className="text-xl font-extrabold leading-tight" style={{ color: '#1C0A04' }}>{product.name}</h2>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ml-3 transition-all hover:bg-[#F5EBE0]"
+                  style={{ color: '#9B7B6B' }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Price */}
+              <div className="px-6 py-4" style={{ borderBottom: '1px solid #F5EBE0' }}>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-3xl font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>${product.price}</span>
+                  {product.compare_at_price > product.price && (
+                    <span className="text-base line-through font-medium" style={{ color: '#C4A898' }}>${product.compare_at_price}</span>
+                  )}
+                  {discount > 0 && (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                      Save ${(product.compare_at_price - product.price).toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                {product.weight && (
+                  <p className="text-xs mt-1" style={{ color: '#9B7B6B' }}>{product.weight} · {product.category}</p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="px-6 py-4 flex-1">
+                <p className="text-sm leading-relaxed" style={{ color: '#6B3A2A' }}>{product.description}</p>
+
+                {/* Tags */}
+                {product.tags && product.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {product.tags.map(tag => (
+                      <span key={tag} className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F5EBE0', color: '#7C4B2A', border: '1px solid #E5D0BC' }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Stock */}
+                {product.stock !== undefined && (
+                  <div className="mt-4 flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${product.stock > 20 ? 'bg-emerald-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+                    <p className="text-xs font-semibold" style={{ color: '#9B7B6B' }}>
+                      {product.stock > 20 ? 'In stock' : product.stock > 0 ? `Only ${product.stock} left` : 'Out of stock'}
+                    </p>
+                  </div>
+                )}
+
+                {/* AI Bargain info */}
+                {product.bargain_enabled && (
+                  <div className="mt-4 rounded-xl px-4 py-3 flex items-start gap-2.5" style={{ background: '#F5EBE0', border: '1px solid #E5D0BC' }}>
+                    <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#B8732A' }} />
+                    <div>
+                      <p className="text-xs font-bold" style={{ color: '#4A2512' }}>AI Price Negotiation Available</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: '#9B7B6B' }}>
+                        Our AI can negotiate a better price for you. Best deal starts at ${product.bargain_min_price || 'flexible'}.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Quantity + Actions */}
+              <div className="px-6 pb-6 pt-4 space-y-3" style={{ borderTop: '1px solid #F5EBE0' }}>
+                {/* Qty selector */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold" style={{ color: '#4A2512' }}>Quantity</span>
+                  <div className="flex items-center gap-3 rounded-xl px-4 py-2" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
+                    <button
+                      onClick={() => setQty(q => Math.max(1, q - 1))}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
+                      style={{ color: '#9B7B6B' }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#4A2512'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#9B7B6B'}
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-sm font-extrabold w-5 text-center" style={{ color: '#1C0A04' }}>{qty}</span>
+                    <button
+                      onClick={() => setQty(q => q + 1)}
+                      className="w-6 h-6 rounded-lg flex items-center justify-center transition-all"
+                      style={{ color: '#9B7B6B' }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#4A2512'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#9B7B6B'}
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs" style={{ color: '#9B7B6B' }}>Total</span>
+                  <span className="text-lg font-extrabold" style={{ color: '#1C0A04' }}>
+                    ${(product.price * qty).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* Add to cart */}
+                <button
+                  onClick={handleAdd}
+                  disabled={product.stock === 0}
+                  className="w-full h-12 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all"
+                  style={{ background: added ? '#059669' : '#4A2512', color: 'white' }}
+                  onMouseEnter={e => { if (!added) e.currentTarget.style.background = '#6B3A2A' }}
+                  onMouseLeave={e => { if (!added) e.currentTarget.style.background = '#4A2512' }}
+                >
+                  {added
+                    ? <><span className="text-base">✓</span> Added to Cart!</>
+                    : <><ShoppingCart className="w-4 h-4" /> Add {qty > 1 ? `${qty} items` : 'to Cart'}</>}
+                </button>
+
+                {/* Negotiate */}
+                {product.bargain_enabled && (
+                  <button
+                    onClick={handleNegotiate}
+                    className="w-full h-10 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                    style={{ border: '1px solid #E5D0BC', background: '#FAF6F1', color: '#7C4B2A' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.background = '#F5EBE0' }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.background = '#FAF6F1' }}
+                  >
+                    <Tag className="w-3.5 h-3.5" /> Negotiate Price with AI
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   )
 }
 
@@ -333,6 +556,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [chatOpen, setChatOpen] = useState(true)
   const [store, setStore] = useState(null)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
   // Force light mode
   useEffect(() => {
@@ -666,7 +890,7 @@ export default function App() {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {filteredProducts.map(p => (
-                <ProductCard key={p.id} product={p} onAddToCart={addToCart} onNegotiate={negotiate} />
+                <ProductCard key={p.id} product={p} onAddToCart={addToCart} onNegotiate={negotiate} onOpen={setSelectedProduct} />
               ))}
             </div>
 
@@ -728,6 +952,18 @@ export default function App() {
           />
         )}
       </div>
+
+
+      {/* Product Detail Popup */}
+      {selectedProduct && (
+        <ProductPopup
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAddToCart={addToCart}
+          onNegotiate={p => { negotiate(p); setSelectedProduct(null) }}
+        />
+      )}
+
 
       {/* Chat FAB */}
       {!chatOpen && (
