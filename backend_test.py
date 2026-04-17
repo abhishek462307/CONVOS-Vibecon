@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 # Base URL from environment
-BASE_URL = "https://ai-shopper-command.preview.emergentagent.com/api"
+BASE_URL = "https://agent-missions-2.preview.emergentagent.com/api"
 
 def test_endpoint(method, endpoint, data=None, expected_status=200, description=""):
     """Test a single API endpoint"""

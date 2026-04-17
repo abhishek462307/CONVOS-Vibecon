@@ -563,7 +563,7 @@
 ### Test Execution Summary (Testing Agent)
 - **Date**: 2024-12-19
 - **Test Suite**: Comprehensive Backend API Testing
-- **Base URL**: https://ai-shopper-command.preview.emergentagent.com/api
+- **Base URL**: https://agent-missions-2.preview.emergentagent.com/api
 - **Total Test Suites**: 10/10 PASSED ✅
 - **Overall Result**: ALL BACKEND APIS WORKING CORRECTLY
 
@@ -678,7 +678,7 @@
 ### Test Execution Summary (Testing Agent - New Session)
 - **Date**: 2024-12-19
 - **Test Suite**: New/Changed Endpoints Testing
-- **Base URL**: https://ai-shopper-command.preview.emergentagent.com/api
+- **Base URL**: https://agent-missions-2.preview.emergentagent.com/api
 - **Total Test Suites**: 10/10 PASSED ✅
 - **Overall Result**: ALL NEW/CHANGED ENDPOINTS WORKING PERFECTLY
 
