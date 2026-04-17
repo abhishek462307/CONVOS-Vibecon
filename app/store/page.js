@@ -995,143 +995,89 @@ export default function App() {
   const cartTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
 
   return (
-    <div className="min-h-screen" style={{ background: '#FAF6F1', fontFamily: 'Inter, system-ui, -apple-system, sans-serif', color: '#1C0A04' }}>
+    <div className="h-screen overflow-hidden flex flex-col" style={{ background: '#FAF6F1', fontFamily: 'Inter, system-ui, -apple-system, sans-serif', color: '#1C0A04' }}>
 
       {/* Announcement bar */}
-      <div className="text-center py-2.5 text-[11px] font-semibold tracking-wide text-white" style={{ background: 'linear-gradient(90deg, #3A1A0A, #6B3A2A, #3A1A0A)' }}>
+      <div className="shrink-0 text-center py-2 text-[11px] font-semibold tracking-wide text-white" style={{ background: 'linear-gradient(90deg, #3A1A0A, #6B3A2A, #3A1A0A)' }}>
         {store?.banner || '✦ FREE GLOBAL SHIPPING OVER $100 · USE CODE WELCOME FOR 10% OFF ✦'}
       </div>
 
       {/* Navbar */}
-      <nav className="sticky top-0 z-40 bg-white" style={{ borderBottom: '1px solid #E5D0BC', boxShadow: '0 1px 4px rgba(74,37,18,0.06)' }}>
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-
+      <nav className="shrink-0 bg-white z-40" style={{ borderBottom: '1px solid #E5D0BC', boxShadow: '0 1px 4px rgba(74,37,18,0.06)' }}>
+        <div className="px-4 sm:px-6 flex items-center justify-between gap-4" style={{ height: '52px' }}>
           {/* Logo */}
           <div className="flex items-center gap-2.5 shrink-0">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center shadow-sm" style={{ background: 'linear-gradient(135deg, #4A2512, #7C4B2A)' }}>
-              <svg width="13" height="13" viewBox="0 0 32 32" fill="none">
-                <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" />
-              </svg>
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4A2512, #7C4B2A)' }}>
+              <svg width="11" height="11" viewBox="0 0 32 32" fill="none"><path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" /></svg>
             </div>
-            <span className="text-sm font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>
-              {store?.name || 'Artisan Coffee'}
-            </span>
+            <span className="text-sm font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>{store?.name || 'Artisan Coffee'}</span>
           </div>
 
           {/* Category tabs */}
           <div className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
             {CATEGORIES.map(c => (
-              <button
-                key={c.name}
-                onClick={() => setSelectedCategory(c.name)}
+              <button key={c.name} onClick={() => { setSelectedCategory(c.name); setContextPanel(null) }}
                 className="px-3 py-1.5 text-[13px] rounded-xl transition-all font-semibold"
-                style={selectedCategory === c.name
-                  ? { background: '#F5EBE0', color: '#4A2512', border: '1px solid #E5D0BC' }
-                  : { color: '#9B7B6B' }
-                }
+                style={selectedCategory === c.name && !contextPanel ? { background: '#F5EBE0', color: '#4A2512', border: '1px solid #E5D0BC' } : { color: '#9B7B6B' }}
                 onMouseEnter={e => { if (selectedCategory !== c.name) e.currentTarget.style.color = '#4A2512' }}
-                onMouseLeave={e => { if (selectedCategory !== c.name) e.currentTarget.style.color = '#9B7B6B' }}
-              >
+                onMouseLeave={e => { if (selectedCategory !== c.name) e.currentTarget.style.color = '#9B7B6B' }}>
                 {c.name}
               </button>
             ))}
           </div>
 
-          {/* Right actions */}
+          {/* Search + Cart */}
           <div className="flex items-center gap-2 shrink-0">
-            {/* Search */}
             <div className="relative hidden sm:block">
               <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#C4A898' }} />
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search…"
-                className="pl-8 pr-3 h-9 w-40 rounded-xl text-[12px] outline-none transition-all"
+              <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setContextPanel(null) }} placeholder="Search…"
+                className="pl-8 pr-3 h-8 w-36 rounded-xl text-[12px] outline-none"
                 style={{ background: '#FAF6F1', border: '1px solid #E5D0BC', color: '#1C0A04' }}
-                onFocus={e => e.target.style.borderColor = '#B8732A'}
-                onBlur={e => e.target.style.borderColor = '#E5D0BC'}
-              />
+                onFocus={e => e.target.style.borderColor = '#B8732A'} onBlur={e => e.target.style.borderColor = '#E5D0BC'} />
             </div>
 
-            {/* Cart */}
             <Sheet>
               <SheetTrigger asChild>
-                <button
-                  className="relative h-9 w-9 rounded-xl flex items-center justify-center transition-all"
+                <button className="relative h-8 w-8 rounded-xl flex items-center justify-center"
                   style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.color = '#4A2512'; e.currentTarget.style.background = '#F5EBE0' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.color = '#9B7B6B'; e.currentTarget.style.background = '#FFFFFF' }}
-                >
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.color = '#9B7B6B'; e.currentTarget.style.background = '#FFFFFF' }}>
                   <ShoppingCart className="w-3.5 h-3.5" />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 h-[18px] w-[18px] rounded-full text-[9px] font-black flex items-center justify-center text-white shadow-sm" style={{ background: '#4A2512' }}>
-                      {cartCount}
-                    </span>
-                  )}
+                  {cartCount > 0 && <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full text-[9px] font-black flex items-center justify-center text-white" style={{ background: '#4A2512' }}>{cartCount}</span>}
                 </button>
               </SheetTrigger>
-
-              <SheetContent className="w-[380px] flex flex-col" style={{ background: '#FFFFFF', borderLeft: '1px solid #E5D0BC', color: '#1C0A04' }}>
+              <SheetContent className="w-[360px] flex flex-col" style={{ background: '#FFFFFF', borderLeft: '1px solid #E5D0BC', color: '#1C0A04' }}>
                 <SheetHeader className="pb-4 shrink-0" style={{ borderBottom: '1px solid #E5D0BC' }}>
                   <SheetTitle className="flex items-center gap-2 text-base font-bold" style={{ color: '#1C0A04' }}>
                     <ShoppingCart className="w-4 h-4" style={{ color: '#9B7B6B' }} /> Your Cart
-                    <span className="rounded-full px-2 py-0.5 text-xs font-bold ml-1" style={{ border: '1px solid #E5D0BC', background: '#F5EBE0', color: '#6B3A2A' }}>
-                      {cartCount}
-                    </span>
+                    <span className="rounded-full px-2 py-0.5 text-xs font-bold" style={{ border: '1px solid #E5D0BC', background: '#F5EBE0', color: '#6B3A2A' }}>{cartCount}</span>
                   </SheetTitle>
                 </SheetHeader>
-
                 <div className="flex-1 overflow-y-auto mt-4 space-y-2.5">
                   {cart.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16" style={{ color: '#C4A898' }}>
-                      <ShoppingCart className="w-10 h-10 mb-3" />
-                      <p className="text-sm font-medium" style={{ color: '#9B7B6B' }}>Your cart is empty</p>
-                      <p className="text-xs mt-1" style={{ color: '#C4A898' }}>Add some products to get started</p>
-                    </div>
+                    <div className="flex flex-col items-center justify-center py-16"><ShoppingCart className="w-10 h-10 mb-3" style={{ color: '#C4A898' }} /><p className="text-sm font-medium" style={{ color: '#9B7B6B' }}>Your cart is empty</p></div>
                   ) : cart.map((item, i) => (
-                    <div key={i} className="rounded-xl p-3 flex gap-3 items-center transition-all" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
-                      <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover shrink-0" style={{ border: '1px solid #E5D0BC' }} />
+                    <div key={i} className="rounded-xl p-3 flex gap-3 items-center" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
+                      <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-bold truncate" style={{ color: '#1C0A04' }}>{item.name}</p>
-                        <p className="text-[12px] font-bold mt-0.5" style={{ color: '#B8732A' }}>${item.price.toFixed(2)}</p>
+                        <p className="text-sm font-bold truncate" style={{ color: '#1C0A04' }}>{item.name}</p>
+                        <p className="text-xs font-bold" style={{ color: '#B8732A' }}>${item.price.toFixed(2)}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <button onClick={() => updateQty(item.id, -1)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                          style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.color = '#4A2512' }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.color = '#9B7B6B' }}>
-                          <Minus className="w-3 h-3" />
-                        </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => updateQty(item.id, -1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}><Minus className="w-3 h-3" /></button>
                         <span className="text-sm font-bold w-5 text-center" style={{ color: '#1C0A04' }}>{item.quantity}</span>
-                        <button onClick={() => updateQty(item.id, 1)}
-                          className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                          style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.color = '#4A2512' }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.color = '#9B7B6B' }}>
-                          <Plus className="w-3 h-3" />
-                        </button>
+                        <button onClick={() => updateQty(item.id, 1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}><Plus className="w-3 h-3" /></button>
                       </div>
                     </div>
                   ))}
                 </div>
-
                 {cart.length > 0 && (
-                  <div className="pt-4 mt-4 space-y-4 shrink-0" style={{ borderTop: '1px solid #E5D0BC' }}>
-                    <div className="flex items-center justify-between text-xs" style={{ color: '#9B7B6B' }}>
-                      <span className="flex items-center gap-1"><TruckIcon className="w-3 h-3" /> Free shipping</span>
-                      <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure checkout</span>
-                      <span className="flex items-center gap-1"><Package className="w-3 h-3" /> Easy returns</span>
-                    </div>
+                  <div className="pt-4 mt-4 space-y-3 shrink-0" style={{ borderTop: '1px solid #E5D0BC' }}>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium" style={{ color: '#6B3A2A' }}>Subtotal</span>
-                      <span className="text-2xl font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>${cartTotal.toFixed(2)}</span>
+                      <span className="text-sm font-medium" style={{ color: '#6B3A2A' }}>Total</span>
+                      <span className="text-xl font-extrabold" style={{ color: '#1C0A04' }}>${cartTotal.toFixed(2)}</span>
                     </div>
-                    <a href="/checkout">
-                      <button className={`w-full h-12 rounded-xl text-sm font-bold flex items-center justify-center gap-2 ${btn_primary}`}>
-                        Checkout <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </a>
+                    <a href="/checkout"><button className={`w-full h-11 rounded-xl text-sm font-bold flex items-center justify-center gap-2 ${btn_primary}`}>Checkout <ArrowRight className="w-4 h-4" /></button></a>
                   </div>
                 )}
               </SheetContent>
@@ -1140,172 +1086,90 @@ export default function App() {
         </div>
       </nav>
 
-      {/* Main */}
-      <div className="flex" style={contextPanel ? { height: 'calc(100vh - 56px)', overflow: 'hidden' } : {}}>
+      {/* Main: two-pane layout fills remaining viewport */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
 
-        {/* Left: Context panel OR normal browsing */}
+        {/* Left: context panel OR scrollable product browse */}
         {contextPanel ? (
           <div className="flex-1 min-w-0 flex overflow-hidden">
-            {contextPanel.type === 'product' && (
-              <ProductFocusPanel
-                product={contextPanel.data}
-                onClose={() => setContextPanel(null)}
-                onAddToCart={addToCart}
-                onNegotiate={negotiate}
-              />
-            )}
-            {contextPanel.type === 'category' && (
-              <CategoryFocusPanel
-                title={contextPanel.title || 'Recommended'}
-                panelProducts={contextPanel.data}
-                onClose={() => setContextPanel(null)}
-                onAddToCart={addToCart}
-                onNegotiate={negotiate}
-                onOpenProduct={setSelectedProduct}
-              />
-            )}
-            {contextPanel.type === 'comparison' && (
-              <ComparisonPanel
-                panelProducts={contextPanel.data}
-                onClose={() => setContextPanel(null)}
-                onAddToCart={addToCart}
-                onNegotiate={negotiate}
-              />
-            )}
+            {contextPanel.type === 'product' && <ProductFocusPanel product={contextPanel.data} onClose={() => setContextPanel(null)} onAddToCart={addToCart} onNegotiate={negotiate} />}
+            {contextPanel.type === 'category' && <CategoryFocusPanel title={contextPanel.title || 'Recommended'} panelProducts={contextPanel.data} onClose={() => setContextPanel(null)} onAddToCart={addToCart} onNegotiate={negotiate} onOpenProduct={setSelectedProduct} />}
+            {contextPanel.type === 'comparison' && <ComparisonPanel panelProducts={contextPanel.data} onClose={() => setContextPanel(null)} onAddToCart={addToCart} onNegotiate={negotiate} />}
           </div>
         ) : (
-          <div className="flex-1 min-w-0">
-
-            {/* Hero */}
-            <div className="relative h-[400px] overflow-hidden">
-              <img
-                src={store?.hero_image || 'https://images.unsplash.com/photo-1447933601403-56dc2e4c4949?w=1400&h=600&fit=crop'}
-                alt="Store hero"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(28,10,4,0.82) 0%, rgba(28,10,4,0.45) 55%, transparent 100%)' }} />
-              <div className="absolute inset-0 flex flex-col justify-center px-8 md:px-14">
-                <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 w-fit mb-4" style={{ background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
-                  <Sparkles className="w-3 h-3" style={{ color: '#F5D5A8' }} />
-                  <span className="text-white text-[11px] font-semibold">AI-Powered Shopping</span>
-                </div>
-                <h1 className="text-4xl md:text-[52px] font-extrabold tracking-tight text-white leading-[1.05] mb-3 max-w-lg">
-                  {store?.name || 'Artisan Coffee Roasters'}
-                </h1>
-                <p className="text-base mb-7 max-w-md leading-relaxed" style={{ color: 'rgba(255,255,255,0.72)' }}>
-                  {store?.description || 'Premium single origin and blended coffees, roasted fresh to order.'}
-                </p>
-                <button
-                  onClick={() => document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold w-fit transition-all shadow-lg"
-                  style={{ background: '#FFFFFF', color: '#1C0A04' }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F5EBE0'}
-                  onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}
-                >
-                  Shop Collection <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Trust bar */}
-            <div className="bg-white" style={{ borderBottom: '1px solid #E5D0BC' }}>
-              <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-center gap-8 text-xs font-semibold" style={{ color: '#9B7B6B' }}>
-                <span className="flex items-center gap-1.5"><TruckIcon className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> Free shipping over $100</span>
-                <span className="hidden sm:flex items-center gap-1.5"><Shield className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> Secure &amp; encrypted checkout</span>
-                <span className="hidden md:flex items-center gap-1.5"><Package className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> 30-day free returns</span>
-                <span className="hidden lg:flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" style={{ color: '#B8732A' }} /> AI negotiates best prices for you</span>
-              </div>
-            </div>
-
-            {/* Category pills */}
-            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 pt-7 pb-4">
-              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                {CATEGORIES.map(c => (
-                  <button
-                    key={c.name}
-                    onClick={() => setSelectedCategory(c.name)}
-                    className="flex items-center gap-2 shrink-0 rounded-full px-4 py-2 text-[12px] font-bold transition-all"
-                    style={selectedCategory === c.name
-                      ? { background: '#4A2512', color: '#FFFFFF' }
-                      : { background: '#FFFFFF', color: '#6B3A2A', border: '1px solid #E5D0BC' }
-                    }
-                    onMouseEnter={e => { if (selectedCategory !== c.name) { e.currentTarget.style.borderColor = '#B8732A'; e.currentTarget.style.background = '#F5EBE0'; e.currentTarget.style.color = '#4A2512' } }}
-                    onMouseLeave={e => { if (selectedCategory !== c.name) { e.currentTarget.style.borderColor = '#E5D0BC'; e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.color = '#6B3A2A' } }}
-                  >
-                    {c.image && <img src={c.image} alt="" className="w-4 h-4 rounded-full object-cover" />}
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Products grid */}
-            <div id="products" className="max-w-[1440px] mx-auto px-4 sm:px-6 pb-16">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h2 className="text-xl font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>
-                    {selectedCategory === 'All' ? 'All Products' : selectedCategory}
-                  </h2>
-                  <p className="text-xs mt-0.5 font-medium" style={{ color: '#C4A898' }}>
-                    {filteredProducts.length} item{filteredProducts.length !== 1 ? 's' : ''}
-                  </p>
-                </div>
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="text-xs font-semibold flex items-center gap-1 transition-colors" style={{ color: '#B8732A' }}>
-                    <X className="w-3 h-3" /> Clear search
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {filteredProducts.map(p => (
-                  <ProductCard key={p.id} product={p} onAddToCart={addToCart} onNegotiate={negotiate} onOpen={setSelectedProduct} />
-                ))}
-              </div>
-
-              {filteredProducts.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: '#F5EBE0' }}>
-                    <Search className="w-7 h-7" style={{ color: '#C4A898' }} />
+          <div className="flex-1 min-w-0 overflow-y-auto">
+            {/* Compact hero */}
+            <div className="relative overflow-hidden shrink-0" style={{ height: '148px' }}>
+              <img src={store?.hero_image || 'https://images.unsplash.com/photo-1447933601403-56dc2e4c4949?w=1400&h=400&fit=crop'} alt="hero" className="w-full h-full object-cover" />
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(28,10,4,0.82) 0%, rgba(28,10,4,0.35) 60%, transparent 100%)' }} />
+              <div className="absolute inset-0 flex items-center px-7 gap-6">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <Sparkles className="w-3 h-3 shrink-0" style={{ color: '#F5D5A8' }} />
+                    <span className="text-white text-[10px] font-semibold uppercase tracking-wider">AI-Powered Shopping</span>
                   </div>
-                  <p className="text-base font-bold mb-1" style={{ color: '#4A2512' }}>No products found</p>
-                  <p className="text-sm" style={{ color: '#9B7B6B' }}>Try a different category or search term</p>
+                  <h1 className="text-xl font-extrabold text-white leading-tight">{store?.name || 'Artisan Coffee Roasters'}</h1>
+                  <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>{store?.description || 'Premium coffees, roasted fresh to order.'}</p>
                 </div>
+                <div className="flex flex-col gap-1 text-[10px] font-medium shrink-0" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                  <span className="flex items-center gap-1"><TruckIcon className="w-3 h-3" /> Free shipping $100+</span>
+                  <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure checkout</span>
+                  <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" /> AI negotiates prices</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Category pills strip */}
+            <div className="px-5 py-2.5 bg-white flex items-center gap-2 overflow-x-auto shrink-0" style={{ borderBottom: '1px solid #E5D0BC', scrollbarWidth: 'none' }}>
+              {CATEGORIES.map(c => (
+                <button key={c.name} onClick={() => setSelectedCategory(c.name)}
+                  className="flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-all"
+                  style={selectedCategory === c.name ? { background: '#4A2512', color: '#FFFFFF' } : { background: '#F5EBE0', color: '#6B3A2A', border: '1px solid #E5D0BC' }}
+                  onMouseEnter={e => { if (selectedCategory !== c.name) { e.currentTarget.style.background = '#EDD9C5'; e.currentTarget.style.color = '#4A2512' } }}
+                  onMouseLeave={e => { if (selectedCategory !== c.name) { e.currentTarget.style.background = '#F5EBE0'; e.currentTarget.style.color = '#6B3A2A' } }}>
+                  {c.image && <img src={c.image} alt="" className="w-3.5 h-3.5 rounded-full object-cover" />}
+                  {c.name}
+                </button>
+              ))}
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="flex items-center gap-1 text-xs font-semibold shrink-0 ml-auto" style={{ color: '#B8732A' }}>
+                  <X className="w-3 h-3" /> Clear
+                </button>
               )}
             </div>
 
-            {/* Footer */}
-            <footer className="bg-white py-10" style={{ borderTop: '1px solid #E5D0BC' }}>
-              <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col items-center gap-8 text-sm" style={{ color: '#C4A898' }}>
-                <div className="flex flex-col items-center gap-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#C4A898]">Secure Payments via</p>
-                  <div className="flex flex-wrap items-center justify-center gap-6 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                    {PAYMENT_LOGOS.map(logo => (
-                      <img key={logo.name} src={logo.src} alt={logo.name} style={{ height: `${logo.h}px`, width: 'auto' }} />
-                    ))}
-                  </div>
-                </div>
-                <div className="w-24 h-px bg-[#E5D0BC]" />
-                <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4A2512, #7C4B2A)' }}>
-                      <svg width="10" height="10" viewBox="0 0 32 32" fill="none">
-                        <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" />
-                      </svg>
-                    </div>
-                    <span className="font-bold" style={{ color: '#4A2512' }}>{store?.name || 'Artisan Coffee'}</span>
-                  </div>
-                  <p className="text-xs">
-                    © {new Date().getFullYear()} {store?.name || 'Artisan Coffee'}. Powered by{' '}
-                    <span className="font-semibold" style={{ color: '#B8732A' }}>Convos AI</span>
-                  </p>
+            {/* Products grid */}
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <span className="text-sm font-extrabold" style={{ color: '#1C0A04' }}>{selectedCategory === 'All' ? 'All Products' : selectedCategory}</span>
+                  <span className="ml-2 text-xs" style={{ color: '#C4A898' }}>{filteredProducts.length} items</span>
                 </div>
               </div>
-            </footer>
+
+              {filteredProducts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ background: '#F5EBE0' }}>
+                    <Search className="w-5 h-5" style={{ color: '#C4A898' }} />
+                  </div>
+                  <p className="font-bold text-sm mb-1" style={{ color: '#4A2512' }}>No products found</p>
+                  <p className="text-xs" style={{ color: '#9B7B6B' }}>Try a different category or search</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {filteredProducts.map(p => <ProductCard key={p.id} product={p} onAddToCart={addToCart} onNegotiate={negotiate} onOpen={setSelectedProduct} />)}
+                </div>
+              )}
+
+              <div className="mt-8 pt-4 flex items-center justify-between text-xs" style={{ borderTop: '1px solid #E5D0BC', color: '#C4A898' }}>
+                <span className="font-bold" style={{ color: '#4A2512' }}>{store?.name || 'Artisan Coffee'}</span>
+                <span>Powered by <span className="font-semibold" style={{ color: '#B8732A' }}>Convos AI</span></span>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Chat widget */}
+        {/* Right: Chat panel */}
         {chatOpen && (
           <ChatWidget
             messages={messages}
@@ -1319,7 +1183,6 @@ export default function App() {
         )}
       </div>
 
-
       {/* Product Detail Popup */}
       {selectedProduct && (
         <ProductPopup
@@ -1330,14 +1193,13 @@ export default function App() {
         />
       )}
 
-
       {/* Chat FAB */}
       {!chatOpen && (
         <motion.button
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           onClick={() => setChatOpen(true)}
-          className="fixed bottom-6 right-6 w-14 h-14 rounded-2xl flex items-center justify-center text-white z-50 transition-colors"
+          className="fixed bottom-5 right-5 w-12 h-12 rounded-2xl flex items-center justify-center text-white z-50"
           style={{ background: '#4A2512', boxShadow: '0 8px 24px rgba(74,37,18,0.3)' }}
           onMouseEnter={e => e.currentTarget.style.background = '#6B3A2A'}
           onMouseLeave={e => e.currentTarget.style.background = '#4A2512'}
