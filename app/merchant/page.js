@@ -49,6 +49,13 @@ const NAV_SECTIONS = [
     items: [
       { key: 'campaigns', label: 'Campaigns', icon: Megaphone },
     ]
+  },
+  {
+    label: 'SETTINGS',
+    items: [
+      { key: 'payments', label: 'Payments', icon: CreditCard },
+      { key: 'store-design', label: 'Store Design', icon: Settings },
+    ]
   }
 ]
 
@@ -924,6 +931,81 @@ export default function MerchantDashboard() {
     </div>
   )
 
+  const renderPayments = () => (
+    <div>
+      <PageHeader title="Payments" description="Manage payment providers and payout methods" actions={<Button variant="outline" size="sm" className="rounded-xl border-gray-200 h-9"><Download className="w-3.5 h-3.5 mr-1.5" /> Payout History</Button>} />
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Stripe</h3>
+                <p className="text-xs text-gray-500">Credit cards, Apple Pay, Google Pay</p>
+              </div>
+            </div>
+            <Switch checked={true} />
+          </div>
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Account Status</span>
+                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Connected</span>
+              </div>
+              <p className="text-sm font-bold text-gray-900">acct_1Oz2P...4j9</p>
+            </div>
+            <Button variant="outline" className="w-full rounded-xl border-gray-200">Manage Stripe Account</Button>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">PayPal</h3>
+                <p className="text-xs text-gray-500">PayPal balance and Credit</p>
+              </div>
+            </div>
+            <Switch checked={false} />
+          </div>
+          <p className="text-sm text-gray-500 mb-6">Connect your PayPal Business account to accept payments via PayPal and Venmo.</p>
+          <Button variant="outline" className="w-full rounded-xl border-gray-200">Connect PayPal</Button>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Crypto Payments</h3>
+                <p className="text-xs text-gray-500">BTC, ETH, SOL, USDC</p>
+              </div>
+            </div>
+            <Switch checked={false} />
+          </div>
+          <p className="text-sm text-gray-500 mb-6">Accept cryptocurrencies via Coinbase Commerce or BitPay.</p>
+          <Button variant="outline" className="w-full rounded-xl border-gray-200">Set up Crypto</Button>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex flex-col justify-center items-center text-center">
+          <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
+            <Plus className="w-6 h-6 text-gray-300" />
+          </div>
+          <h3 className="font-bold text-gray-900">Add Provider</h3>
+          <p className="text-xs text-gray-500 mt-1 max-w-[200px]">More local and alternative payment methods coming soon.</p>
+        </div>
+      </div>
+    </div>
+  )
+
   // ─── SECTION: CONVERSATIONS ────────────────────────────────
 
   const renderConversations = () => {
@@ -1156,6 +1238,7 @@ export default function MerchantDashboard() {
       case 'reviews': return renderReviews()
       case 'campaigns': return renderCampaigns()
       case 'shipments': return renderShipments()
+      case 'payments': return renderPayments()
       case 'store-design': return renderStoreDesign()
       case 'conversations': return renderConversations()
       case 'missions': return renderMissions()

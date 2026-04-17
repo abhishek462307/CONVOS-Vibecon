@@ -33,6 +33,14 @@ const QUICK_PROMPTS = [
   'Show me espresso blends',
 ]
 
+const PAYMENT_LOGOS = [
+  { name: 'Stripe', src: 'https://convos.store/_next/image?url=%2Flogos%2FStripe%20wordmark%20-%20White%20-%20Large.png&w=1200&q=75', h: 24 },
+  { name: 'Visa', src: 'https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg', h: 14 },
+  { name: 'Mastercard', src: 'https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg', h: 20 },
+  { name: 'Apple Pay', src: 'https://upload.wikimedia.org/wikipedia/commons/b/b0/Apple_Pay_logo.svg', h: 18 },
+  { name: 'Google Pay', src: 'https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg', h: 18 },
+]
+
 // Shared style tokens
 const btn_primary = 'bg-[#4A2512] hover:bg-[#6B3A2A] text-white transition-colors shadow-sm'
 const btn_outline  = 'border border-[#E5D0BC] bg-white text-[#6B3A2A] hover:border-[#B8732A] hover:bg-[#F5EBE0] hover:text-[#4A2512] transition-all'
@@ -674,8 +682,22 @@ export default function App() {
           </div>
 
           {/* Footer */}
-          <footer className="bg-white py-8" style={{ borderTop: '1px solid #E5D0BC' }}>
-            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm" style={{ color: '#C4A898' }}>
+          <footer className="bg-white py-10" style={{ borderTop: '1px solid #E5D0BC' }}>
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex flex-col items-center gap-8 text-sm" style={{ color: '#C4A898' }}>
+              
+              {/* Payment methods */}
+              <div className="flex flex-col items-center gap-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#C4A898]">Secure Payments via</p>
+                <div className="flex flex-wrap items-center justify-center gap-6 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                  {PAYMENT_LOGOS.map(logo => (
+                    <img key={logo.name} src={logo.src} alt={logo.name} style={{ height: `${logo.h}px`, width: 'auto' }} />
+                  ))}
+                </div>
+              </div>
+
+              <div className="w-24 h-px bg-[#E5D0BC]" />
+
+              <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4A2512, #7C4B2A)' }}>
                   <svg width="10" height="10" viewBox="0 0 32 32" fill="none">

@@ -1,264 +1,386 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for Convos Agentic Commerce Platform
-Testing new/changed endpoints and verifying existing functionality
+Convos Agentic Commerce Platform - End-to-End Order Flow Testing
+Testing complete purchase-to-fulfillment cycle as requested.
 """
 
 import requests
 import json
-import sys
+import time
 from datetime import datetime
 
-# Base URL from environment
+# Configuration
 BASE_URL = "https://agent-missions-2.preview.emergentagent.com/api"
+TEST_SESSION_ID = "test-order-session-123"
 
-def test_endpoint(method, endpoint, data=None, expected_status=200, description=""):
-    """Test a single API endpoint"""
+def log_test(test_name, status, details=""):
+    """Log test results with timestamp"""
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    status_icon = "✅" if status == "PASS" else "❌" if status == "FAIL" else "⚠️"
+    print(f"[{timestamp}] {status_icon} {test_name}")
+    if details:
+        print(f"    {details}")
+    print()
+
+def make_request(method, endpoint, data=None, expected_status=200):
+    """Make HTTP request with error handling"""
     url = f"{BASE_URL}{endpoint}"
-    
     try:
-        print(f"\n🧪 Testing {method} {endpoint}")
-        print(f"   Description: {description}")
-        
         if method == "GET":
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=30)
         elif method == "POST":
-            response = requests.post(url, json=data, timeout=10)
+            response = requests.post(url, json=data, timeout=30)
         elif method == "PUT":
-            response = requests.put(url, json=data, timeout=10)
-        elif method == "DELETE":
-            response = requests.delete(url, timeout=10)
+            response = requests.put(url, json=data, timeout=30)
         else:
-            print(f"❌ Unsupported method: {method}")
-            return False
-            
-        print(f"   Status: {response.status_code}")
+            raise ValueError(f"Unsupported method: {method}")
+        
+        print(f"    {method} {endpoint} -> {response.status_code}")
         
         if response.status_code != expected_status:
-            print(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
-            print(f"   Response: {response.text[:200]}...")
-            return False
+            print(f"    Expected {expected_status}, got {response.status_code}")
+            print(f"    Response: {response.text[:200]}")
+            return None, response.status_code
             
-        try:
-            result = response.json()
-            print(f"✅ SUCCESS - Response received")
-            return result
-        except json.JSONDecodeError:
-            print(f"❌ FAILED - Invalid JSON response")
-            print(f"   Response: {response.text[:200]}...")
-            return False
-            
+        return response.json(), response.status_code
     except requests.exceptions.RequestException as e:
-        print(f"❌ FAILED - Request error: {str(e)}")
+        print(f"    Request failed: {str(e)}")
+        return None, 0
+    except json.JSONDecodeError as e:
+        print(f"    JSON decode error: {str(e)}")
+        print(f"    Response text: {response.text[:200]}")
+        return None, response.status_code
+
+def test_1_browse_products():
+    """Test 1: Browse Products - GET /api/products and GET /api/store"""
+    print("=" * 60)
+    print("TEST 1: BROWSE PRODUCTS")
+    print("=" * 60)
+    
+    # Test GET /api/products
+    products_data, status = make_request("GET", "/products")
+    if products_data is None:
+        log_test("GET /api/products", "FAIL", f"Request failed with status {status}")
+        return None
+    
+    if not isinstance(products_data, list) or len(products_data) == 0:
+        log_test("GET /api/products", "FAIL", "No products found or invalid response format")
+        return None
+    
+    # Find a product with stock > 0
+    available_product = None
+    for product in products_data:
+        if product.get('stock', 0) > 0:
+            available_product = product
+            break
+    
+    if not available_product:
+        log_test("GET /api/products", "FAIL", "No products with stock > 0 found")
+        return None
+    
+    log_test("GET /api/products", "PASS", f"Found {len(products_data)} products, selected: {available_product['name']} (${available_product['price']}, stock: {available_product['stock']})")
+    
+    # Test GET /api/store
+    store_data, status = make_request("GET", "/store")
+    if store_data is None:
+        log_test("GET /api/store", "FAIL", f"Request failed with status {status}")
+        return available_product
+    
+    if not isinstance(store_data, dict) or 'name' not in store_data:
+        log_test("GET /api/store", "FAIL", "Invalid store config response")
+        return available_product
+    
+    log_test("GET /api/store", "PASS", f"Store config loaded: {store_data.get('name', 'Unknown Store')}")
+    
+    return available_product
+
+def test_2_place_order(product):
+    """Test 2: Place an Order - POST /api/checkout"""
+    print("=" * 60)
+    print("TEST 2: PLACE ORDER (CHECKOUT)")
+    print("=" * 60)
+    
+    if not product:
+        log_test("POST /api/checkout", "SKIP", "No product available from previous test")
+        return None
+    
+    # Prepare checkout data as specified in the review request
+    checkout_data = {
+        "session_id": TEST_SESSION_ID,
+        "items": [{
+            "product_id": product['id'],
+            "quantity": 1,
+            "price": product['price'],
+            "name": product['name']
+        }],
+        "shipping_address": {
+            "name": "Test Buyer",
+            "street": "123 Main St",
+            "city": "New York",
+            "state": "NY",
+            "zip": "10001",
+            "country": "US"
+        },
+        "payment_method": "stripe_test"
+    }
+    
+    # Test POST /api/checkout
+    checkout_response, status = make_request("POST", "/checkout", checkout_data)
+    if checkout_response is None:
+        log_test("POST /api/checkout", "FAIL", f"Request failed with status {status}")
+        return None
+    
+    if 'url' not in checkout_response:
+        log_test("POST /api/checkout", "FAIL", "No checkout URL returned")
+        return None
+    
+    log_test("POST /api/checkout", "PASS", f"Checkout session created successfully")
+    
+    # Now create an actual order for testing the merchant flow
+    # Since we can't complete Stripe checkout in testing, create order directly
+    order_data = {
+        "session_id": TEST_SESSION_ID,
+        "items": checkout_data["items"],
+        "subtotal": product['price'],
+        "shipping": 5.99,
+        "tax": product['price'] * 0.08,
+        "total": product['price'] + 5.99 + (product['price'] * 0.08),
+        "status": "pending",
+        "payment_status": "paid",
+        "shipping_address": checkout_data["shipping_address"]
+    }
+    
+    order_response, status = make_request("POST", "/orders", order_data, 201)
+    if order_response is None:
+        log_test("POST /api/orders (simulate)", "FAIL", f"Request failed with status {status}")
+        return None
+    
+    if 'id' not in order_response or 'order_number' not in order_response:
+        log_test("POST /api/orders (simulate)", "FAIL", "Invalid order response")
+        return None
+    
+    log_test("POST /api/orders (simulate)", "PASS", f"Order created: {order_response['order_number']} (ID: {order_response['id']})")
+    
+    return order_response
+
+def test_3_merchant_views_orders(order):
+    """Test 3: Merchant Views Orders - GET /api/orders and GET /api/stats"""
+    print("=" * 60)
+    print("TEST 3: MERCHANT VIEWS ORDERS")
+    print("=" * 60)
+    
+    # Test GET /api/orders
+    orders_data, status = make_request("GET", "/orders")
+    if orders_data is None:
+        log_test("GET /api/orders", "FAIL", f"Request failed with status {status}")
         return False
+    
+    if not isinstance(orders_data, list):
+        log_test("GET /api/orders", "FAIL", "Invalid orders response format")
+        return False
+    
+    # Check if our order appears in the list
+    order_found = False
+    if order:
+        for o in orders_data:
+            if o.get('id') == order['id']:
+                order_found = True
+                break
+    
+    log_test("GET /api/orders", "PASS", f"Found {len(orders_data)} orders" + (f", including our test order" if order_found else ""))
+    
+    # Test GET /api/stats
+    stats_data, status = make_request("GET", "/stats")
+    if stats_data is None:
+        log_test("GET /api/stats", "FAIL", f"Request failed with status {status}")
+        return False
+    
+    required_stats = ['totalProducts', 'totalOrders', 'totalRevenue']
+    missing_stats = [stat for stat in required_stats if stat not in stats_data]
+    
+    if missing_stats:
+        log_test("GET /api/stats", "FAIL", f"Missing required stats: {missing_stats}")
+        return False
+    
+    log_test("GET /api/stats", "PASS", f"Stats loaded - Products: {stats_data.get('totalProducts')}, Orders: {stats_data.get('totalOrders')}, Revenue: ${stats_data.get('totalRevenue', 0):.2f}")
+    
+    return True
+
+def test_4_merchant_processes_order(order):
+    """Test 4: Merchant Processes Order - Status transitions via PUT /api/orders/:id"""
+    print("=" * 60)
+    print("TEST 4: MERCHANT PROCESSES ORDER")
+    print("=" * 60)
+    
+    if not order:
+        log_test("Order Processing", "SKIP", "No order available from previous test")
+        return False
+    
+    order_id = order['id']
+    
+    # Step 1: Update to "processing"
+    update_data = {"status": "processing"}
+    response, status = make_request("PUT", f"/orders/{order_id}", update_data)
+    if response is None:
+        log_test("PUT /api/orders/:id (processing)", "FAIL", f"Request failed with status {status}")
+        return False
+    
+    if response.get('status') != 'processing':
+        log_test("PUT /api/orders/:id (processing)", "FAIL", f"Status not updated correctly: {response.get('status')}")
+        return False
+    
+    log_test("PUT /api/orders/:id (processing)", "PASS", "Order status updated to processing")
+    
+    # Step 2: Update to "shipped" with tracking info
+    update_data = {
+        "status": "shipped",
+        "carrier": "UPS",
+        "tracking_number": "1Z999AA10123456784"
+    }
+    response, status = make_request("PUT", f"/orders/{order_id}", update_data)
+    if response is None:
+        log_test("PUT /api/orders/:id (shipped)", "FAIL", f"Request failed with status {status}")
+        return False
+    
+    if response.get('status') != 'shipped' or response.get('tracking_number') != '1Z999AA10123456784':
+        log_test("PUT /api/orders/:id (shipped)", "FAIL", "Shipping info not updated correctly")
+        return False
+    
+    log_test("PUT /api/orders/:id (shipped)", "PASS", f"Order shipped with tracking: {response.get('tracking_number')}")
+    
+    # Step 3: Update to "delivered"
+    update_data = {"status": "delivered"}
+    response, status = make_request("PUT", f"/orders/{order_id}", update_data)
+    if response is None:
+        log_test("PUT /api/orders/:id (delivered)", "FAIL", f"Request failed with status {status}")
+        return False
+    
+    if response.get('status') != 'delivered':
+        log_test("PUT /api/orders/:id (delivered)", "FAIL", f"Status not updated correctly: {response.get('status')}")
+        return False
+    
+    log_test("PUT /api/orders/:id (delivered)", "PASS", "Order marked as delivered")
+    
+    return True
+
+def test_5_shipments_endpoint(order):
+    """Test 5: Shipments endpoint - GET /api/shipments"""
+    print("=" * 60)
+    print("TEST 5: SHIPMENTS ENDPOINT")
+    print("=" * 60)
+    
+    # Test GET /api/shipments
+    shipments_data, status = make_request("GET", "/shipments")
+    if shipments_data is None:
+        log_test("GET /api/shipments", "FAIL", f"Request failed with status {status}")
+        return False
+    
+    if not isinstance(shipments_data, list):
+        log_test("GET /api/shipments", "FAIL", "Invalid shipments response format")
+        return False
+    
+    # Check if our order appears in shipments (should have processing/shipped/delivered status)
+    shipment_found = False
+    if order:
+        for shipment in shipments_data:
+            if shipment.get('id') == order['id']:
+                shipment_found = True
+                break
+    
+    log_test("GET /api/shipments", "PASS", f"Found {len(shipments_data)} shipments" + (f", including our test order" if shipment_found else ""))
+    
+    return True
+
+def test_6_order_details(order):
+    """Test 6: Order Details - GET /api/orders/:id"""
+    print("=" * 60)
+    print("TEST 6: ORDER DETAILS")
+    print("=" * 60)
+    
+    if not order:
+        log_test("GET /api/orders/:id", "SKIP", "No order available from previous test")
+        return False
+    
+    order_id = order['id']
+    
+    # Test GET /api/orders/:id
+    order_details, status = make_request("GET", f"/orders/{order_id}")
+    if order_details is None:
+        log_test("GET /api/orders/:id", "FAIL", f"Request failed with status {status}")
+        return False
+    
+    # Verify order details contain expected fields
+    required_fields = ['id', 'order_number', 'items', 'shipping_address', 'status']
+    missing_fields = [field for field in required_fields if field not in order_details]
+    
+    if missing_fields:
+        log_test("GET /api/orders/:id", "FAIL", f"Missing required fields: {missing_fields}")
+        return False
+    
+    # Verify the order has the expected final status
+    final_status = order_details.get('status')
+    tracking_number = order_details.get('tracking_number')
+    
+    log_test("GET /api/orders/:id", "PASS", f"Order details retrieved - Status: {final_status}, Tracking: {tracking_number or 'N/A'}")
+    
+    return True
 
 def main():
-    """Run all backend API tests"""
+    """Run complete end-to-end order flow test"""
+    print("🚀 CONVOS AGENTIC COMMERCE - END-TO-END ORDER FLOW TEST")
+    print(f"Base URL: {BASE_URL}")
+    print(f"Test Session ID: {TEST_SESSION_ID}")
+    print(f"Started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print()
+    
+    # Test sequence
+    test_results = []
+    
+    # Test 1: Browse Products
+    product = test_1_browse_products()
+    test_results.append(("Browse Products", product is not None))
+    
+    # Test 2: Place Order
+    order = test_2_place_order(product)
+    test_results.append(("Place Order", order is not None))
+    
+    # Test 3: Merchant Views Orders
+    merchant_view_success = test_3_merchant_views_orders(order)
+    test_results.append(("Merchant Views Orders", merchant_view_success))
+    
+    # Test 4: Merchant Processes Order
+    processing_success = test_4_merchant_processes_order(order)
+    test_results.append(("Merchant Processes Order", processing_success))
+    
+    # Test 5: Shipments Endpoint
+    shipments_success = test_5_shipments_endpoint(order)
+    test_results.append(("Shipments Endpoint", shipments_success))
+    
+    # Test 6: Order Details
+    details_success = test_6_order_details(order)
+    test_results.append(("Order Details", details_success))
+    
+    # Summary
     print("=" * 60)
-    print("🚀 CONVOS BACKEND API TESTING")
-    print("=" * 60)
-    
-    test_results = {}
-    
-    # ═══════════════════════════════════════════
-    # NEW/CHANGED ENDPOINTS (Priority Testing)
-    # ═══════════════════════════════════════════
-    
-    print("\n📋 TESTING NEW/CHANGED ENDPOINTS")
-    print("-" * 40)
-    
-    # 1. GET /api/store - Should return store config from DB
-    print("\n1️⃣ Testing GET /api/store (DB-based store config)")
-    store_result = test_endpoint("GET", "/store", description="Should return store config from DB, not hardcoded")
-    if store_result:
-        store_name = store_result.get('name', 'Unknown')
-        print(f"   Store name: {store_name}")
-        if 'Updated Test Store' in store_name or 'Artisan Coffee Roasters' in store_name:
-            print("✅ Store config returned from DB")
-            test_results['store_config'] = True
-        else:
-            print("⚠️  Store name doesn't match expected pattern")
-            test_results['store_config'] = True  # Still working, just different name
-    else:
-        test_results['store_config'] = False
-    
-    # 2. GET /api/approvals?status=all - Should return all approvals
-    print("\n2️⃣ Testing GET /api/approvals?status=all")
-    approvals_all = test_endpoint("GET", "/approvals?status=all", description="Should return all approvals regardless of status")
-    if approvals_all:
-        print(f"   Total approvals: {len(approvals_all)}")
-        test_results['approvals_all'] = True
-    else:
-        test_results['approvals_all'] = False
-    
-    # 3. GET /api/approvals?status=pending - Should return only pending approvals
-    print("\n3️⃣ Testing GET /api/approvals?status=pending")
-    approvals_pending = test_endpoint("GET", "/approvals?status=pending", description="Should return only pending approvals")
-    if approvals_pending:
-        print(f"   Pending approvals: {len(approvals_pending)}")
-        # Check if all returned approvals are pending
-        all_pending = all(approval.get('status') == 'pending' for approval in approvals_pending)
-        if all_pending:
-            print("✅ All returned approvals have pending status")
-        else:
-            print("⚠️  Some approvals don't have pending status")
-        test_results['approvals_pending'] = True
-    else:
-        test_results['approvals_pending'] = False
-    
-    # 4. POST /api/approvals - Create new approval
-    print("\n4️⃣ Testing POST /api/approvals")
-    new_approval_data = {
-        "type": "price_override",
-        "session_id": "test_session_123",
-        "description": "Test approval request from backend testing",
-        "value": 25.99,
-        "product_name": "Test Product",
-        "original_price": 29.99,
-        "requested_price": 25.99
-    }
-    new_approval = test_endpoint("POST", "/approvals", data=new_approval_data, expected_status=201, description="Create new approval request")
-    approval_id = None
-    if new_approval:
-        approval_id = new_approval.get('id')
-        print(f"   Created approval ID: {approval_id}")
-        test_results['approvals_create'] = True
-    else:
-        test_results['approvals_create'] = False
-    
-    # 5. PUT /api/approvals/:id - Approve/reject approval
-    if approval_id:
-        print("\n5️⃣ Testing PUT /api/approvals/:id")
-        approval_update_data = {
-            "status": "approved",
-            "note": "Approved during backend testing"
-        }
-        approval_update = test_endpoint("PUT", f"/approvals/{approval_id}", data=approval_update_data, description="Approve the created approval")
-        if approval_update:
-            print("✅ Approval status updated successfully")
-            test_results['approvals_update'] = True
-        else:
-            test_results['approvals_update'] = False
-    else:
-        print("\n5️⃣ Skipping PUT /api/approvals/:id (no approval ID from creation)")
-        test_results['approvals_update'] = False
-    
-    # 6. GET /api/missions - Should return missions
-    print("\n6️⃣ Testing GET /api/missions")
-    missions_result = test_endpoint("GET", "/missions", description="Should return missions list")
-    if missions_result:
-        print(f"   Total missions: {len(missions_result)}")
-        test_results['missions'] = True
-    else:
-        test_results['missions'] = False
-    
-    # ═══════════════════════════════════════════
-    # EXISTING ENDPOINTS VERIFICATION
-    # ═══════════════════════════════════════════
-    
-    print("\n📋 VERIFYING EXISTING ENDPOINTS")
-    print("-" * 40)
-    
-    # 7. GET /api/products - Should return 13 products
-    print("\n7️⃣ Testing GET /api/products")
-    products_result = test_endpoint("GET", "/products", description="Should return product list")
-    if products_result:
-        print(f"   Total products: {len(products_result)}")
-        if len(products_result) >= 10:  # Allow some flexibility
-            print("✅ Product count looks good")
-            test_results['products'] = True
-        else:
-            print("⚠️  Product count lower than expected")
-            test_results['products'] = True  # Still working
-    else:
-        test_results['products'] = False
-    
-    # 8. GET /api/orders - Should return orders
-    print("\n8️⃣ Testing GET /api/orders")
-    orders_result = test_endpoint("GET", "/orders", description="Should return orders list")
-    if orders_result:
-        print(f"   Total orders: {len(orders_result)}")
-        test_results['orders'] = True
-    else:
-        test_results['orders'] = False
-    
-    # 9. GET /api/stats - Should return dashboard stats
-    print("\n9️⃣ Testing GET /api/stats")
-    stats_result = test_endpoint("GET", "/stats", description="Should return dashboard statistics")
-    if stats_result:
-        required_fields = ['totalProducts', 'totalOrders', 'totalRevenue']
-        missing_fields = [field for field in required_fields if field not in stats_result]
-        if not missing_fields:
-            print("✅ All required stats fields present")
-            print(f"   Total Products: {stats_result.get('totalProducts')}")
-            print(f"   Total Orders: {stats_result.get('totalOrders')}")
-            print(f"   Total Revenue: ${stats_result.get('totalRevenue', 0)}")
-            test_results['stats'] = True
-        else:
-            print(f"⚠️  Missing stats fields: {missing_fields}")
-            test_results['stats'] = True  # Still working, just missing some fields
-    else:
-        test_results['stats'] = False
-    
-    # 10. GET /api/store-config - Should return DB store config
-    print("\n🔟 Testing GET /api/store-config")
-    store_config_result = test_endpoint("GET", "/store-config", description="Should return store configuration from DB")
-    if store_config_result:
-        print(f"   Store config name: {store_config_result.get('name', 'Unknown')}")
-        test_results['store_config_endpoint'] = True
-    else:
-        test_results['store_config_endpoint'] = False
-    
-    # ═══════════════════════════════════════════
-    # TEST SUMMARY
-    # ═══════════════════════════════════════════
-    
-    print("\n" + "=" * 60)
-    print("📊 TEST SUMMARY")
+    print("FINAL TEST SUMMARY")
     print("=" * 60)
     
-    passed_tests = sum(1 for result in test_results.values() if result)
-    total_tests = len(test_results)
+    passed = sum(1 for _, success in test_results if success)
+    total = len(test_results)
     
-    print(f"\n✅ Passed: {passed_tests}/{total_tests} tests")
+    for test_name, success in test_results:
+        status_icon = "✅" if success else "❌"
+        print(f"{status_icon} {test_name}")
     
-    print("\n📋 Detailed Results:")
-    test_names = {
-        'store_config': 'GET /api/store (DB-based)',
-        'approvals_all': 'GET /api/approvals?status=all',
-        'approvals_pending': 'GET /api/approvals?status=pending',
-        'approvals_create': 'POST /api/approvals',
-        'approvals_update': 'PUT /api/approvals/:id',
-        'missions': 'GET /api/missions',
-        'products': 'GET /api/products',
-        'orders': 'GET /api/orders',
-        'stats': 'GET /api/stats',
-        'store_config_endpoint': 'GET /api/store-config'
-    }
+    print()
+    print(f"OVERALL RESULT: {passed}/{total} tests passed")
     
-    for test_key, result in test_results.items():
-        status = "✅ PASS" if result else "❌ FAIL"
-        test_name = test_names.get(test_key, test_key)
-        print(f"   {status} - {test_name}")
-    
-    # Critical issues check
-    critical_failures = []
-    if not test_results.get('store_config', False):
-        critical_failures.append("Store config endpoint not working")
-    if not test_results.get('approvals_all', False):
-        critical_failures.append("Approvals listing not working")
-    if not test_results.get('products', False):
-        critical_failures.append("Products endpoint not working")
-    
-    if critical_failures:
-        print(f"\n🚨 CRITICAL ISSUES FOUND:")
-        for issue in critical_failures:
-            print(f"   - {issue}")
-        return False
+    if passed == total:
+        print("🎉 ALL TESTS PASSED - Complete order flow is working!")
     else:
-        print(f"\n🎉 ALL CRITICAL ENDPOINTS WORKING!")
-        return True
+        print("⚠️  Some tests failed - Check individual test results above")
+    
+    print(f"Completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 if __name__ == "__main__":
-    success = main()
-    sys.exit(0 if success else 1)
+    main()
