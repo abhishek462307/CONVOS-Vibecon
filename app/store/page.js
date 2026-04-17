@@ -322,12 +322,29 @@ function App() {
     setIsLoading(false)
   }, [sessionId])
 
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
+    // Optimistic UI update
     const newCart = cart.find(i => i.id === product.id)
       ? cart.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
       : [...cart, { ...product, quantity: 1 }]
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
+
+    // Server-side update
+    if (sessionId) {
+      try {
+        await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            session_id: sessionId, 
+            message: `[Internal] Added ${product.name} to cart` 
+          })
+        })
+      } catch (e) {
+        console.error('Failed to sync cart to server:', e)
+      }
+    }
   }
 
   const updateQty = (id, delta) => {

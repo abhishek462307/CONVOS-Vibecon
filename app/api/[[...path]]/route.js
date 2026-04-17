@@ -430,9 +430,12 @@ async function handleRoute(request, { params }) {
       return corsResponse({ status: 'ok', platform: 'Convos Agentic Commerce', version: '2.0' })
     }
 
-    // ─── Store Config ───
+    // ─── Store Config (public endpoint used by storefront) ───
     if (route === '/store' && method === 'GET') {
-      return corsResponse(STORE_CONFIG)
+      const config = await db.collection('store_config').findOne({})
+      if (!config) return corsResponse(STORE_CONFIG)
+      const { _id, ...rest } = config
+      return corsResponse({ ...STORE_CONFIG, ...rest })
     }
 
     // ═══════════════════════════════════════════
@@ -708,8 +711,43 @@ async function handleRoute(request, { params }) {
 
     // ─── Approvals (Merchant) ───
     if (route === '/approvals' && method === 'GET') {
-      const approvals = await db.collection('approvals').find({ status: 'pending' }).sort({ created_at: -1 }).toArray()
+      const filter = {}
+      const statusParam = request.nextUrl.searchParams.get('status')
+      if (statusParam && statusParam !== 'all') {
+        filter.status = statusParam
+      }
+      const approvals = await db.collection('approvals').find(filter).sort({ created_at: -1 }).toArray()
       return corsResponse(approvals.map(({ _id, ...a }) => a))
+    }
+
+    if (route.match(/^\/approvals\/[^/]+$/) && method === 'PUT') {
+      const id = route.split('/')[2]
+      const body = await request.json()
+      const { status, note } = body
+      await db.collection('approvals').updateOne(
+        { id },
+        { $set: { status, note: note || '', resolved_at: new Date(), updated_at: new Date() } }
+      )
+      return corsResponse({ success: true })
+    }
+
+    if (route === '/approvals' && method === 'POST') {
+      const body = await request.json()
+      const approval = {
+        id: uuidv4(),
+        type: body.type || 'price_override',
+        session_id: body.session_id || 'unknown',
+        description: body.description || 'AI action pending approval',
+        value: body.value || null,
+        product_name: body.product_name || null,
+        original_price: body.original_price || null,
+        requested_price: body.requested_price || null,
+        status: 'pending',
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+      await db.collection('approvals').insertOne(approval)
+      return corsResponse(approval, 201)
     }
 
     // ─── Authentication ───

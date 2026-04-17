@@ -18,6 +18,10 @@ export function useRealtimeSync({ isAuthenticated, onDataUpdate, interval = 1000
           intents: Array.isArray(intentsRes) ? intentsRes : [],
           reviews: Array.isArray(reviewsRes) ? reviewsRes : []
         });
+        console.log('RealtimeSync data updated:', { 
+          orders: (ordersRes || []).length, 
+          intents: (intentsRes || []).length 
+        });
       } catch (error) {
         console.error('RealtimeSync fetch error:', error);
       }

@@ -101,7 +101,13 @@
 # END - Testing Protocol - DO NOT EDIT OR REMOVE THIS SECTION
 #====================================================================================================
 
-## user_problem_statement: "Convos - Agentic Commerce Platform. Fully build the functional backend merchant panel with all CRUD operations for products, orders, reviews, campaigns, shipments, store config."
+## user_problem_statement: "Convos - Agentic Commerce Platform. Rebuilt merchant dashboard with light Shopify/Linear theme, recharts analytics, added Missions and Approvals sections, fixed DB→Storefront disconnect (/api/store now reads from DB), added POST/PUT /api/approvals endpoints."
+
+## agent_communication:
+##     -agent: "main"
+##     -message: "New changes in this session: 1) Fixed /api/store to read from store_config DB collection instead of hardcoded constant. 2) Added POST /api/approvals, PUT /api/approvals/:id endpoints. 3) Fixed GET /api/approvals to support ?status=all filter using request.nextUrl.searchParams. 4) Rebuilt entire /merchant/page.js with light theme, recharts AreaChart, 11 sidebar sections including new Missions + Approvals. Please test: /api/store (should return DB data), /api/approvals (should return all 3 seeded approvals), PUT /api/approvals/:id (approve/reject), existing CRUD endpoints still working."
+##     -agent: "testing"
+##     -message: "TESTING COMPLETED - ALL NEW/CHANGED ENDPOINTS WORKING PERFECTLY. Key results: (1) GET /api/store now correctly returns 'Updated Test Store' from DB (not hardcoded) (2) GET /api/approvals?status=all returns 3 approvals (3) GET /api/approvals?status=pending filters correctly (4) POST /api/approvals creates new approvals successfully (5) PUT /api/approvals/:id updates approval status (6) GET /api/missions returns 6 missions (7) All existing endpoints verified: products (13), orders (5), stats, store-config. All 10/10 tests passed. Backend is fully functional."
 
 ## backend:
 ##   - task: "GET /api/health - Health check endpoint"
@@ -449,6 +455,81 @@
 ##         -agent: "testing"
 ##         -comment: "TESTED - Merchant login successful with merchant@demo.com/merchant123, user type correctly identified"
 
+##   - task: "GET /api/store - Store config from DB (not hardcoded)"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "UPDATED - Fixed to read from store_config DB collection instead of hardcoded constant"
+##         -working: true
+##         -agent: "testing"
+##         -comment: "TESTED - Returns 'Updated Test Store' from DB correctly, no longer hardcoded"
+
+##   - task: "GET /api/approvals - List approvals with status filter"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "UPDATED - Added support for ?status=all filter using request.nextUrl.searchParams"
+##         -working: true
+##         -agent: "testing"
+##         -comment: "TESTED - Returns 3 approvals with ?status=all, filters correctly with ?status=pending"
+
+##   - task: "POST /api/approvals - Create approval request"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "NEW - Create approval requests with type, session_id, description, value, product details"
+##         -working: true
+##         -agent: "testing"
+##         -comment: "TESTED - Creates approval requests successfully, returns 201 status with UUID"
+
+##   - task: "PUT /api/approvals/:id - Approve/reject approval"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "high"
+##     needs_retesting: false
+##     status_history:
+##         -working: "NA"
+##         -agent: "main"
+##         -comment: "NEW - Update approval status and note, sets resolved_at timestamp"
+##         -working: true
+##         -agent: "testing"
+##         -comment: "TESTED - Updates approval status from pending to approved successfully"
+
+##   - task: "GET /api/missions - List missions"
+##     implemented: true
+##     working: true
+##     file: "app/api/[[...path]]/route.js"
+##     stuck_count: 0
+##     priority: "medium"
+##     needs_retesting: false
+##     status_history:
+##         -working: true
+##         -agent: "main"
+##         -comment: "Existing endpoint for missions list with session_id filter"
+##         -working: true
+##         -agent: "testing"
+##         -comment: "TESTED - Returns 6 missions correctly"
+
 ## metadata:
 ##   created_by: "main_agent"
 ##   version: "2.0"
@@ -457,16 +538,14 @@
 
 ## test_plan:
 ##   current_focus:
-##     - "Products CRUD (POST, PUT, DELETE)"
-##     - "Orders CRUD (GET by ID, PUT, DELETE)"
-##     - "Reviews CRUD (PUT fix, DELETE)"
-##     - "Campaigns CRUD (POST, PUT, DELETE)"
-##     - "Shipments PUT"
-##     - "Stats endpoint"
-##     - "Store Config GET/PUT"
-##     - "Export endpoints"
+##     - "GET /api/store (DB-based store config)"
+##     - "GET /api/approvals (with status filters)"
+##     - "POST /api/approvals (create approval)"
+##     - "PUT /api/approvals/:id (approve/reject)"
+##     - "GET /api/missions (missions list)"
+##     - "Existing endpoints verification"
 ##   stuck_tasks: []
-##   test_all: true
+##   test_all: false
 ##   test_priority: "high_first"
 
 ## agent_communication:
@@ -593,3 +672,93 @@
 ### Agent Communication Update
 - **Agent**: testing
 - **Message**: "COMPREHENSIVE BACKEND TESTING COMPLETED - ALL 29 API ENDPOINTS TESTED AND WORKING. Key highlights: (1) All CRUD operations functional across products, orders, reviews, campaigns (2) Reviews PUT bug fix confirmed working - now correctly writes to reviews collection (3) All search/filter parameters working (4) Export endpoints functional (5) Authentication working (6) Stats dashboard metrics accurate (7) Soft delete working for products (8) UUID-based IDs throughout (9) Proper error handling and CORS. Backend is production-ready."
+
+## NEW ENDPOINTS TESTING RESULTS - TESTING AGENT (December 2024)
+
+### Test Execution Summary (Testing Agent - New Session)
+- **Date**: 2024-12-19
+- **Test Suite**: New/Changed Endpoints Testing
+- **Base URL**: https://ai-shopper-command.preview.emergentagent.com/api
+- **Total Test Suites**: 10/10 PASSED ✅
+- **Overall Result**: ALL NEW/CHANGED ENDPOINTS WORKING PERFECTLY
+
+### Detailed Test Results
+
+#### ✅ NEW/CHANGED ENDPOINTS - ALL WORKING
+
+##### 1. GET /api/store (DB-based) - WORKING ✅
+- **Status**: Fixed to read from store_config DB collection (not hardcoded)
+- **Result**: Returns "Updated Test Store" from database correctly
+- **Verification**: Store config now properly reads from DB instead of hardcoded constant
+
+##### 2. GET /api/approvals?status=all - WORKING ✅
+- **Status**: Returns all approvals regardless of status
+- **Result**: Returns 3 approvals total
+- **Verification**: Status filter working correctly with ?status=all parameter
+
+##### 3. GET /api/approvals?status=pending - WORKING ✅
+- **Status**: Filters approvals by pending status
+- **Result**: Returns 3 pending approvals, all with correct status
+- **Verification**: Status filtering working correctly
+
+##### 4. POST /api/approvals - WORKING ✅
+- **Status**: Creates new approval requests
+- **Result**: Successfully created approval with UUID, returns 201 status
+- **Verification**: All required fields (type, session_id, description, value, product details) working
+
+##### 5. PUT /api/approvals/:id - WORKING ✅
+- **Status**: Updates approval status and notes
+- **Result**: Successfully updated approval from pending to approved
+- **Verification**: Status update and note addition working correctly
+
+##### 6. GET /api/missions - WORKING ✅
+- **Status**: Returns missions list
+- **Result**: Returns 6 missions
+- **Verification**: Missions endpoint functioning correctly
+
+#### ✅ EXISTING ENDPOINTS VERIFICATION - ALL WORKING
+
+##### 7. GET /api/products - WORKING ✅
+- **Result**: Returns 13 products (expected count)
+- **Verification**: Product listing still functional after changes
+
+##### 8. GET /api/orders - WORKING ✅
+- **Result**: Returns 5 orders
+- **Verification**: Orders endpoint still functional
+
+##### 9. GET /api/stats - WORKING ✅
+- **Result**: All required fields present (totalProducts: 13, totalOrders: 5, totalRevenue: $173.67)
+- **Verification**: Dashboard statistics working correctly
+
+##### 10. GET /api/store-config - WORKING ✅
+- **Result**: Returns "Updated Test Store" configuration
+- **Verification**: Store config endpoint working correctly
+
+### Key Technical Validations
+- ✅ /api/store now reads from DB (store_config collection) instead of hardcoded constant
+- ✅ Approvals endpoints support status filtering (?status=all, ?status=pending)
+- ✅ Approvals CRUD operations (GET, POST, PUT) all functional
+- ✅ Missions endpoint returns expected data (6 missions)
+- ✅ All existing endpoints remain functional after changes
+- ✅ Proper HTTP status codes (200, 201) returned
+- ✅ JSON responses properly formatted
+- ✅ UUID-based IDs maintained throughout
+
+### Updated Task Status (New Endpoints)
+
+#### New/Changed Backend Tasks:
+- GET /api/store (DB-based): working = true ✅
+- GET /api/approvals (with filters): working = true ✅
+- POST /api/approvals: working = true ✅
+- PUT /api/approvals/:id: working = true ✅
+- GET /api/missions: working = true ✅
+
+#### Verified Existing Tasks:
+- GET /api/products: working = true ✅
+- GET /api/orders: working = true ✅
+- GET /api/stats: working = true ✅
+- GET /api/store-config: working = true ✅
+
+### Final Agent Communication Update
+- **Agent**: testing
+- **Message**: "NEW ENDPOINTS TESTING COMPLETED - ALL 10/10 TESTS PASSED. Critical updates verified: (1) /api/store now correctly reads from DB returning 'Updated Test Store' (2) Approvals endpoints fully functional with status filtering, CRUD operations working (3) Missions endpoint returns 6 missions (4) All existing endpoints verified and working. No critical issues found. Backend changes successfully implemented and tested."
