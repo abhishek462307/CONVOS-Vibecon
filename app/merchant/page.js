@@ -20,7 +20,7 @@ import {
   Activity, ExternalLink, MapPin, LogOut, RefreshCw, ArrowUpRight,
   ArrowDownRight, LayoutGrid, List, Shield, Target, Bot, AlertTriangle,
   Loader2, CheckCircle, XCircle, Reply, Zap, Tag, Package2, Globe,
-  Sparkles, ChevronRight, CircleDot, BarChart2, Settings, Hash
+  Sparkles, ChevronRight, CircleDot, BarChart2, Settings, Hash, CreditCard
 } from 'lucide-react'
 
 const BASE_URL = '/api'
