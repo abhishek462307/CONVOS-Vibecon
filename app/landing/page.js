@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 
 const DARK_LOGO = 'https://convos.store/_next/image?q=75&url=https%3A%2F%2Fslelguoygbfzlpylpxfs.supabase.co%2Fstorage%2Fv1%2Frender%2Fimage%2Fpublic%2Fdocument-uploads%2FBlue-and-Black-Minimalist-Brand-Logo-3-1768609870958.png%3Fwidth%3D8000%26height%3D8000%26resize%3Dcontain&w=256'
-const DASHBOARD_IMG = 'https://convos.store/_next/image?q=75&url=%2Fscreenshot-dashboard.webp&w=1200'
+const DASHBOARD_IMG = 'https://convos.store/_next/image?url=%2Fscreenshot-dashboard.webp&w=1200&q=75'
 
 
 function GradientText({ children, className = '', colors = ['#a855f7', '#ec4899', '#f97316', '#ec4899', '#a855f7'], animationSpeed = 8 }) {

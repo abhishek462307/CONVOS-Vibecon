@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 
 const DARK_LOGO = 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/render/image/public/document-uploads/Blue-and-Black-Minimalist-Brand-Logo-3-1768609870958.png?width=8000&height=8000&resize=contain'
+const DASHBOARD_IMG = 'https://convos.store/_next/image?url=%2Fscreenshot-dashboard.webp&w=1200&q=75'
 
 
 function GradientText({ children, className = '', colors = ['#a855f7', '#ec4899', '#f97316', '#ec4899', '#a855f7'], animationSpeed = 8 }) {
@@ -256,14 +257,9 @@ function HeroSection() {
       </div>
       <motion.div initial={{ opacity: 0, y: 60, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.9, delay: 0.3, ease: [0.16, 1, 0.3, 1] }} className="relative z-20 mx-auto mt-6 md:mt-16 w-full max-w-7xl px-0 md:px-4 mb-2 md:mb-8">
         <div className="relative p-1.5 md:p-3 rounded-[20px] md:rounded-[40px] backdrop-blur-lg" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', boxShadow: '0 0 80px rgba(255,255,255,0.03), 0 0 160px rgba(0,0,0,0.5)' }}>
-          <div className="relative rounded-[16px] md:rounded-[32px] overflow-hidden bg-card border border-[#1f1f1f] aspect-video flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-pink-900/10" />
-            <div className="relative z-10 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-purple flex items-center justify-center mx-auto mb-4 glow-purple">
-                <Bot className="w-8 h-8 text-white" />
-              </div>
-              <p className="text-white/40 text-sm">Dashboard Preview</p>
-            </div>
+          <div className="relative rounded-[16px] md:rounded-[32px] overflow-hidden bg-card border border-[#1f1f1f] aspect-video">
+            <img src={DASHBOARD_IMG} alt="Convos Dashboard" className="w-full h-full object-cover object-top" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
           </div>
         </div>
       </motion.div>
