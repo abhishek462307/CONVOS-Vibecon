@@ -49,7 +49,6 @@ const NAV_SECTIONS = [
     label: 'GROWTH',
     items: [
       { key: 'campaigns', label: 'Campaigns', icon: Megaphone },
-      { key: 'approvals', label: 'AI Approvals', icon: Shield, badge: 'approvals' },
     ]
   }
 ]
@@ -387,7 +386,6 @@ export default function MerchantDashboard() {
   // ─── SECTION: HOME ──────────────────────────────────────────
 
   const renderHome = () => {
-    const pendingApprovals = approvals.filter(a => a.status === 'pending')
     const totalRevenue = orders.reduce((s, o) => s + parseFloat(o.total || 0), 0)
     const conversionRate = stats?.totalConversations > 0 ? ((orders.length / stats.totalConversations) * 100).toFixed(1) : '0.0'
 
@@ -422,20 +420,6 @@ export default function MerchantDashboard() {
 
     return (
       <div>
-        {/* Pending approval alert */}
-        {pendingApprovals.length > 0 && (
-          <div
-            className="mb-6 flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3.5 cursor-pointer hover:bg-amber-100 transition-colors"
-            onClick={() => setActiveSection('approvals')}
-          >
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-            <p className="text-sm text-amber-800 font-medium flex-1">
-              <span className="font-bold">{pendingApprovals.length} AI action{pendingApprovals.length > 1 ? 's' : ''}</span> awaiting your approval
-            </p>
-            <span className="text-xs font-semibold text-amber-700 bg-amber-100 px-3 py-1 rounded-full">Review →</span>
-          </div>
-        )}
-
         {/* Top controls bar */}
         <div className="flex items-center justify-between mb-7">
           <div className="flex items-center gap-2">
@@ -1166,7 +1150,6 @@ export default function MerchantDashboard() {
   }
   if (!isAuthenticated) return null
 
-  const pendingApprovals = approvals.filter(a => a.status === 'pending').length
   const pendingOrders = orders.filter(o => o.status === 'pending').length
   const pendingReviews = reviews.filter(r => r.status === 'pending').length
 
@@ -1249,12 +1232,6 @@ export default function MerchantDashboard() {
             </button>
           </a>
 
-          {/* Convos AI button */}
-          <button className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-bold text-white transition-all" style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)' }}>
-            <svg width="12" height="12" viewBox="0 0 32 32" fill="none"><path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" /></svg>
-            Convos AI
-          </button>
-
           {/* Refresh */}
           <button
             onClick={fetchData}
@@ -1283,7 +1260,7 @@ export default function MerchantDashboard() {
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] px-3 mb-1.5" style={{ color: '#B5AFA8' }}>{section.label}</p>
                 <div className="space-y-0.5">
                   {section.items.map(item => {
-                    const badge = item.badge === 'orders' ? pendingOrders : item.badge === 'reviews' ? pendingReviews : item.badge === 'approvals' ? pendingApprovals : 0
+                    const badge = item.badge === 'orders' ? pendingOrders : item.badge === 'reviews' ? pendingReviews : 0
                     const isActive = activeSection === item.key
                     return (
                       <button
