@@ -929,8 +929,9 @@ export default function App() {
     if (!sid) {
       sid = crypto.randomUUID()
       try { localStorage.setItem('convos_session_id', sid) } catch (e) { }
-      // New session — clear any stale cart
+      // New session — clear stale local cart and DB cart
       try { localStorage.removeItem('cart') } catch (e) { }
+      fetch(`/api/cart?session_id=${sid}`, { method: 'DELETE' }).catch(() => {})
     }
     setSessionId(sid)
     try { const s = localStorage.getItem('cart'); if (s) setCart(JSON.parse(s)) } catch (e) { }
@@ -1024,15 +1025,8 @@ export default function App() {
       : [...cart, { ...product, id: product.id, quantity: 1 }]
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
-    if (sessionId) {
-      try {
-        await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sessionId, message: `[Internal] Added ${product.name} to cart` })
-        })
-      } catch (e) { }
-    }
+    // NOTE: We intentionally do NOT notify the AI about manual cart additions.
+    // AI cart is only synced when the AI itself calls add_to_cart tool.
   }
 
   const updateQty = (id, delta) => {
