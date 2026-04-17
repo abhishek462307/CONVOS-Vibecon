@@ -1183,8 +1183,8 @@ export default function MerchantDashboard() {
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
 
-      {/* ── DARK TOP HEADER ─────────────────────────────────── */}
-      <header className="h-[58px] shrink-0 flex items-center px-5 gap-4" style={{ background: '#0D0D0D' }}>
+      {/* ── TOP HEADER ──────────────────────────────────────── */}
+      <header className="h-[58px] shrink-0 flex items-center px-5 gap-4" style={{ background: '#F5F3EF', borderBottom: '1px solid #E8E4DE' }}>
         {/* Logo */}
         <div className="flex items-center gap-2.5 shrink-0">
           <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)' }}>
@@ -1192,19 +1192,19 @@ export default function MerchantDashboard() {
               <path d="M16 2C12 2 8 6 8 12c0 4 2 8 4 11 1.5 2 2.5 4 4 5 1.5-1 2.5-3 4-5 2-3 4-7 4-11 0-6-4-10-8-10z" fill="white" />
             </svg>
           </div>
-          <span className="text-sm font-extrabold text-white tracking-tight">Convos</span>
+          <span className="text-sm font-extrabold tracking-tight" style={{ color: '#1C0A04' }}>Convos</span>
         </div>
 
         {/* Search */}
         <div className="flex-1 max-w-lg mx-4">
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#666' }} />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: '#B5AFA8' }} />
             <input
               placeholder="Search orders, missions, or intelligence…"
               className="w-full h-9 pl-10 pr-4 rounded-xl text-sm outline-none transition-all"
-              style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#999', caretColor: '#fff' }}
-              onFocus={e => { e.target.style.borderColor = '#444'; e.target.style.color = '#fff' }}
-              onBlur={e => { e.target.style.borderColor = '#2A2A2A'; e.target.style.color = '#999' }}
+              style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#7A6F66' }}
+              onFocus={e => { e.target.style.borderColor = '#C4B5A8'; e.target.style.color = '#1C0A04' }}
+              onBlur={e => { e.target.style.borderColor = '#E8E4DE'; e.target.style.color = '#7A6F66' }}
             />
           </div>
         </div>
@@ -1212,18 +1212,18 @@ export default function MerchantDashboard() {
         {/* Store info + actions */}
         <div className="flex items-center gap-2 shrink-0">
           {/* Store name pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl" style={{ background: '#1A1A1A', border: '1px solid #2A2A2A' }}>
-            <span className="text-sm font-semibold text-white">{storeConfig?.name || 'Your Store'}</span>
-            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+            <span className="text-sm font-semibold" style={{ color: '#1C0A04' }}>{storeConfig?.name || 'Your Store'}</span>
+            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
             </span>
           </div>
 
           {/* Storefront */}
           <a href="/store" target="_blank" rel="noopener noreferrer">
-            <button className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-xs font-semibold transition-all" style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#999' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#fff' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2A2A2A'; e.currentTarget.style.color = '#999' }}>
+            <button className="flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-xs font-semibold transition-all" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#7A6F66' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#C4B5A8'; e.currentTarget.style.color = '#1C0A04' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.color = '#7A6F66' }}>
               <ExternalLink className="w-3.5 h-3.5" /> Storefront
             </button>
           </a>
@@ -1234,15 +1234,18 @@ export default function MerchantDashboard() {
             Convos AI
           </button>
 
-          {/* Notifications */}
-          <button className="relative h-9 w-9 rounded-xl flex items-center justify-center transition-all" style={{ background: '#1A1A1A', border: '1px solid #2A2A2A', color: '#666' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = '#444'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = '#2A2A2A'; e.currentTarget.style.color = '#666' }}>
-            <RefreshCw className="w-3.5 h-3.5" onClick={fetchData} />
+          {/* Refresh */}
+          <button
+            onClick={fetchData}
+            className="h-9 w-9 rounded-xl flex items-center justify-center transition-all"
+            style={{ background: '#FFFFFF', border: '1px solid #E8E4DE', color: '#B5AFA8' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = '#C4B5A8'; e.currentTarget.style.color = '#1C0A04' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = '#E8E4DE'; e.currentTarget.style.color = '#B5AFA8' }}>
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
 
           {/* User avatar */}
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm shrink-0" style={{ background: '#2A2A2A', border: '1px solid #333' }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm shrink-0" style={{ background: '#1C0A04', color: '#F5EBE0' }}>
             M
           </div>
         </div>
