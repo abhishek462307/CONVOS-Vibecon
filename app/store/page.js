@@ -711,6 +711,7 @@ export default function App() {
                 <span className="font-semibold" style={{ color: '#B8732A' }}>Convos AI</span>
               </p>
             </div>
+            </div>
           </footer>
         </div>
 
