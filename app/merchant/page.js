@@ -103,17 +103,42 @@ const INTENT_TYPE = {
 function StatusPill({ status, map = STATUS_ORDER }) {
   const cfg = map[status] || { label: status, pill: 'bg-gray-100 text-gray-600 border-gray-200' }
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${cfg.pill}`}>
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${cfg.pill}`}>
       {cfg.dot && <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />}
       {cfg.label || status}
     </span>
   )
 }
 
+// Matches reference exactly: label + icon row, big number, description + compact pill
+function StatCard({ label, value, description, change, changeUp = true, icon: Icon }) {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 p-5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{label}</p>
+        <div className="w-8 h-8 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center shrink-0">
+          <Icon className="w-4 h-4 text-gray-400" />
+        </div>
+      </div>
+      <p className="text-4xl font-bold text-gray-900 tracking-tight mb-2">{value}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-xs text-gray-400 leading-snug flex-1">{description}</p>
+        {change && (
+          <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${changeUp
+            ? 'bg-emerald-50 text-emerald-700'
+            : 'bg-red-50 text-red-500'}`}>
+            {change}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function EmptySlate({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
+      <div className="w-14 h-14 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center mb-4">
         <Icon className="w-6 h-6 text-gray-300" />
       </div>
       <p className="text-sm font-semibold text-gray-700 mb-1">{title}</p>
@@ -126,7 +151,7 @@ function EmptySlate({ icon: Icon, title, description, action }) {
 function ConfirmDialog({ open, onClose, onConfirm, title, description, loading, confirmLabel = 'Delete' }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+      <DialogContent className="sm:max-w-md bg-white rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-gray-900">{title}</DialogTitle>
           <DialogDescription className="text-gray-500">{description}</DialogDescription>
@@ -146,7 +171,7 @@ function ConfirmDialog({ open, onClose, onConfirm, title, description, loading, 
 function Toast({ message, type, onClose }) {
   useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t) }, [onClose])
   return (
-    <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl text-sm font-medium border max-w-sm ${type === 'success' ? 'bg-white text-emerald-700 border-emerald-200' : type === 'error' ? 'bg-white text-red-600 border-red-200' : 'bg-white text-gray-800 border-gray-200'}`}>
+    <div className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-xl text-sm font-medium border max-w-sm ${type === 'success' ? 'bg-white text-emerald-700 border-emerald-200' : type === 'error' ? 'bg-white text-red-600 border-red-200' : 'bg-white text-gray-800 border-gray-200'}`}>
       {type === 'success' ? <CheckCircle className="w-4 h-4 shrink-0" /> : type === 'error' ? <XCircle className="w-4 h-4 shrink-0" /> : null}
       {message}
     </div>
@@ -167,7 +192,7 @@ function PageHeader({ title, description, actions }) {
 
 function DataTable({ children }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
       <div className="overflow-x-auto">{children}</div>
     </div>
   )
@@ -419,29 +444,6 @@ export default function MerchantDashboard() {
     const totalRevenue = orders.reduce((s, o) => s + parseFloat(o.total || 0), 0)
     const conversionRate = stats?.totalConversations > 0 ? ((orders.length / stats.totalConversations) * 100).toFixed(1) : '0.0'
 
-    const kpiCards = [
-      {
-        label: 'REVENUE', value: `$${totalRevenue.toFixed(2)}`,
-        desc: 'Gross sales in the selected range', change: '+12.5%', up: true,
-        icon: DollarSign,
-      },
-      {
-        label: 'ORDERS', value: orders.length,
-        desc: 'Completed and active transactions', change: '+8.2%', up: true,
-        icon: ShoppingCart,
-      },
-      {
-        label: 'AI SESSIONS', value: stats?.totalConversations || 0,
-        desc: 'Live assistant-led shopping chats', change: '+24.0%', up: true,
-        icon: MessageSquare,
-      },
-      {
-        label: 'CONVERSION', value: `${conversionRate}%`,
-        desc: 'Sessions that turned into orders', change: '-2.1%', up: false,
-        icon: TrendingUp,
-      },
-    ]
-
     const storePulse = [
       { label: 'Orders in range', desc: 'Total transactions captured', value: orders.length },
       { label: 'AI-assisted orders', desc: orders.length === 0 ? 'No AI-assisted orders yet' : `${Math.floor(orders.length * 0.6)} orders via AI`, value: Math.floor(orders.length * 0.6) },
@@ -495,28 +497,16 @@ export default function MerchantDashboard() {
 
         {/* KPI cards */}
         <div className="grid grid-cols-4 gap-4 mb-5">
-          {kpiCards.map(card => (
-            <div key={card.label} className="bg-white rounded-2xl border border-gray-100 p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-              <div className="flex items-start justify-between mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{card.label}</span>
-                <div className="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
-                  <card.icon className="w-4 h-4 text-gray-400" />
-                </div>
-              </div>
-              <p className="text-4xl font-bold text-gray-900 tracking-tight mb-2">{card.value}</p>
-              <p className="text-xs text-gray-400 leading-snug mb-3">{card.desc}</p>
-              <span className={`inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full ${card.up ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
-                {card.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {card.change}
-              </span>
-            </div>
-          ))}
+          <StatCard label="REVENUE" value={`$${totalRevenue.toFixed(2)}`} description="Gross sales in the selected range" change="+12.5%" changeUp icon={DollarSign} />
+          <StatCard label="ORDERS" value={orders.length} description="Completed and active transactions" change="+8.2%" changeUp icon={ShoppingCart} />
+          <StatCard label="AI SESSIONS" value={stats?.totalConversations || 0} description="Live assistant-led shopping chats" change="+24.0%" changeUp icon={MessageSquare} />
+          <StatCard label="CONVERSION" value={`${conversionRate}%`} description="Sessions that turned into orders" change="-2.1%" changeUp={false} icon={TrendingUp} />
         </div>
 
         {/* Sales performance + Store pulse */}
         <div className="grid grid-cols-3 gap-4">
           {/* Sales performance chart */}
-          <div className="col-span-2 bg-white rounded-2xl border border-gray-100 p-6" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div className="col-span-2 bg-white rounded-xl border border-gray-100 p-6" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h3 className="text-base font-bold text-gray-900">Sales performance</h3>
@@ -549,7 +539,7 @@ export default function MerchantDashboard() {
           </div>
 
           {/* Store pulse */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div className="bg-white rounded-xl border border-gray-100 p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <h3 className="text-base font-bold text-gray-900 mb-4">Store pulse</h3>
             <div className="space-y-0">
               {storePulse.map((item, i) => (
@@ -616,7 +606,7 @@ export default function MerchantDashboard() {
             { key: 'cancelled', label: 'Cancelled', color: 'text-red-500' },
           ].map(s => (
             <button key={s.key} onClick={() => setOrderFilter(s.key)}
-              className={`bg-white rounded-2xl border p-4 text-center transition-all ${orderFilter === s.key ? 'border-gray-900 ring-1 ring-gray-900' : 'border-gray-100 hover:border-gray-200'}`}
+              className={`bg-white rounded-xl border p-4 text-center transition-all ${orderFilter === s.key ? 'border-gray-900 ring-1 ring-gray-900' : 'border-gray-100 hover:border-gray-200'}`}
               style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <p className={`text-3xl font-bold ${orderFilter === s.key ? s.color : 'text-gray-800'}`}>{counts[s.key]}</p>
               <p className="text-xs text-gray-400 font-medium mt-0.5">{s.label}</p>
@@ -698,7 +688,7 @@ export default function MerchantDashboard() {
         />
 
         {lowStock.length > 0 && (
-          <div className="mb-5 flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl px-5 py-3.5">
+          <div className="mb-5 flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-xl px-5 py-3.5">
             <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
             <p className="text-sm text-amber-800"><strong>{lowStock.length} product{lowStock.length > 1 ? 's' : ''}</strong> running low on stock — under 20 units</p>
             <span className="ml-auto text-xs font-medium text-amber-600">{lowStock.slice(0, 2).map(p => p.name).join(', ')}{lowStock.length > 2 ? ` +${lowStock.length - 2}` : ''}</span>
@@ -727,7 +717,7 @@ export default function MerchantDashboard() {
         {catalogView === 'grid' ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filtered.map(p => (
-              <div key={p.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 group" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+              <div key={p.id} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200 group" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
                 <div className="relative aspect-square bg-gray-50 overflow-hidden">
                   <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
@@ -794,7 +784,7 @@ export default function MerchantDashboard() {
         <PageHeader title="Customer Intelligence" description={`${customers.length} consumer profiles tracked by AI`} actions={<Button variant="outline" size="sm" onClick={() => handleExport('customers')} className="rounded-xl border-gray-200 h-9"><Download className="w-3.5 h-3.5 mr-1.5" /> Export</Button>} />
         <div className="grid grid-cols-4 gap-4 mb-6">
           {[{ label: 'Total', value: customers.length, icon: Users, color: 'text-gray-700' }, { label: 'Avg Trust Score', value: `${avgTrust}/100`, icon: Shield, color: 'text-emerald-600' }, { label: 'Total Spent', value: `$${customers.reduce((s, c) => s + (c.total_spent || 0), 0).toFixed(0)}`, icon: DollarSign, color: 'text-blue-600' }, { label: 'High Risk', value: customers.filter(c => c.risk_level === 'high').length, icon: AlertTriangle, color: 'text-red-500' }].map(m => (
-            <div key={m.label} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+            <div key={m.label} className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
               <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"><m.icon className={`w-5 h-5 ${m.color}`} /></div>
               <div><p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{m.label}</p><p className={`text-2xl font-bold ${m.color}`}>{m.value}</p></div>
             </div>
@@ -803,7 +793,7 @@ export default function MerchantDashboard() {
         {customers.length === 0 ? <EmptySlate icon={Users} title="No customers yet" description="Profiles are created when buyers interact with your AI store." /> : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {customers.map(c => (
-              <div key={c.id} className="bg-white rounded-2xl border border-gray-100 p-5 cursor-pointer hover:shadow-md transition-all" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} onClick={() => setCustomerModal({ open: true, customer: c })}>
+              <div key={c.id} className="bg-white rounded-xl border border-gray-100 p-5 cursor-pointer hover:shadow-md transition-all" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }} onClick={() => setCustomerModal({ open: true, customer: c })}>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-sm shrink-0">{c.session_id?.charAt(0)?.toUpperCase() || '?'}</div>
                   <div className="flex-1 min-w-0"><p className="font-bold text-gray-900 text-sm">#{c.session_id?.slice(0, 8)}</p><p className="text-xs text-gray-400">{c.interactions || 0} interactions</p></div>
@@ -832,7 +822,7 @@ export default function MerchantDashboard() {
       <div>
         <PageHeader title="Reviews" description={`${reviews.length} total · ★ ${avg} average · ${pending} pending moderation`} />
         {reviews.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-5 flex items-center gap-8" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+          <div className="bg-white rounded-xl border border-gray-100 p-5 mb-5 flex items-center gap-8" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
             <div className="text-center shrink-0"><p className="text-5xl font-black text-gray-900">{avg}</p><div className="flex gap-0.5 mt-1 justify-center">{[1,2,3,4,5].map(i=><Star key={i} className={`w-3.5 h-3.5 ${i<=Math.round(parseFloat(avg))? 'fill-amber-400 text-amber-400':'text-gray-200'}`}/>)}</div><p className="text-xs text-gray-400 mt-1">{reviews.length} reviews</p></div>
             <div className="flex-1 space-y-1.5">{[5,4,3,2,1].map(s=>{const c=reviews.filter(r=>r.rating===s).length;const p=reviews.length?(c/reviews.length)*100:0;return(<div key={s} className="flex items-center gap-2"><span className="text-xs text-gray-500 w-3">{s}</span><Star className="w-3 h-3 fill-amber-400 text-amber-400"/><div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-amber-400 rounded-full" style={{width:`${p}%`}}/></div><span className="text-xs text-gray-400 w-5 text-right">{c}</span></div>)})}</div>
           </div>
@@ -847,7 +837,7 @@ export default function MerchantDashboard() {
         {filtered.length===0?<EmptySlate icon={Star} title="No reviews" description="Customer reviews will appear here." />:(
           <div className="space-y-3">
             {filtered.map(r=>(
-              <div key={r.id} className="bg-white rounded-2xl border border-gray-100 p-5 hover:shadow-sm transition-all" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
+              <div key={r.id} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-sm transition-all" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex gap-4 flex-1 min-w-0">
                     {r.product?.image&&<img src={r.product.image} alt="" className="w-14 h-14 rounded-xl object-cover border border-gray-100 shrink-0"/>}
@@ -881,7 +871,7 @@ export default function MerchantDashboard() {
         <PageHeader title="Shipments" description={`${shipments.length} active shipment records`} />
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[{l:'Processing',v:shipments.filter(s=>s.status==='processing').length,c:'text-blue-600',i:Truck},{l:'In Transit',v:shipments.filter(s=>s.status==='shipped').length,c:'text-purple-600',i:Truck},{l:'Delivered',v:shipments.filter(s=>s.status==='delivered').length,c:'text-emerald-600',i:CheckCircle}].map(m=>(
-            <div key={m.l} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
+            <div key={m.l} className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
               <div className="w-11 h-11 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"><m.i className={`w-5 h-5 ${m.c}`}/></div>
               <div><p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{m.l}</p><p className={`text-3xl font-bold ${m.c}`}>{m.v}</p></div>
             </div>
@@ -918,7 +908,7 @@ export default function MerchantDashboard() {
       {campaigns.length===0?<EmptySlate icon={Megaphone} title="No campaigns" description="Create email, SMS, or push campaigns to reach customers."/>:(
         <div className="space-y-3">
           {campaigns.map(c=>(
-            <div key={c.id} className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-sm transition-all" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
+            <div key={c.id} className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-sm transition-all" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
               <div className="flex items-start justify-between mb-4">
                 <div><div className="flex items-center gap-2.5 mb-1.5"><h3 className="font-bold text-gray-900">{c.name}</h3><StatusPill status={c.status} map={STATUS_CAMPAIGN}/><span className="text-xs font-bold uppercase text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">{c.type}</span></div><p className="text-sm text-gray-500">{c.description}</p></div>
                 <div className="flex gap-1.5 ml-4"><button onClick={()=>{setCampaignForm({...c});setCampaignModal({open:true,mode:'edit',data:c})}} className="p-2 rounded-xl text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all"><Edit className="w-3.5 h-3.5"/></button><button onClick={()=>setDeleteConfirm({open:true,type:'campaign',id:c.id,name:c.name})} className="p-2 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"><Trash2 className="w-3.5 h-3.5"/></button></div>
@@ -938,7 +928,7 @@ export default function MerchantDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Cash on Delivery — active */}
-        <div className="bg-white rounded-2xl border-2 border-amber-200 p-6 shadow-sm">
+        <div className="bg-white rounded-xl border-2 border-amber-200 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -970,7 +960,7 @@ export default function MerchantDashboard() {
         </div>
 
         {/* Stripe */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -996,7 +986,7 @@ export default function MerchantDashboard() {
         </div>
 
         {/* PayPal */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -1014,7 +1004,7 @@ export default function MerchantDashboard() {
         </div>
 
         {/* Add Provider */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex flex-col justify-center items-center text-center">
+        <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col justify-center items-center text-center">
           <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
             <Plus className="w-6 h-6 text-gray-300" />
           </div>
@@ -1041,7 +1031,7 @@ export default function MerchantDashboard() {
         {filtered.length===0?<EmptySlate icon={Activity} title="No activity yet" description="Customer interactions stream here in real-time."/>:(
           <div className="space-y-2">
             {filtered.map((intent,i)=>{const cfg=INTENT_TYPE[intent.type]||{color:'bg-gray-100 text-gray-600',icon:Activity};const Icon=cfg.icon;return(
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-start gap-3 hover:bg-gray-50/50 transition-colors" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.03)'}}>
+              <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 flex items-start gap-3 hover:bg-gray-50/50 transition-colors" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.03)'}}>
                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${cfg.color}`}><Icon className="w-4 h-4"/></div>
                 <div className="flex-1 min-w-0"><p className="text-sm text-gray-700">{intent.description}</p><div className="flex items-center gap-2 mt-1"><span className="text-xs text-gray-400">{new Date(intent.timestamp).toLocaleString()}</span><span className="text-gray-200">·</span><span className="text-xs text-gray-400 font-mono">#{intent.session_id?.slice(0,8)}</span></div></div>
                 <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${cfg.color}`}>{intent.type?.replace('_',' ')}</span>
@@ -1062,14 +1052,14 @@ export default function MerchantDashboard() {
         <PageHeader title="AI Authority" description="Buyer AI agents working on active shopping goals" actions={<span className="text-xs font-bold bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>{missions.filter(m=>m.status==='active').length} running</span>} />
         <div className="grid grid-cols-3 gap-4 mb-6">
           {[{l:'Active',v:missions.filter(m=>m.status==='active').length,c:'text-gray-900'},{l:'Completed',v:missions.filter(m=>m.status==='completed').length,c:'text-emerald-600'},{l:'Total',v:missions.length,c:'text-gray-700'}].map(m=>(
-            <div key={m.l} className="bg-white rounded-2xl border border-gray-100 p-5 flex items-center gap-4" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}><div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"><Target className={`w-5 h-5 ${m.c}`}/></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{m.l}</p><p className={`text-3xl font-bold ${m.c}`}>{m.v}</p></div></div>
+            <div key={m.l} className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}><div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center shrink-0"><Target className={`w-5 h-5 ${m.c}`}/></div><div><p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{m.l}</p><p className={`text-3xl font-bold ${m.c}`}>{m.v}</p></div></div>
           ))}
         </div>
         <div className="flex gap-2 mb-5">{['all','active','completed','failed'].map(s=><button key={s} onClick={()=>setMissionFilter(s)} className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${missionFilter===s?'bg-gray-900 text-white':'bg-white border border-gray-200 text-gray-500 hover:border-gray-300'}`}>{s==='all'?'All Missions':s}</button>)}</div>
         {filtered.length===0?<EmptySlate icon={Target} title="No missions" description="Buyer AI missions appear here when customers set shopping goals."/>:(
           <div className="space-y-3">
             {filtered.map(m=>(
-              <div key={m.id} className="bg-white rounded-2xl border border-gray-100 p-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
+              <div key={m.id} className="bg-white rounded-xl border border-gray-100 p-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>
                 <div className="flex items-start gap-4">
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${m.status==='active'?'bg-gray-100':'m.status==="completed"'?'bg-emerald-50':'bg-gray-50'}`}><Bot className={`w-5 h-5 ${m.status==='active'?'text-gray-700':m.status==='completed'?'text-emerald-600':'text-gray-400'}`}/></div>
                   <div className="flex-1 min-w-0">
@@ -1094,13 +1084,13 @@ export default function MerchantDashboard() {
     return (
       <div>
         <PageHeader title="AI Approval Queue" description="Review sensitive AI agent actions before they execute" actions={pending.length>0?<span className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs font-bold text-amber-700"><AlertTriangle className="w-3.5 h-3.5"/>{pending.length} awaiting</span>:<span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-bold text-emerald-700"><CheckCircle className="w-3.5 h-3.5"/>All clear</span>} />
-        {pending.length===0&&<div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-8 text-center mb-6"><CheckCircle className="w-10 h-10 text-emerald-400 mx-auto mb-3"/><p className="font-bold text-emerald-800">All caught up!</p><p className="text-sm text-emerald-600 mt-1">No pending AI actions require your approval.</p></div>}
+        {pending.length===0&&<div className="bg-emerald-50 border border-emerald-100 rounded-xl p-8 text-center mb-6"><CheckCircle className="w-10 h-10 text-emerald-400 mx-auto mb-3"/><p className="font-bold text-emerald-800">All caught up!</p><p className="text-sm text-emerald-600 mt-1">No pending AI actions require your approval.</p></div>}
         {pending.length>0&&(
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3"><div className="w-1 h-5 bg-amber-400 rounded-full"/><p className="text-sm font-bold text-gray-900">Pending Actions ({pending.length})</p></div>
             <div className="space-y-3">
               {pending.map(a=>{const t=TYPE_APPROVAL[a.type]||{label:a.type,bg:'bg-gray-50',text:'text-gray-600',pill:'bg-gray-100 text-gray-600 border-gray-200'};const TI=t.icon||Shield;return(
-                <div key={a.id} className="bg-white rounded-2xl border-2 border-amber-200 overflow-hidden" style={{boxShadow:'0 2px 8px rgba(251,191,36,0.1)'}}>
+                <div key={a.id} className="bg-white rounded-xl border-2 border-amber-200 overflow-hidden" style={{boxShadow:'0 2px 8px rgba(251,191,36,0.1)'}}>
                   <div className="bg-amber-50 px-5 py-3 flex items-center gap-3 border-b border-amber-100"><span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${t.pill}`}>{t.label}</span><span className="text-xs text-amber-700 font-mono">Session: {a.session_id?.slice(0,12)}…</span><span className="text-xs text-amber-500 ml-auto">{new Date(a.created_at).toLocaleString()}</span></div>
                   <div className="p-5">
                     <div className="flex items-start gap-4">
@@ -1117,7 +1107,7 @@ export default function MerchantDashboard() {
             </div>
           </div>
         )}
-        {resolved.length>0&&<div><div className="flex items-center gap-2 mb-3"><div className="w-1 h-5 bg-gray-200 rounded-full"/><p className="text-sm font-bold text-gray-400">Resolved ({resolved.length})</p></div><div className="space-y-2">{resolved.map(a=><div key={a.id} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3"><div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${a.status==='approved'?'bg-emerald-50':'bg-red-50'}`}>{a.status==='approved'?<Check className="w-3.5 h-3.5 text-emerald-600"/>:<X className="w-3.5 h-3.5 text-red-500"/>}</div><div className="flex-1 min-w-0"><p className="text-sm text-gray-700 truncate">{a.description}</p><p className="text-xs text-gray-400">{a.status==='approved'?'Approved':'Rejected'} · {new Date(a.resolved_at||a.updated_at).toLocaleString()}</p></div><span className={`text-xs font-bold px-2.5 py-1 rounded-full ${a.status==='approved'?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-red-50 text-red-600 border border-red-200'}`}>{a.status}</span></div>)}</div></div>}
+        {resolved.length>0&&<div><div className="flex items-center gap-2 mb-3"><div className="w-1 h-5 bg-gray-200 rounded-full"/><p className="text-sm font-bold text-gray-400">Resolved ({resolved.length})</p></div><div className="space-y-2">{resolved.map(a=><div key={a.id} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-3"><div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${a.status==='approved'?'bg-emerald-50':'bg-red-50'}`}>{a.status==='approved'?<Check className="w-3.5 h-3.5 text-emerald-600"/>:<X className="w-3.5 h-3.5 text-red-500"/>}</div><div className="flex-1 min-w-0"><p className="text-sm text-gray-700 truncate">{a.description}</p><p className="text-xs text-gray-400">{a.status==='approved'?'Approved':'Rejected'} · {new Date(a.resolved_at||a.updated_at).toLocaleString()}</p></div><span className={`text-xs font-bold px-2.5 py-1 rounded-full ${a.status==='approved'?'bg-emerald-50 text-emerald-700 border border-emerald-200':'bg-red-50 text-red-600 border border-red-200'}`}>{a.status}</span></div>)}</div></div>}
       </div>
     )
   }
@@ -1130,11 +1120,11 @@ export default function MerchantDashboard() {
       {storeConfig?(
         <Tabs defaultValue="general" className="space-y-5">
           <TabsList className="bg-gray-100 border border-gray-200 p-1 rounded-xl"><TabsTrigger value="general" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm">General</TabsTrigger><TabsTrigger value="ai" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm">AI Assistant</TabsTrigger><TabsTrigger value="appearance" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm text-sm">Appearance</TabsTrigger></TabsList>
-          <TabsContent value="general"><div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>{[{label:'Store Name',key:'name',placeholder:'e.g. Artisan Coffee Roasters'},{label:'Tagline',key:'tagline',placeholder:'e.g. Best coffee in town'},{label:'Banner Text',key:'banner',placeholder:'e.g. FREE SHIPPING OVER $100'}].map(f=><div key={f.key}><Label className="text-sm font-semibold text-gray-700">{f.label}</Label><Input value={storeConfig[f.key]||''} onChange={e=>setStoreConfig({...storeConfig,[f.key]:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder={f.placeholder}/></div>)}<div><Label className="text-sm font-semibold text-gray-700">Description</Label><Textarea value={storeConfig.description||''} onChange={e=>setStoreConfig({...storeConfig,description:e.target.value})} className="mt-2 border-gray-200 rounded-xl text-gray-900 bg-white" rows={3}/></div><div><Label className="text-sm font-semibold text-gray-700">Store Status</Label><Select value={storeConfig.status||'live'} onValueChange={v=>setStoreConfig({...storeConfig,status:v})}><SelectTrigger className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white"><SelectValue/></SelectTrigger><SelectContent className="bg-white border-gray-200 rounded-xl"><SelectItem value="live">🟢 Live</SelectItem><SelectItem value="maintenance">🟡 Maintenance</SelectItem><SelectItem value="closed">🔴 Closed</SelectItem></SelectContent></Select></div></div></TabsContent>
-          <TabsContent value="ai"><div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}><div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"><div className="w-11 h-11 rounded-xl bg-gray-900 flex items-center justify-center shrink-0"><Bot className="w-5 h-5 text-white"/></div><div><p className="text-sm font-bold text-gray-900">AI Assistant Configuration</p><p className="text-xs text-gray-500 mt-0.5">Control how your AI shopping assistant introduces itself</p></div></div><div><Label className="text-sm font-semibold text-gray-700">AI Name</Label><Input value={storeConfig.ai_name||''} onChange={e=>setStoreConfig({...storeConfig,ai_name:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder="e.g. Aria, Mark, Sage"/></div><div><Label className="text-sm font-semibold text-gray-700">Greeting Message</Label><Textarea value={storeConfig.ai_greeting||''} onChange={e=>setStoreConfig({...storeConfig,ai_greeting:e.target.value})} className="mt-2 border-gray-200 rounded-xl text-gray-900 bg-white" rows={3} placeholder="Hey! What are you shopping for today?"/></div></div></TabsContent>
-          <TabsContent value="appearance"><div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}><div><Label className="text-sm font-semibold text-gray-700">Hero Image URL</Label><Input value={storeConfig.hero_image||''} onChange={e=>setStoreConfig({...storeConfig,hero_image:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder="https://…"/>{storeConfig.hero_image&&<img src={storeConfig.hero_image} alt="Preview" className="mt-3 w-full h-36 object-cover rounded-xl border border-gray-100" onError={e=>e.target.style.display='none'}/>}</div><div><Label className="text-sm font-semibold text-gray-700">Logo URL</Label><Input value={storeConfig.logo_url||''} onChange={e=>setStoreConfig({...storeConfig,logo_url:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder="https://…"/></div></div></TabsContent>
+          <TabsContent value="general"><div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}>{[{label:'Store Name',key:'name',placeholder:'e.g. Artisan Coffee Roasters'},{label:'Tagline',key:'tagline',placeholder:'e.g. Best coffee in town'},{label:'Banner Text',key:'banner',placeholder:'e.g. FREE SHIPPING OVER $100'}].map(f=><div key={f.key}><Label className="text-sm font-semibold text-gray-700">{f.label}</Label><Input value={storeConfig[f.key]||''} onChange={e=>setStoreConfig({...storeConfig,[f.key]:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder={f.placeholder}/></div>)}<div><Label className="text-sm font-semibold text-gray-700">Description</Label><Textarea value={storeConfig.description||''} onChange={e=>setStoreConfig({...storeConfig,description:e.target.value})} className="mt-2 border-gray-200 rounded-xl text-gray-900 bg-white" rows={3}/></div><div><Label className="text-sm font-semibold text-gray-700">Store Status</Label><Select value={storeConfig.status||'live'} onValueChange={v=>setStoreConfig({...storeConfig,status:v})}><SelectTrigger className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white"><SelectValue/></SelectTrigger><SelectContent className="bg-white border-gray-200 rounded-xl"><SelectItem value="live">🟢 Live</SelectItem><SelectItem value="maintenance">🟡 Maintenance</SelectItem><SelectItem value="closed">🔴 Closed</SelectItem></SelectContent></Select></div></div></TabsContent>
+          <TabsContent value="ai"><div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}><div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"><div className="w-11 h-11 rounded-xl bg-gray-900 flex items-center justify-center shrink-0"><Bot className="w-5 h-5 text-white"/></div><div><p className="text-sm font-bold text-gray-900">AI Assistant Configuration</p><p className="text-xs text-gray-500 mt-0.5">Control how your AI shopping assistant introduces itself</p></div></div><div><Label className="text-sm font-semibold text-gray-700">AI Name</Label><Input value={storeConfig.ai_name||''} onChange={e=>setStoreConfig({...storeConfig,ai_name:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder="e.g. Aria, Mark, Sage"/></div><div><Label className="text-sm font-semibold text-gray-700">Greeting Message</Label><Textarea value={storeConfig.ai_greeting||''} onChange={e=>setStoreConfig({...storeConfig,ai_greeting:e.target.value})} className="mt-2 border-gray-200 rounded-xl text-gray-900 bg-white" rows={3} placeholder="Hey! What are you shopping for today?"/></div></div></TabsContent>
+          <TabsContent value="appearance"><div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5" style={{boxShadow:'0 1px 4px rgba(0,0,0,0.04)'}}><div><Label className="text-sm font-semibold text-gray-700">Hero Image URL</Label><Input value={storeConfig.hero_image||''} onChange={e=>setStoreConfig({...storeConfig,hero_image:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder="https://…"/>{storeConfig.hero_image&&<img src={storeConfig.hero_image} alt="Preview" className="mt-3 w-full h-36 object-cover rounded-xl border border-gray-100" onError={e=>e.target.style.display='none'}/>}</div><div><Label className="text-sm font-semibold text-gray-700">Logo URL</Label><Input value={storeConfig.logo_url||''} onChange={e=>setStoreConfig({...storeConfig,logo_url:e.target.value})} className="mt-2 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder="https://…"/></div></div></TabsContent>
         </Tabs>
-      ):<div className="bg-white rounded-2xl border border-gray-100 p-16 text-center"><Loader2 className="w-8 h-8 animate-spin text-gray-200 mx-auto"/></div>}
+      ):<div className="bg-white rounded-xl border border-gray-100 p-16 text-center"><Loader2 className="w-8 h-8 animate-spin text-gray-200 mx-auto"/></div>}
     </div>
   )
 
@@ -1142,10 +1132,10 @@ export default function MerchantDashboard() {
 
   const ProductModal = () => (
     <Dialog open={productModal.open} onOpenChange={o=>!o&&setProductModal({open:false,mode:'create',data:null})}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto bg-white rounded-xl">
         <DialogHeader><DialogTitle className="text-gray-900 text-lg">{productModal.mode==='edit'?'Edit Product':'Add New Product'}</DialogTitle><DialogDescription className="text-gray-400">Fill in the product details below</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
-          {productForm.image&&<div className="relative h-40 bg-gray-100 rounded-2xl overflow-hidden"><img src={productForm.image} alt="Preview" className="w-full h-full object-cover" onError={e=>e.target.style.display='none'}/><span className="absolute bottom-3 left-3 text-white text-xs font-semibold bg-black/40 px-2.5 py-1 rounded-lg">Preview</span></div>}
+          {productForm.image&&<div className="relative h-40 bg-gray-100 rounded-xl overflow-hidden"><img src={productForm.image} alt="Preview" className="w-full h-full object-cover" onError={e=>e.target.style.display='none'}/><span className="absolute bottom-3 left-3 text-white text-xs font-semibold bg-black/40 px-2.5 py-1 rounded-lg">Preview</span></div>}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2"><Label className="text-sm font-semibold text-gray-700">Name *</Label><Input value={productForm.name} onChange={e=>setProductForm({...productForm,name:e.target.value})} className="mt-1.5 border-gray-200 rounded-xl h-10 text-gray-900 bg-white" placeholder="e.g. Ethiopian Yirgacheffe"/></div>
             <div className="col-span-2"><Label className="text-sm font-semibold text-gray-700">Description</Label><Textarea value={productForm.description} onChange={e=>setProductForm({...productForm,description:e.target.value})} className="mt-1.5 border-gray-200 rounded-xl text-gray-900 bg-white" rows={2}/></div>
@@ -1168,7 +1158,7 @@ export default function MerchantDashboard() {
     const o = orderModal.order; if (!o) return null
     return (
       <Dialog open={orderModal.open} onOpenChange={op=>!op&&setOrderModal({open:false,order:null})}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-2xl">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-xl">
           <DialogHeader><DialogTitle className="text-gray-900 text-lg">{o.order_number}</DialogTitle><DialogDescription className="text-gray-400">{new Date(o.created_at).toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</DialogDescription></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-3"><div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100"><p className="text-xs text-gray-400 mb-1.5">Order Status</p><StatusPill status={o.status}/></div><div className="bg-gray-50 rounded-xl p-3.5 border border-gray-100"><p className="text-xs text-gray-400 mb-1.5">Payment</p><StatusPill status={o.payment_status||'unknown'} map={{paid:{label:'Paid',dot:'bg-emerald-400',pill:'bg-emerald-50 text-emerald-700 border-emerald-200'},pending:{label:'Pending',dot:'bg-amber-400',pill:'bg-amber-50 text-amber-700 border-amber-200'},failed:{label:'Failed',dot:'bg-red-400',pill:'bg-red-50 text-red-700 border-red-200'},unknown:{label:'Unknown',dot:'bg-gray-400',pill:'bg-gray-100 text-gray-600 border-gray-200'},unpaid:{label:'Unpaid',dot:'bg-gray-400',pill:'bg-gray-100 text-gray-600 border-gray-200'}}}/></div></div>
@@ -1183,7 +1173,7 @@ export default function MerchantDashboard() {
 
   const CampaignModal = () => (
     <Dialog open={campaignModal.open} onOpenChange={o=>!o&&setCampaignModal({open:false,mode:'create',data:null})}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-2xl">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-xl">
         <DialogHeader><DialogTitle className="text-gray-900 text-lg">{campaignModal.mode==='edit'?'Edit Campaign':'Create Campaign'}</DialogTitle></DialogHeader>
         <div className="space-y-4 py-2">
           <div><Label className="text-sm font-semibold text-gray-700">Name *</Label><Input value={campaignForm.name} onChange={e=>setCampaignForm({...campaignForm,name:e.target.value})} className="mt-1.5 border-gray-200 rounded-xl h-10 text-gray-900 bg-white"/></div>
@@ -1203,7 +1193,7 @@ export default function MerchantDashboard() {
 
   const ReviewModal = () => (
     <Dialog open={reviewModal.open} onOpenChange={o=>!o&&setReviewModal({open:false,review:null})}>
-      <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+      <DialogContent className="sm:max-w-md bg-white rounded-xl">
         <DialogHeader><DialogTitle className="text-gray-900 text-lg">Reply to Review</DialogTitle><DialogDescription className="text-gray-400">Responding to {reviewModal.review?.author_name}</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-gray-50 rounded-xl p-4 border border-gray-100"><div className="flex gap-0.5 mb-2">{[1,2,3,4,5].map(i=><Star key={i} className={`w-3.5 h-3.5 ${i<=(reviewModal.review?.rating||0)?'fill-amber-400 text-amber-400':'text-gray-200'}`}/>)}</div><p className="text-sm text-gray-700">{reviewModal.review?.content}</p></div>
@@ -1217,7 +1207,7 @@ export default function MerchantDashboard() {
 
   const ShipmentModal = () => (
     <Dialog open={shipmentModal.open} onOpenChange={o=>!o&&setShipmentModal({open:false,order:null})}>
-      <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+      <DialogContent className="sm:max-w-md bg-white rounded-xl">
         <DialogHeader><DialogTitle className="text-gray-900 text-lg">Update Shipment</DialogTitle><DialogDescription className="text-gray-400">{shipmentModal.order?.order_number} — {shipmentModal.order?.shipping_address?.name}</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div><Label className="text-sm font-semibold text-gray-700">Carrier</Label><Select value={shipmentForm.carrier||'none'} onValueChange={v=>setShipmentForm({...shipmentForm,carrier:v==='none'?'':v})}><SelectTrigger className="mt-1.5 border-gray-200 bg-white text-gray-900 rounded-xl h-10"><SelectValue placeholder="Select carrier"/></SelectTrigger><SelectContent className="bg-white border-gray-200 rounded-xl"><SelectItem value="none">Select carrier</SelectItem>{['UPS','USPS','FedEx','DHL','Other'].map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
@@ -1234,7 +1224,7 @@ export default function MerchantDashboard() {
     const c = customerModal.customer; if (!c) return null
     return (
       <Dialog open={customerModal.open} onOpenChange={o=>!o&&setCustomerModal({open:false,customer:null})}>
-        <DialogContent className="sm:max-w-md bg-white rounded-2xl">
+        <DialogContent className="sm:max-w-md bg-white rounded-xl">
           <DialogHeader><DialogTitle className="text-gray-900 text-lg">Customer Profile</DialogTitle><DialogDescription className="text-gray-400">Session #{c.session_id?.slice(0,16)}</DialogDescription></DialogHeader>
           <div className="space-y-4 py-2">
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100"><div className="w-14 h-14 rounded-full bg-gray-900 flex items-center justify-center text-white font-bold text-xl shrink-0">{c.session_id?.charAt(0)?.toUpperCase()||'?'}</div><div><p className="font-bold text-gray-900">Session #{c.session_id?.slice(0,8)}</p><p className="text-sm text-gray-400">{c.interactions||0} total interactions</p><span className={`text-xs font-bold px-2.5 py-0.5 rounded-full mt-1 inline-block ${c.risk_level==='high'?'bg-red-50 text-red-600 border border-red-200':'bg-emerald-50 text-emerald-600 border border-emerald-200'}`}>{c.risk_level||'low'} risk</span></div></div>
@@ -1511,7 +1501,7 @@ export default function MerchantDashboard() {
       </div>
 
       {/* ── FLOATING BOTTOM DOCK ─────────────────────────────── */}
-      <div className="fixed bottom-5 z-50 flex items-center gap-1 px-2.5 py-2 rounded-2xl shadow-xl" style={{ left: 'calc(200px + (100% - 200px) / 2)', transform: 'translateX(-50%)', background: '#0D0D0D', border: '1px solid #2A2A2A' }}>
+      <div className="fixed bottom-5 z-50 flex items-center gap-1 px-2.5 py-2 rounded-xl shadow-xl" style={{ left: 'calc(200px + (100% - 200px) / 2)', transform: 'translateX(-50%)', background: '#0D0D0D', border: '1px solid #2A2A2A' }}>
         {DOCK_ITEMS.map(item => (
           <button
             key={item.key}
