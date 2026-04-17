@@ -484,12 +484,6 @@ export default function App() {
               />
             </div>
 
-            <a href="/merchant/login" className="text-[12px] font-semibold px-2 hidden sm:block transition-colors" style={{ color: '#C4A898' }}
-              onMouseEnter={e => e.currentTarget.style.color = '#4A2512'}
-              onMouseLeave={e => e.currentTarget.style.color = '#C4A898'}>
-              Merchant
-            </a>
-
             {/* Cart */}
             <Sheet>
               <SheetTrigger asChild>
