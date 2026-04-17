@@ -20,7 +20,7 @@ import {
   Activity, ExternalLink, MapPin, LogOut, RefreshCw, ArrowUpRight,
   ArrowDownRight, LayoutGrid, List, Shield, Target, Bot, AlertTriangle,
   Loader2, CheckCircle, XCircle, Reply, Zap, Tag, Package2, Globe,
-  Sparkles, ChevronRight, CircleDot, BarChart2, Settings, Hash, CreditCard
+  Sparkles, ChevronRight, CircleDot, BarChart2, Settings, Hash, CreditCard, Banknote
 } from 'lucide-react'
 
 const BASE_URL = '/api'
@@ -934,8 +934,42 @@ export default function MerchantDashboard() {
   const renderPayments = () => (
     <div>
       <PageHeader title="Payments" description="Manage payment providers and payout methods" actions={<Button variant="outline" size="sm" className="rounded-xl border-gray-200 h-9"><Download className="w-3.5 h-3.5 mr-1.5" /> Payout History</Button>} />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        {/* Cash on Delivery — active */}
+        <div className="bg-white rounded-2xl border-2 border-amber-200 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Banknote className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900">Cash on Delivery</h3>
+                <p className="text-xs text-gray-500">Collect payment at doorstep</p>
+              </div>
+            </div>
+            <Switch checked={true} />
+          </div>
+          <div className="space-y-3">
+            <div className="p-3.5 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span className="text-xs font-semibold text-amber-800">Active · Available at checkout</span>
+            </div>
+            <div className="space-y-2 text-sm text-gray-600">
+              <div className="flex justify-between py-1.5 border-b border-gray-50">
+                <span className="text-gray-500 text-xs">COD Orders</span>
+                <span className="font-bold text-gray-900">{orders?.filter(o => o.payment_method === 'cod').length || 0}</span>
+              </div>
+              <div className="flex justify-between py-1.5">
+                <span className="text-gray-500 text-xs">Pending Collection</span>
+                <span className="font-bold text-amber-600">{orders?.filter(o => o.payment_method === 'cod' && o.payment_status === 'cod').length || 0}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stripe */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -961,11 +995,12 @@ export default function MerchantDashboard() {
           </div>
         </div>
 
+        {/* PayPal */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-amber-600" />
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-blue-600" />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900">PayPal</h3>
@@ -978,23 +1013,7 @@ export default function MerchantDashboard() {
           <Button variant="outline" className="w-full rounded-xl border-gray-200">Connect PayPal</Button>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
-                <Zap className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-900">Crypto Payments</h3>
-                <p className="text-xs text-gray-500">BTC, ETH, SOL, USDC</p>
-              </div>
-            </div>
-            <Switch checked={false} />
-          </div>
-          <p className="text-sm text-gray-500 mb-6">Accept cryptocurrencies via Coinbase Commerce or BitPay.</p>
-          <Button variant="outline" className="w-full rounded-xl border-gray-200">Set up Crypto</Button>
-        </div>
-
+        {/* Add Provider */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm flex flex-col justify-center items-center text-center">
           <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center mb-3">
             <Plus className="w-6 h-6 text-gray-300" />
