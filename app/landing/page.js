@@ -93,9 +93,9 @@ const rotatingWords = ['sell', 'talk', 'negotiate', 'convert']
 
 const techStack = [
   { name: 'Next.js', src: 'https://convos.store/logos/nextjs-logotype-dark-background.svg', h: 22 },
-  { name: 'Supabase', src: 'https://convos.store/_next/image?q=75&url=%2Flogos%2Fsupabase-logo-wordmark--dark.png&w=1200', h: 24 },
+  { name: 'Supabase', src: 'https://convos.store/_next/image?url=%2Flogos%2Fsupabase-logo-wordmark--dark.png&w=1200&q=75', h: 24 },
   { name: 'Tailwind CSS', src: 'https://convos.store/logos/tailwindcss-logotype-white.svg', h: 18 },
-  { name: 'Stripe', src: 'https://convos.store/_next/image?q=75&url=%2Flogos%2FStripe+wordmark+-+White+-+Large.png&w=1200', h: 32 },
+  { name: 'Stripe', src: 'https://convos.store/_next/image?url=%2Flogos%2FStripe%20wordmark%20-%20White%20-%20Large.png&w=1200&q=75', h: 32 },
   { name: 'OpenAI', src: 'https://convos.store/logos/openai-combined.svg', h: 26 },
 ]
 

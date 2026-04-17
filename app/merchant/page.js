@@ -31,7 +31,6 @@ const NAV_SECTIONS = [
     items: [
       { key: 'home', label: 'Home', icon: LayoutDashboard },
       { key: 'conversations', label: 'Conversations', icon: MessageSquare },
-      { key: 'missions', label: 'AI Authority', icon: Target },
     ]
   },
   {
@@ -1182,7 +1181,6 @@ export default function MerchantDashboard() {
     { key: 'orders', icon: ShoppingBag },
     { key: 'catalog', icon: Package },
     { key: 'conversations', icon: MessageSquare },
-    { key: 'missions', icon: Target },
     { key: 'customers', icon: Users },
     { key: 'store-design', icon: Settings },
   ]
