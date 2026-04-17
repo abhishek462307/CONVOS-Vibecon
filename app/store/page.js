@@ -370,6 +370,25 @@ function TypingDots() {
   )
 }
 
+// Simple markdown renderer: **bold**, *italic*, newlines
+function renderMarkdown(text) {
+  if (!text) return null
+  // Split by double newlines for paragraphs, single newlines for breaks
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i} style={{ fontWeight: 700, color: 'inherit' }}>{part.slice(2, -2)}</strong>
+    }
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+      return <em key={i}>{part.slice(1, -1)}</em>
+    }
+    // Handle line breaks within plain text
+    return part.split('\n').map((line, j, arr) => (
+      <span key={`${i}-${j}`}>{line}{j < arr.length - 1 && <br />}</span>
+    ))
+  })
+}
+
 function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName, aiName }) {
   const [input, setInput] = useState('')
   const messagesEndRef = useRef(null)
@@ -385,8 +404,8 @@ function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName,
 
   return (
     <div
-      className="w-[360px] flex-shrink-0 flex flex-col h-[calc(100vh-96px)] sticky top-[96px] bg-white"
-      style={{ borderLeft: '1px solid #E5D0BC' }}
+      className="w-[360px] flex-shrink-0 flex flex-col bg-white"
+      style={{ borderLeft: '1px solid #E5D0BC', height: 'calc(100vh - 56px)', position: 'sticky', top: '56px' }}
     >
       {/* Header */}
       <div className="px-4 py-3.5 flex items-center justify-between shrink-0 bg-white" style={{ borderBottom: '1px solid #E5D0BC' }}>
@@ -445,7 +464,7 @@ function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName,
                       : { background: '#FFFFFF', color: '#3D1F10', border: '1px solid #E5D0BC' }
                     }
                   >
-                    {msg.content}
+                    {renderMarkdown(msg.content)}
                   </div>
                 </motion.div>
               )
