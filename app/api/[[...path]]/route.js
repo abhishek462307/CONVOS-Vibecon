@@ -97,10 +97,13 @@ RULES:
 4. When a buyer describes a goal, use create_mission to track it
 5. For negotiations, respect the bargain_min_price boundary
 6. Only recommend products from search results
-7. When buyer seems ready, offer to generate checkout
-8. Keep responses concise (2-4 sentences unless detail is needed)
-9. Mention specific prices and savings when relevant
-10. Be enthusiastic about good deals
+7. When buyer seems ready, ask their preferred payment: "Card/Stripe" or "Cash on Delivery (COD)"
+8. For card payment → use generate_checkout to get a Stripe link
+9. For COD → ask for name + address, then use checkout_cod to place the order directly
+10. Keep responses concise (2-4 sentences unless detail is needed)
+11. Mention specific prices and savings when relevant
+12. Be enthusiastic about good deals
+13. After adding items to cart, confirm what's in cart and ask if they're ready to checkout
 
 SEARCH TOOL USAGE:
 - General queries: search_products({ query: "user's search term" })
@@ -172,11 +175,27 @@ const AI_TOOL_DEFS = [
   },
   {
     name: 'generate_checkout',
-    description: 'Generate a checkout link when the buyer is ready to purchase their cart.',
+    description: 'Generate a Stripe checkout link when the buyer is ready to purchase their cart with card/online payment.',
     parameters: {
       type: 'object',
       properties: {},
       required: []
+    }
+  },
+  {
+    name: 'checkout_cod',
+    description: 'Place a Cash on Delivery (COD) order when the buyer wants to pay with cash on delivery. Use this when buyer says "cash on delivery", "pay on delivery", "COD", or "pay when it arrives".',
+    parameters: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Full name of the buyer' },
+        address: { type: 'string', description: 'Street address' },
+        city: { type: 'string', description: 'City' },
+        state: { type: 'string', description: 'State or region' },
+        zip: { type: 'string', description: 'ZIP or postal code' },
+        country: { type: 'string', description: 'Country (default: US)' }
+      },
+      required: ['name', 'address', 'city', 'state', 'zip']
     }
   }
 ]
@@ -371,17 +390,51 @@ async function executeTool(name, argsStr, db, sessionId) {
             quantity: item.quantity
           })),
           mode: 'payment',
-          success_url: `${baseUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${baseUrl}?checkout=cancel`,
+          success_url: `${baseUrl}/store?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${baseUrl}/store?checkout=cancel`,
           metadata: { convos_session_id: sessionId }
         })
-        await logIntent(db, sessionId, 'checkout', `Checkout initiated: $${total.toFixed(2)}`, { total, items: cart.length, stripe_session: session.id })
+        await logIntent(db, sessionId, 'checkout', `Stripe checkout initiated: $${total.toFixed(2)}`, { total, items: cart.length, stripe_session: session.id })
         await updateConsumerProfile(db, sessionId, { action: 'checkout', value: total })
         return JSON.stringify({ success: true, checkout_url: session.url, total: total.toFixed(2) })
       } catch(e) {
         console.error('Stripe error:', e)
-        return JSON.stringify({ error: 'Checkout is temporarily unavailable. Please try again.' })
+        return JSON.stringify({ error: 'Card payment is temporarily unavailable. You can choose Cash on Delivery instead.' })
       }
+    }
+    case 'checkout_cod': {
+      const conv = await db.collection('conversations').findOne({ session_id: sessionId })
+      const cart = conv?.cart || []
+      if (cart.length === 0) return JSON.stringify({ error: 'Cart is empty. Add items first.' })
+      const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0)
+      const shipping = subtotal > 50 ? 0 : 5
+      const tax = subtotal * 0.08
+      const total = subtotal + shipping + tax
+      const orderNumber = `ORD-${Date.now()}`
+      const order = {
+        id: uuidv4(), order_number: orderNumber, session_id: sessionId,
+        items: cart.map(i => ({ ...i, id: i.product_id })),
+        subtotal, shipping, tax, total,
+        status: 'pending',
+        payment_method: 'cod',
+        payment_status: 'cod',
+        shipping_address: {
+          name: args.name || 'Customer',
+          street: args.address || '',
+          city: args.city || '',
+          state: args.state || '',
+          zip: args.zip || '',
+          country: args.country || 'US'
+        },
+        created_at: new Date(), updated_at: new Date()
+      }
+      await db.collection('orders').insertOne(order)
+      // Clear cart
+      await db.collection('conversations').updateOne({ session_id: sessionId }, { $set: { cart: [] } })
+      await logIntent(db, sessionId, 'checkout', `COD order placed: $${total.toFixed(2)}`, { total, items: cart.length, order_id: order.id })
+      await updateConsumerProfile(db, sessionId, { action: 'checkout', value: total })
+      const { _id, ...cleanOrder } = order
+      return JSON.stringify({ success: true, cod_order: cleanOrder, order_number: orderNumber, total: total.toFixed(2), message: `Order ${orderNumber} placed! Pay $${total.toFixed(2)} cash on delivery.` })
     }
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` })
@@ -568,6 +621,7 @@ async function handleRoute(request, { params }) {
       let missionCreated = null
       let negotiationResult = null
       let checkoutUrl = null
+      let codOrder = null
       let cartUpdated = false
 
       for (let iteration = 0; iteration < 5; iteration++) {
@@ -596,6 +650,7 @@ async function handleRoute(request, { params }) {
               if (result.mission) missionCreated = result.mission
               if (result.status && result.final_price) negotiationResult = result
               if (result.checkout_url) checkoutUrl = result.checkout_url
+              if (result.cod_order) codOrder = result.cod_order
               if (result.cart) cartUpdated = true
             } catch(e) {}
           }
@@ -623,6 +678,7 @@ async function handleRoute(request, { params }) {
           mission_created: missionCreated,
           negotiation: negotiationResult,
           checkout_url: checkoutUrl,
+          cod_order: codOrder,
           cart_updated: cartUpdated
         },
         cart: currentCart,

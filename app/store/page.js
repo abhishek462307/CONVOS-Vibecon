@@ -475,11 +475,8 @@ function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName,
           {messages.length > 0 && messages[messages.length - 1].products?.length > 0 && (
             <div className="ml-8 flex flex-col gap-2">
               {messages[messages.length - 1].products.map(p => (
-                <div
-                  key={p.id}
-                  className="rounded-xl p-2.5 flex gap-2.5 transition-all hover:shadow-sm"
-                  style={{ background: '#FFFFFF', border: '1px solid #E5D0BC' }}
-                >
+                <div key={p.id} className="rounded-xl p-2.5 flex gap-2.5 transition-all hover:shadow-sm cursor-pointer"
+                  style={{ background: '#FFFFFF', border: '1px solid #E5D0BC' }}>
                   <img src={p.image} alt={p.name} className="w-11 h-11 rounded-lg object-cover shrink-0" style={{ border: '1px solid #E5D0BC' }} />
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-bold truncate" style={{ color: '#1C0A04' }}>{p.name}</p>
@@ -490,13 +487,33 @@ function ChatWidget({ messages, isLoading, onSend, onClear, onToggle, storeName,
             </div>
           )}
 
-          {/* Checkout link */}
+          {/* Stripe checkout button */}
           {messages.length > 0 && messages[messages.length - 1].checkout_url && (
-            <div className="ml-8">
+            <div className="ml-8 space-y-2">
+              <div className="rounded-xl p-3 text-xs" style={{ background: '#F5EBE0', border: '1px solid #E5D0BC' }}>
+                <p className="font-bold mb-1" style={{ color: '#4A2512' }}>🔗 Payment link ready!</p>
+                <p style={{ color: '#7C4B2A' }}>Redirecting you to secure checkout in a moment…</p>
+              </div>
               <a href={messages[messages.length - 1].checkout_url} target="_blank" rel="noopener noreferrer"
                 className={`inline-flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-bold ${btn_primary}`}>
-                <CreditCard className="w-3.5 h-3.5" /> Checkout <ArrowRight className="w-3 h-3" />
+                <CreditCard className="w-3.5 h-3.5" /> Pay with Card <ArrowRight className="w-3 h-3" />
               </a>
+            </div>
+          )}
+
+          {/* COD order success */}
+          {messages.length > 0 && messages[messages.length - 1].cod_order && (
+            <div className="ml-8">
+              <div className="rounded-xl p-3.5 space-y-2" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+                <p className="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+                  <span>✅</span> Order Placed — Cash on Delivery!
+                </p>
+                <div className="text-xs space-y-0.5" style={{ color: '#166534' }}>
+                  <p>Order: <strong>{messages[messages.length - 1].cod_order.order_number}</strong></p>
+                  <p>Total: <strong>${parseFloat(messages[messages.length - 1].cod_order.total || 0).toFixed(2)}</strong></p>
+                  <p>Pay with cash when your order arrives.</p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -921,7 +938,8 @@ export default function App() {
           role: 'assistant',
           content: data.response.text,
           products: data.response.products || [],
-          checkout_url: data.response.checkout_url || null
+          checkout_url: data.response.checkout_url || null,
+          cod_order: data.response.cod_order || null,
         }])
 
         // ── Smart context panel detection ────────────────────
@@ -930,22 +948,37 @@ export default function App() {
         const isCategoryBrowse = /show.*all|all.*product|browse|list|what.*do you have/i.test(text)
 
         if (prods.length === 1 && !isCategoryBrowse) {
-          // Single product mentioned → product focus panel
           setContextPanel({ type: 'product', data: prods[0] })
         } else if (prods.length >= 2 && isComparison) {
-          // Multiple products + compare intent → comparison panel
           setContextPanel({ type: 'comparison', data: prods })
         } else if (prods.length >= 2) {
-          // Multiple products → category/results panel
           const title = prods.every(p => p.category === prods[0].category) ? prods[0].category : 'Recommended for you'
           setContextPanel({ type: 'category', data: prods, title })
         } else if (prods.length === 0 && /bye|thanks|ok|great|awesome|got it/i.test(text)) {
-          // Closing phrase → clear panel
           setContextPanel(null)
         }
-        // If no products in response, keep existing context
+
+        // ── Auto-redirect for Stripe checkout ────────────────
+        if (data.response.checkout_url) {
+          setTimeout(() => { window.location.href = data.response.checkout_url }, 1500)
+        }
+
+        // ── COD order: clear cart + show success ──────────────
+        if (data.response.cod_order) {
+          setCart([])
+          localStorage.setItem('cart', JSON.stringify([]))
+        }
       }
-      if (data.cart) setCart(data.cart)
+
+      // ── Sync AI cart to local state (normalize product_id → id) ──
+      if (data.cart && Array.isArray(data.cart)) {
+        const normalized = data.cart.map(item => ({
+          ...item,
+          id: item.product_id || item.id,
+        }))
+        setCart(normalized)
+        localStorage.setItem('cart', JSON.stringify(normalized))
+      }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }])
     }
@@ -953,9 +986,9 @@ export default function App() {
   }, [sessionId])
 
   const addToCart = async (product) => {
-    const newCart = cart.find(i => i.id === product.id)
-      ? cart.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i)
-      : [...cart, { ...product, quantity: 1 }]
+    const newCart = cart.find(i => (i.id || i.product_id) === product.id)
+      ? cart.map(i => (i.id || i.product_id) === product.id ? { ...i, quantity: i.quantity + 1 } : i)
+      : [...cart, { ...product, id: product.id, quantity: 1 }]
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
     if (sessionId) {
@@ -970,7 +1003,10 @@ export default function App() {
   }
 
   const updateQty = (id, delta) => {
-    const newCart = cart.map(i => i.id === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i).filter(i => i.quantity > 0)
+    const newCart = cart.map(i => {
+      const itemId = i.id || i.product_id
+      return itemId === id ? { ...i, quantity: Math.max(0, i.quantity + delta) } : i
+    }).filter(i => i.quantity > 0)
     setCart(newCart)
     localStorage.setItem('cart', JSON.stringify(newCart))
   }
@@ -1057,16 +1093,16 @@ export default function App() {
                   {cart.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16"><ShoppingCart className="w-10 h-10 mb-3" style={{ color: '#C4A898' }} /><p className="text-sm font-medium" style={{ color: '#9B7B6B' }}>Your cart is empty</p></div>
                   ) : cart.map((item, i) => (
-                    <div key={i} className="rounded-xl p-3 flex gap-3 items-center" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
+                    <div key={item.id || item.product_id || i} className="rounded-xl p-3 flex gap-3 items-center" style={{ border: '1px solid #E5D0BC', background: '#FAF6F1' }}>
                       <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate" style={{ color: '#1C0A04' }}>{item.name}</p>
-                        <p className="text-xs font-bold" style={{ color: '#B8732A' }}>${item.price.toFixed(2)}</p>
+                        <p className="text-xs font-bold" style={{ color: '#B8732A' }}>${parseFloat(item.price).toFixed(2)}</p>
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
-                        <button onClick={() => updateQty(item.id, -1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}><Minus className="w-3 h-3" /></button>
+                        <button onClick={() => updateQty(item.id || item.product_id, -1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}><Minus className="w-3 h-3" /></button>
                         <span className="text-sm font-bold w-5 text-center" style={{ color: '#1C0A04' }}>{item.quantity}</span>
-                        <button onClick={() => updateQty(item.id, 1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}><Plus className="w-3 h-3" /></button>
+                        <button onClick={() => updateQty(item.id || item.product_id, 1)} className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ border: '1px solid #E5D0BC', background: '#FFFFFF', color: '#9B7B6B' }}><Plus className="w-3 h-3" /></button>
                       </div>
                     </div>
                   ))}
