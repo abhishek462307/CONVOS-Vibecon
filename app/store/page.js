@@ -901,7 +901,12 @@ export default function App() {
   useEffect(() => {
     let sid = null
     try { sid = localStorage.getItem('convos_session_id') } catch (e) { }
-    if (!sid) { sid = crypto.randomUUID(); try { localStorage.setItem('convos_session_id', sid) } catch (e) { } }
+    if (!sid) {
+      sid = crypto.randomUUID()
+      try { localStorage.setItem('convos_session_id', sid) } catch (e) { }
+      // New session — clear any stale cart
+      try { localStorage.removeItem('cart') } catch (e) { }
+    }
     setSessionId(sid)
     try { const s = localStorage.getItem('cart'); if (s) setCart(JSON.parse(s)) } catch (e) { }
 
@@ -970,14 +975,17 @@ export default function App() {
         }
       }
 
-      // ── Sync AI cart to local state (normalize product_id → id) ──
+      // ── Sync AI cart ONLY when AI actually modified it ────────
       if (data.cart && Array.isArray(data.cart)) {
-        const normalized = data.cart.map(item => ({
-          ...item,
-          id: item.product_id || item.id,
-        }))
-        setCart(normalized)
-        localStorage.setItem('cart', JSON.stringify(normalized))
+        const aiModifiedCart = data.response?.cart_updated || data.response?.cod_order || data.response?.negotiation?.status === 'accepted'
+        if (aiModifiedCart) {
+          const normalized = data.cart.map(item => ({
+            ...item,
+            id: item.product_id || item.id,
+          }))
+          setCart(normalized)
+          localStorage.setItem('cart', JSON.stringify(normalized))
+        }
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Something went wrong. Please try again.' }])

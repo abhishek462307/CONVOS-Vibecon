@@ -718,6 +718,14 @@ async function handleRoute(request, { params }) {
       return corsResponse({ cart: conv?.cart || [] })
     }
 
+    // DELETE /api/cart?session_id=xxx — clear cart for a session
+    if (route === '/cart' && method === 'DELETE') {
+      const sessionId = request.nextUrl.searchParams.get('session_id')
+      if (!sessionId) return corsResponse({ error: 'session_id required' }, 400)
+      await db.collection('conversations').updateOne({ session_id: sessionId }, { $set: { cart: [] } }, { upsert: false })
+      return corsResponse({ success: true, cart: [] })
+    }
+
     // ─── Checkout ───
     if (route === '/checkout' && method === 'POST') {
       const body = await request.json()
